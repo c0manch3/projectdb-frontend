@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загруженность - LenconDB</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="projects.html" class="header__logo">LenconDB</a>
+    
+    <nav class="header__nav">
+      <a href="projects.html" class="header__nav-link">Проекты</a>
+      <a href="employees.html" class="header__nav-link" id="employeesNav">Сотрудники</a>
+      <a href="companies.html" class="header__nav-link">Компании</a>
+      <a href="workload.html" class="header__nav-link header__nav-link--active">Загруженность</a>
+    </nav>
+    
+    <div class="header__user">
+      <div class="header__user-info">
+        <div class="header__user-name" id="userName">Загрузка...</div>
+        <div class="header__user-role" id="userRole">Загрузка...</div>
+      </div>
+      <div class="header__user-avatar" id="userAvatar">?</div>
+      <button class="button button--secondary button--small" onclick="logout()">Выйти</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="page-header">
+      <div class="container">
+        <h1 class="page-header__title">Загруженность</h1>
+        <p class="page-header__subtitle">Планирование и учет рабочего времени сотрудников</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Filters and Controls -->
+      <div class="card">
+        <div class="filters">
+          <div class="filters__group">
+            <label class="filters__label" for="employeeFilter">Сотрудник:</label>
+            <select id="employeeFilter" class="form__select filters__select">
+              <option value="all">Все сотрудники</option>
+            </select>
+          </div>
+          
+          <div class="filters__group">
+            <label class="filters__label" for="projectFilter">Проект:</label>
+            <select id="projectFilter" class="form__select filters__select">
+              <option value="all">Все проекты</option>
+            </select>
+          </div>
+          
+          <div class="filters__group">
+            <label class="filters__label" for="periodFilter">Период:</label>
+            <select id="periodFilter" class="form__select filters__select">
+              <option value="week">Неделя</option>
+              <option value="month" selected>Месяц</option>
+            </select>
+          </div>
+
+          <div class="filters__group">
+            <label class="filters__label" for="dateInput">Дата:</label>
+            <input type="date" id="dateInput" class="form__input" style="min-width: 150px;">
+          </div>
+
+          <button class="button button--primary" onclick="exportToExcel()" title="Экспорт в Excel">
+            📊 Экспорт
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;" id="totalHoursPlanned">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Часов запланировано</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;" id="totalHoursActual">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Часов отработано</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--warning); margin-bottom: 0.5rem;" id="utilizationRate">0%</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Загруженность</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary); margin-bottom: 0.5rem;" id="activeEmployees">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Активных сотрудников</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card">
+        <div class="tabs">
+          <div class="tabs__list">
+            <button class="tabs__button tabs__button--active" data-tab="planned">
+              Плановая загруженность
+            </button>
+            <button class="tabs__button" data-tab="actual">
+              Фактическая загруженность
+            </button>
+            <button class="tabs__button" data-tab="comparison">
+              Сравнение план/факт
+            </button>
+          </div>
+        </div>
+        
+        <div class="tabs__content">
+          <!-- Planned Workload Tab -->
+          <div id="planned-tab" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Плановая загруженность</h3>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="button button--secondary" onclick="copyWeek()">
+                  📋 Копировать неделю
+                </button>
+                <button class="button button--primary" onclick="showAddPlanModal()">
+                  + Добавить план
+                </button>
+              </div>
+            </div>
+            
+            <div class="workload-calendar" id="plannedWorkloadCalendar">
+              <!-- Календарь плановой загруженности -->
+            </div>
+          </div>
+
+          <!-- Actual Workload Tab -->
+          <div id="actual-tab" class="tab-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Фактическая загруженность</h3>
+              <button class="button button--primary" onclick="showAddActualModal()">
+                + Добавить время
+              </button>
+            </div>
+            
+            <div class="workload-calendar" id="actualWorkloadCalendar">
+              <!-- Календарь фактической загруженности -->
+            </div>
+          </div>
+
+          <!-- Comparison Tab -->
+          <div id="comparison-tab" class="tab-content" style="display: none;">
+            <h3 style="margin-bottom: 1.5rem;">Сравнение план/факт</h3>
+            
+            <div class="table-container">
+              <table class="table">
+                <thead class="table__head">
+                  <tr>
+                    <th class="table__header">Сотрудник</th>
+                    <th class="table__header">Проект</th>
+                    <th class="table__header">План (ч)</th>
+                    <th class="table__header">Факт (ч)</th>
+                    <th class="table__header">Отклонение</th>
+                    <th class="table__header">Загруженность</th>
+                  </tr>
+                </thead>
+                <tbody class="table__body" id="comparisonTableBody">
+                  <!-- Сравнительные данные будут загружены здесь -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Plan Modal -->
+  <div class="modal-overlay" id="addPlanModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Добавить план</h3>
+        <button class="modal__close" onclick="hideAddPlanModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="addPlanForm">
+          <div class="form__group">
+            <label for="planEmployee" class="form__label form__label--required">Сотрудник</label>
+            <select id="planEmployee" class="form__select" required>
+              <option value="">Выберите сотрудника</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="planProject" class="form__label form__label--required">Проект</label>
+            <select id="planProject" class="form__select" required>
+              <option value="">Выберите проект</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="planDate" class="form__label form__label--required">Дата</label>
+            <input type="date" id="planDate" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="planHours" class="form__label form__label--required">Часы</label>
+            <input type="number" id="planHours" class="form__input" min="0" max="24" step="0.5" placeholder="8" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="planDescription" class="form__label">Описание работ</label>
+            <textarea id="planDescription" class="form__textarea" placeholder="Описание планируемых работ"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideAddPlanModal()">Отмена</button>
+        <button class="button button--primary" onclick="addPlan()">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Actual Modal -->
+  <div class="modal-overlay" id="addActualModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Добавить отработанное время</h3>
+        <button class="modal__close" onclick="hideAddActualModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="addActualForm">
+          <div class="form__group">
+            <label for="actualEmployee" class="form__label form__label--required">Сотрудник</label>
+            <select id="actualEmployee" class="form__select" required>
+              <option value="">Выберите сотрудника</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="actualProject" class="form__label form__label--required">Проект</label>
+            <select id="actualProject" class="form__select" required>
+              <option value="">Выберите проект</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="actualDate" class="form__label form__label--required">Дата</label>
+            <input type="date" id="actualDate" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="actualHours" class="form__label form__label--required">Часы</label>
+            <input type="number" id="actualHours" class="form__input" min="0" max="24" step="0.5" placeholder="8" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="actualDescription" class="form__label form__label--required">Описание выполненных работ</label>
+            <textarea id="actualDescription" class="form__textarea" placeholder="Детальное описание выполненных работ" required></textarea>
+            <div class="form__help">Это поле заполняется автоматически из Telegram бота или вручную</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideAddActualModal()">Отмена</button>
+        <button class="button button--primary" onclick="addActual()">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Глобальные переменные
+    let currentUser = null;
+    let employees = [];
+    let projects = [];
+    let plannedWorkload = [];
+    let actualWorkload = [];
+    let activeTab = 'planned';
+    let currentDate = new Date();
+    let currentPeriod = 'month';
+
+    // Проверка авторизации
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!user || !accessToken) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUser = JSON.parse(user);
+      
+      // Обновление информации о пользователе
+      document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+      document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+      document.getElementById('userAvatar').textContent = `${currentUser.firstName[0]}${currentUser.lastName[0]}`;
+      
+      updateUIForRole();
+    }
+
+    // Получение текста роли
+    function getRoleText(role) {
+      const roles = {
+        'Admin': 'Администратор',
+        'Manager': 'Менеджер',
+        'Employee': 'Сотрудник',
+        'Customer': 'Заказчик'
+      };
+      return roles[role] || role;
+    }
+
+    // Обновление UI в зависимости от роли
+    function updateUIForRole() {
+      const employeesNav = document.getElementById('employeesNav');
+      
+      if (currentUser.role === 'Employee') {
+        employeesNav.style.display = 'none';
+        // Employee видит только свою загруженность
+        document.getElementById('employeeFilter').value = currentUser.id;
+        document.getElementById('employeeFilter').disabled = true;
+      }
+    }
+
+    // Выход из системы
+    function logout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    }
+
+    // Демонстрационные данные
+    const demoEmployees = [
+      {
+        id: '2',
+        name: 'Елена Петрова',
+        role: 'Manager'
+      },
+      {
+        id: '3',
+        name: 'Иван Конструкторов',
+        role: 'Employee'
+      },
+      {
+        id: '4',
+        name: 'Мария Чертежникова',
+        role: 'Employee'
+      },
+      {
+        id: '5',
+        name: 'Петр Проектировщик',
+        role: 'Employee'
+      }
+    ];
+
+    const demoProjects = [
+      {
+        id: '1',
+        name: 'ЖК Солнечный'
+      },
+      {
+        id: '2',
+        name: 'ТЦ Европа'
+      },
+      {
+        id: '4',
+        name: 'Офисное здание "Бизнес-Парк"'
+      }
+    ];
+
+    // Генерация демо данных для загруженности
+    function generateDemoWorkload() {
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+      
+      // Плановая загруженность
+      plannedWorkload = [];
+      actualWorkload = [];
+      
+      for (let employeeId of ['3', '4', '5']) {
+        for (let day = 1; day <= 31; day++) {
+          const date = new Date(currentYear, currentMonth, day);
+          if (date.getMonth() !== currentMonth) continue;
+          if (date.getDay() === 0 || date.getDay() === 6) continue; // Пропускаем выходные
+          
+          const dateStr = date.toISOString().split('T')[0];
+          const projectId = ['1', '2', '4'][Math.floor(Math.random() * 3)];
+          const plannedHours = Math.floor(Math.random() * 4) + 6; // 6-9 часов
+          
+          plannedWorkload.push({
+            id: `plan_${employeeId}_${day}_${projectId}`,
+            employeeId,
+            projectId,
+            date: dateStr,
+            hours: plannedHours,
+            description: `Плановые работы по проекту`,
+            createdAt: dateStr
+          });
+          
+          // Фактическое время (с некоторой вероятностью)
+          if (date < new Date() && Math.random() > 0.2) {
+            const actualHours = plannedHours + (Math.random() * 4 - 2); // ±2 часа от плана
+            const actualHoursRounded = Math.max(0, Math.round(actualHours * 2) / 2);
+            
+            actualWorkload.push({
+              id: `actual_${employeeId}_${day}_${projectId}`,
+              employeeId,
+              projectId,
+              date: dateStr,
+              hours: actualHoursRounded,
+              description: `Выполненные работы по проекту: разработка чертежей КЖ`,
+              createdAt: dateStr
+            });
+          }
+        }
+      }
+    }
+
+    // Инициализация
+    function initialize() {
+      employees = demoEmployees;
+      projects = demoProjects;
+      generateDemoWorkload();
+      
+      // Установка текущей даты
+      const today = new Date();
+      document.getElementById('dateInput').value = today.toISOString().split('T')[0];
+      
+      loadEmployeesForFilters();
+      loadProjectsForFilters();
+      loadEmployeesForModals();
+      loadProjectsForModals();
+      updateStatistics();
+      renderActiveTab();
+    }
+
+    // Загрузка сотрудников для фильтров и модальных окон
+    function loadEmployeesForFilters() {
+      const employeeFilter = document.getElementById('employeeFilter');
+      employeeFilter.innerHTML = '<option value="all">Все сотрудники</option>';
+      
+      employees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = employee.name;
+        employeeFilter.appendChild(option);
+      });
+    }
+
+    function loadProjectsForFilters() {
+      const projectFilter = document.getElementById('projectFilter');
+      projectFilter.innerHTML = '<option value="all">Все проекты</option>';
+      
+      projects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.id;
+        option.textContent = project.name;
+        projectFilter.appendChild(option);
+      });
+    }
+
+    function loadEmployeesForModals() {
+      const selects = [
+        document.getElementById('planEmployee'),
+        document.getElementById('actualEmployee')
+      ];
+      
+      selects.forEach(select => {
+        select.innerHTML = '<option value="">Выберите сотрудника</option>';
+        
+        employees.forEach(employee => {
+          const option = document.createElement('option');
+          option.value = employee.id;
+          option.textContent = employee.name;
+          select.appendChild(option);
+        });
+        
+        // Для Employee автоматически выбираем текущего пользователя
+        if (currentUser.role === 'Employee') {
+          select.value = currentUser.id;
+          select.disabled = true;
+        }
+      });
+    }
+
+    function loadProjectsForModals() {
+      const selects = [
+        document.getElementById('planProject'),
+        document.getElementById('actualProject')
+      ];
+      
+      selects.forEach(select => {
+        select.innerHTML = '<option value="">Выберите проект</option>';
+        
+        projects.forEach(project => {
+          const option = document.createElement('option');
+          option.value = project.id;
+          option.textContent = project.name;
+          select.appendChild(option);
+        });
+      });
+    }
+
+    // Обновление статистики
+    function updateStatistics() {
+      const employeeId = document.getElementById('employeeFilter').value;
+      const projectId = document.getElementById('projectFilter').value;
+      
+      let filteredPlanned = plannedWorkload;
+      let filteredActual = actualWorkload;
+      
+      if (employeeId !== 'all') {
+        filteredPlanned = filteredPlanned.filter(p => p.employeeId === employeeId);
+        filteredActual = filteredActual.filter(a => a.employeeId === employeeId);
+      }
+      
+      if (projectId !== 'all') {
+        filteredPlanned = filteredPlanned.filter(p => p.projectId === projectId);
+        filteredActual = filteredActual.filter(a => a.projectId === projectId);
+      }
+      
+      const totalPlanned = filteredPlanned.reduce((sum, item) => sum + item.hours, 0);
+      const totalActual = filteredActual.reduce((sum, item) => sum + item.hours, 0);
+      const utilizationRate = totalPlanned > 0 ? Math.round((totalActual / totalPlanned) * 100) : 0;
+      const uniqueEmployees = new Set(filteredActual.map(a => a.employeeId)).size;
+      
+      document.getElementById('totalHoursPlanned').textContent = totalPlanned;
+      document.getElementById('totalHoursActual').textContent = totalActual;
+      document.getElementById('utilizationRate').textContent = `${utilizationRate}%`;
+      document.getElementById('activeEmployees').textContent = uniqueEmployees;
+    }
+
+    // Отрисовка активного таба
+    function renderActiveTab() {
+      switch (activeTab) {
+        case 'planned':
+          renderPlannedWorkload();
+          break;
+        case 'actual':
+          renderActualWorkload();
+          break;
+        case 'comparison':
+          renderComparisonTable();
+          break;
+      }
+    }
+
+    // Отрисовка плановой загруженности
+    function renderPlannedWorkload() {
+      const calendar = document.getElementById('plannedWorkloadCalendar');
+      const employeeId = document.getElementById('employeeFilter').value;
+      
+      let filteredEmployees = employees;
+      if (employeeId !== 'all') {
+        filteredEmployees = employees.filter(e => e.id === employeeId);
+      }
+      
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      // Генерация дней недели для отображения рабочих дней
+      const workDays = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(currentYear, currentMonth, day);
+        if (date.getDay() !== 0 && date.getDay() !== 6) { // Исключаем выходные
+          workDays.push(date);
+        }
+      }
+      
+      // Ограничиваем количество дней для лучшего отображения
+      const displayDays = workDays.slice(0, 22); // Максимум 22 рабочих дня
+      
+      // Set dynamic grid columns based on number of days
+      const columnCount = displayDays.length + 1; // +1 for employee name column
+      const calendarElement = document.getElementById('plannedWorkloadCalendar');
+      calendarElement.style.setProperty('--calendar-columns', columnCount);
+      
+      calendar.innerHTML = `
+        <div class="workload-calendar__header" style="grid-template-columns: 200px repeat(${displayDays.length}, minmax(90px, 1fr));">
+          <div class="workload-calendar__header-cell">Сотрудник</div>
+          ${displayDays.map(date => `
+            <div class="workload-calendar__header-cell">
+              ${date.getDate()}<br>
+              <small>${getDayName(date.getDay())}</small>
+            </div>
+          `).join('')}
+        </div>
+        ${filteredEmployees.map(employee => {
+          const employeePlanned = plannedWorkload.filter(p => p.employeeId === employee.id);
+          
+          return `
+            <div class="workload-calendar__row" style="grid-template-columns: 200px repeat(${displayDays.length}, minmax(90px, 1fr));">
+              <div class="workload-calendar__employee">
+                ${employee.name}
+              </div>
+              ${displayDays.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayPlanned = employeePlanned.filter(p => p.date === dateStr);
+                const totalHours = dayPlanned.reduce((sum, p) => sum + p.hours, 0);
+                
+                return `
+                  <div class="workload-calendar__cell" onclick="editPlan('${employee.id}', '${dateStr}')">
+                    ${totalHours > 0 ? `<div class="workload-calendar__hours">${totalHours}ч</div>` : ''}
+                    <div class="workload-calendar__projects">
+                      ${dayPlanned.map(p => {
+                        const project = projects.find(pr => pr.id === p.projectId);
+                        const projectName = project ? project.name : 'Проект';
+                        return `<div class="workload-calendar__project" title="${projectName}">${projectName.length > 12 ? projectName.substring(0, 12) + '...' : projectName}</div>`;
+                      }).join('')}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    // Отрисовка фактической загруженности
+    function renderActualWorkload() {
+      const calendar = document.getElementById('actualWorkloadCalendar');
+      const employeeId = document.getElementById('employeeFilter').value;
+      
+      let filteredEmployees = employees;
+      if (employeeId !== 'all') {
+        filteredEmployees = employees.filter(e => e.id === employeeId);
+      }
+      
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      // Генерация дней недели для отображения рабочих дней
+      const workDays = [];
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(currentYear, currentMonth, day);
+        if (date.getDay() !== 0 && date.getDay() !== 6) { // Исключаем выходные
+          workDays.push(date);
+        }
+      }
+      
+      // Ограничиваем количество дней для лучшего отображения
+      const displayDays = workDays.slice(0, 22); // Максимум 22 рабочих дня
+      
+      // Set dynamic grid columns based on number of days
+      const columnCount = displayDays.length + 1; // +1 for employee name column
+      const calendarElement = document.getElementById('actualWorkloadCalendar');
+      calendarElement.style.setProperty('--calendar-columns', columnCount);
+      
+      calendar.innerHTML = `
+        <div class="workload-calendar__header" style="grid-template-columns: 200px repeat(${displayDays.length}, minmax(90px, 1fr));">
+          <div class="workload-calendar__header-cell">Сотрудник</div>
+          ${displayDays.map(date => `
+            <div class="workload-calendar__header-cell">
+              ${date.getDate()}<br>
+              <small>${getDayName(date.getDay())}</small>
+            </div>
+          `).join('')}
+        </div>
+        ${filteredEmployees.map(employee => {
+          const employeeActual = actualWorkload.filter(a => a.employeeId === employee.id);
+          
+          return `
+            <div class="workload-calendar__row" style="grid-template-columns: 200px repeat(${displayDays.length}, minmax(90px, 1fr));">
+              <div class="workload-calendar__employee">
+                ${employee.name}
+              </div>
+              ${displayDays.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayActual = employeeActual.filter(a => a.date === dateStr);
+                const totalHours = dayActual.reduce((sum, a) => sum + a.hours, 0);
+                
+                return `
+                  <div class="workload-calendar__cell" onclick="editActual('${employee.id}', '${dateStr}')">
+                    ${totalHours > 0 ? `<div class="workload-calendar__hours" style="background: var(--success);">${totalHours}ч</div>` : ''}
+                    <div class="workload-calendar__projects">
+                      ${dayActual.map(a => {
+                        const project = projects.find(pr => pr.id === a.projectId);
+                        const projectName = project ? project.name : 'Проект';
+                        return `<div class="workload-calendar__project" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.3);" title="${projectName}">${projectName.length > 12 ? projectName.substring(0, 12) + '...' : projectName}</div>`;
+                      }).join('')}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    // Отрисовка таблицы сравнения
+    function renderComparisonTable() {
+      const tbody = document.getElementById('comparisonTableBody');
+      const employeeId = document.getElementById('employeeFilter').value;
+      const projectId = document.getElementById('projectFilter').value;
+      
+      // Группировка данных по сотрудникам и проектам
+      const comparison = [];
+      
+      employees.forEach(employee => {
+        if (employeeId !== 'all' && employee.id !== employeeId) return;
+        
+        projects.forEach(project => {
+          if (projectId !== 'all' && project.id !== projectId) return;
+          
+          const empPlanned = plannedWorkload.filter(p => p.employeeId === employee.id && p.projectId === project.id);
+          const empActual = actualWorkload.filter(a => a.employeeId === employee.id && a.projectId === project.id);
+          
+          const plannedHours = empPlanned.reduce((sum, p) => sum + p.hours, 0);
+          const actualHours = empActual.reduce((sum, a) => sum + a.hours, 0);
+          
+          if (plannedHours > 0 || actualHours > 0) {
+            comparison.push({
+              employee: employee.name,
+              project: project.name,
+              planned: plannedHours,
+              actual: actualHours,
+              deviation: actualHours - plannedHours,
+              utilization: plannedHours > 0 ? Math.round((actualHours / plannedHours) * 100) : 0
+            });
+          }
+        });
+      });
+      
+      tbody.innerHTML = comparison.map(item => `
+        <tr class="table__row">
+          <td class="table__cell">${item.employee}</td>
+          <td class="table__cell">${item.project}</td>
+          <td class="table__cell">${item.planned}</td>
+          <td class="table__cell">${item.actual}</td>
+          <td class="table__cell">
+            <span style="color: ${item.deviation >= 0 ? 'var(--success)' : 'var(--danger)'};">
+              ${item.deviation >= 0 ? '+' : ''}${item.deviation}
+            </span>
+          </td>
+          <td class="table__cell">
+            <span class="status-badge ${getUtilizationBadgeClass(item.utilization)}">
+              ${item.utilization}%
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Получение класса бейджа загруженности
+    function getUtilizationBadgeClass(utilization) {
+      if (utilization >= 80 && utilization <= 120) return 'status-badge--active';
+      if (utilization > 120) return 'status-badge--overdue';
+      return 'status-badge--warning';
+    }
+
+    // Получение названия дня недели
+    function getDayName(dayNumber) {
+      const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+      return days[dayNumber];
+    }
+
+    // Управление табами
+    function switchTab(tabName) {
+      // Скрыть все табы
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Убрать активный класс с кнопок
+      document.querySelectorAll('.tabs__button').forEach(button => {
+        button.classList.remove('tabs__button--active');
+      });
+      
+      // Показать активный таб
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('tabs__button--active');
+      
+      activeTab = tabName;
+      renderActiveTab();
+    }
+
+    // Модальные окна
+    function showAddPlanModal() {
+      document.getElementById('addPlanModal').classList.add('modal-overlay--open');
+      // Установить сегодняшнюю дату по умолчанию
+      document.getElementById('planDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    function hideAddPlanModal() {
+      document.getElementById('addPlanModal').classList.remove('modal-overlay--open');
+      document.getElementById('addPlanForm').reset();
+    }
+
+    function showAddActualModal() {
+      document.getElementById('addActualModal').classList.add('modal-overlay--open');
+      // Установить сегодняшнюю дату по умолчанию
+      document.getElementById('actualDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    function hideAddActualModal() {
+      document.getElementById('addActualModal').classList.remove('modal-overlay--open');
+      document.getElementById('addActualForm').reset();
+    }
+
+    // Функции для работы с данными
+    function addPlan() {
+      const form = document.getElementById('addPlanForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      const newPlan = {
+        id: Date.now().toString(),
+        employeeId: document.getElementById('planEmployee').value,
+        projectId: document.getElementById('planProject').value,
+        date: document.getElementById('planDate').value,
+        hours: parseFloat(document.getElementById('planHours').value),
+        description: document.getElementById('planDescription').value || 'Плановые работы',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      plannedWorkload.push(newPlan);
+      updateStatistics();
+      renderActiveTab();
+      hideAddPlanModal();
+    }
+
+    function addActual() {
+      const form = document.getElementById('addActualForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      const newActual = {
+        id: Date.now().toString(),
+        employeeId: document.getElementById('actualEmployee').value,
+        projectId: document.getElementById('actualProject').value,
+        date: document.getElementById('actualDate').value,
+        hours: parseFloat(document.getElementById('actualHours').value),
+        description: document.getElementById('actualDescription').value,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      actualWorkload.push(newActual);
+      updateStatistics();
+      renderActiveTab();
+      hideAddActualModal();
+    }
+
+    function editPlan(employeeId, date) {
+      if (currentUser.role === 'Employee' && currentUser.id !== employeeId) return;
+      
+      const plans = plannedWorkload.filter(p => p.employeeId === employeeId && p.date === date);
+      if (plans.length > 0) {
+        // Показать существующий план для редактирования
+        const plan = plans[0];
+        document.getElementById('planEmployee').value = plan.employeeId;
+        document.getElementById('planProject').value = plan.projectId;
+        document.getElementById('planDate').value = plan.date;
+        document.getElementById('planHours').value = plan.hours;
+        document.getElementById('planDescription').value = plan.description;
+        showAddPlanModal();
+      } else {
+        // Создать новый план для этой даты
+        document.getElementById('planEmployee').value = employeeId;
+        document.getElementById('planDate').value = date;
+        showAddPlanModal();
+      }
+    }
+
+    function editActual(employeeId, date) {
+      if (currentUser.role === 'Employee' && currentUser.id !== employeeId) return;
+      
+      const actuals = actualWorkload.filter(a => a.employeeId === employeeId && a.date === date);
+      if (actuals.length > 0) {
+        // Показать существующий факт для редактирования
+        const actual = actuals[0];
+        document.getElementById('actualEmployee').value = actual.employeeId;
+        document.getElementById('actualProject').value = actual.projectId;
+        document.getElementById('actualDate').value = actual.date;
+        document.getElementById('actualHours').value = actual.hours;
+        document.getElementById('actualDescription').value = actual.description;
+        showAddActualModal();
+      } else {
+        // Создать новый факт для этой даты
+        document.getElementById('actualEmployee').value = employeeId;
+        document.getElementById('actualDate').value = date;
+        showAddActualModal();
+      }
+    }
+
+    function copyWeek() {
+      alert('Функция копирования недели будет реализована в следующей версии');
+    }
+
+    function exportToExcel() {
+      alert('Экспорт в Excel будет реализован в следующей версии');
+    }
+
+    // Обработчики событий
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      initialize();
+    });
+
+    // Обработчики для табов
+    document.querySelectorAll('.tabs__button').forEach(button => {
+      button.addEventListener('click', () => {
+        const tabName = button.getAttribute('data-tab');
+        switchTab(tabName);
+      });
+    });
+
+    // Фильтры
+    document.getElementById('employeeFilter').addEventListener('change', () => {
+      updateStatistics();
+      renderActiveTab();
+    });
+    
+    document.getElementById('projectFilter').addEventListener('change', () => {
+      updateStatistics();
+      renderActiveTab();
+    });
+    
+    document.getElementById('periodFilter').addEventListener('change', () => {
+      currentPeriod = document.getElementById('periodFilter').value;
+      renderActiveTab();
+    });
+    
+    document.getElementById('dateInput').addEventListener('change', (e) => {
+      currentDate = new Date(e.target.value);
+      generateDemoWorkload();
+      updateStatistics();
+      renderActiveTab();
+    });
+
+    // Закрытие модальных окон
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('modal-overlay--open');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay--open').forEach(modal => {
+          modal.classList.remove('modal-overlay--open');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

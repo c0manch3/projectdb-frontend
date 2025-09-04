@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход в систему - LenconDB</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login">
+    <div class="login__container">
+      <div class="login__logo">
+        <h1 class="login__title">LenconDB</h1>
+        <p class="login__subtitle">Система управления проектами</p>
+      </div>
+      
+      <form class="login__form" id="loginForm">
+        <div class="form__group">
+          <label for="email" class="form__label form__label--required">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form__input" 
+            placeholder="user@company.com" 
+            required
+            autocomplete="username"
+          >
+          <div class="form__error" id="emailError" style="display: none;"></div>
+        </div>
+        
+        <div class="form__group">
+          <label for="password" class="form__label form__label--required">Пароль</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form__input" 
+            placeholder="Введите пароль" 
+            required
+            autocomplete="current-password"
+          >
+          <div class="form__error" id="passwordError" style="display: none;"></div>
+        </div>
+        
+        <div class="form__error" id="generalError" style="display: none; margin-top: 1rem;"></div>
+        
+        <button type="submit" class="button button--primary button--large login__submit" id="submitButton">
+          <span id="submitText">Войти</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // DOM элементы
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const submitButton = document.getElementById('submitButton');
+    const submitText = document.getElementById('submitText');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    const generalError = document.getElementById('generalError');
+
+    // Очистка ошибок
+    function clearErrors() {
+      emailError.style.display = 'none';
+      passwordError.style.display = 'none';
+      generalError.style.display = 'none';
+      emailInput.classList.remove('form__input--error');
+      passwordInput.classList.remove('form__input--error');
+    }
+
+    // Показ ошибки
+    function showError(element, errorElement, message) {
+      element.classList.add('form__input--error');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+
+    // Валидация email
+    function validateEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    // Состояние загрузки
+    function setLoading(loading) {
+      if (loading) {
+        submitButton.classList.add('button--loading');
+        submitButton.disabled = true;
+        submitText.textContent = 'Вход...';
+      } else {
+        submitButton.classList.remove('button--loading');
+        submitButton.disabled = false;
+        submitText.textContent = 'Войти';
+      }
+    }
+
+    // Имитация API запроса
+    function loginAPI(email, password) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Имитация успешного входа для demo
+          if (email === 'admin@lencondb.com' && password === 'admin123') {
+            resolve({
+              user: {
+                id: '1',
+                email: 'admin@lencondb.com',
+                firstName: 'Админ',
+                lastName: 'Системы',
+                role: 'Admin',
+                companyId: '1'
+              },
+              accessToken: 'demo_access_token',
+              refreshToken: 'demo_refresh_token'
+            });
+          } else if (email === 'manager@lencondb.com' && password === 'manager123') {
+            resolve({
+              user: {
+                id: '2',
+                email: 'manager@lencondb.com',
+                firstName: 'Елена',
+                lastName: 'Петрова',
+                role: 'Manager',
+                companyId: '1'
+              },
+              accessToken: 'demo_access_token_manager',
+              refreshToken: 'demo_refresh_token_manager'
+            });
+          } else if (email === 'employee@lencondb.com' && password === 'employee123') {
+            resolve({
+              user: {
+                id: '3',
+                email: 'employee@lencondb.com',
+                firstName: 'Иван',
+                lastName: 'Конструкторов',
+                role: 'Employee',
+                companyId: '1'
+              },
+              accessToken: 'demo_access_token_employee',
+              refreshToken: 'demo_refresh_token_employee'
+            });
+          } else {
+            reject(new Error('Неверный email или пароль'));
+          }
+        }, 1000);
+      });
+    }
+
+    // Обработчик формы входа
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      clearErrors();
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      
+      // Валидация
+      let hasErrors = false;
+      
+      if (!email) {
+        showError(emailInput, emailError, 'Email обязателен');
+        hasErrors = true;
+      } else if (!validateEmail(email)) {
+        showError(emailInput, emailError, 'Введите корректный email');
+        hasErrors = true;
+      }
+      
+      if (!password) {
+        showError(passwordInput, passwordError, 'Пароль обязателен');
+        hasErrors = true;
+      } else if (password.length < 6) {
+        showError(passwordInput, passwordError, 'Пароль должен содержать минимум 6 символов');
+        hasErrors = true;
+      }
+      
+      if (hasErrors) return;
+      
+      try {
+        setLoading(true);
+        
+        const response = await loginAPI(email, password);
+        
+        // Сохранение данных в localStorage
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken);
+        
+        // Перенаправление на главную страницу
+        window.location.href = 'projects.html';
+        
+      } catch (error) {
+        generalError.textContent = error.message;
+        generalError.style.display = 'block';
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Очистка ошибок при вводе
+    emailInput.addEventListener('input', () => {
+      if (emailInput.classList.contains('form__input--error')) {
+        emailInput.classList.remove('form__input--error');
+        emailError.style.display = 'none';
+      }
+      if (generalError.style.display !== 'none') {
+        generalError.style.display = 'none';
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      if (passwordInput.classList.contains('form__input--error')) {
+        passwordInput.classList.remove('form__input--error');
+        passwordError.style.display = 'none';
+      }
+      if (generalError.style.display !== 'none') {
+        generalError.style.display = 'none';
+      }
+    });
+
+    // Проверка уже аутентифицированного пользователя
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (user && accessToken) {
+        // Пользователь уже авторизован, перенаправляем на главную
+        window.location.href = 'projects.html';
+      }
+    });
+
+    // Демонстрационные данные для входа (отображаются в консоли)
+    console.log('Демонстрационные аккаунты для входа:');
+    console.log('Admin: admin@lencondb.com / admin123');
+    console.log('Manager: manager@lencondb.com / manager123');  
+    console.log('Employee: employee@lencondb.com / employee123');
+  </script>
+</body>
+</html>

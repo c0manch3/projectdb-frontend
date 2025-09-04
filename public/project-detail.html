@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Проект - LenconDB</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="projects.html" class="header__logo">LenconDB</a>
+    
+    <nav class="header__nav">
+      <a href="projects.html" class="header__nav-link">Проекты</a>
+      <a href="employees.html" class="header__nav-link" id="employeesNav">Сотрудники</a>
+      <a href="companies.html" class="header__nav-link">Компании</a>
+      <a href="workload.html" class="header__nav-link">Загруженность</a>
+    </nav>
+    
+    <div class="header__user">
+      <div class="header__user-info">
+        <div class="header__user-name" id="userName">Загрузка...</div>
+        <div class="header__user-role" id="userRole">Загрузка...</div>
+      </div>
+      <div class="header__user-avatar" id="userAvatar">?</div>
+      <button class="button button--secondary button--small" onclick="logout()">Выйти</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="page-header">
+      <div class="container">
+        <div class="breadcrumbs">
+          <a href="projects.html" class="breadcrumbs__link">Проекты</a>
+          <span class="breadcrumbs__separator">›</span>
+          <span class="breadcrumbs__item" id="projectBreadcrumb">Загрузка...</span>
+        </div>
+        <h1 class="page-header__title" id="projectTitle">Загрузка...</h1>
+        <p class="page-header__subtitle" id="projectSubtitle">Загрузка...</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Project Info Card -->
+      <div class="card" id="projectInfoCard">
+        <div class="card__content">
+          <div id="projectInfoContent">
+            <p>Загрузка информации о проекте...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="tabs">
+          <div class="tabs__list">
+            <button class="tabs__button tabs__button--active" data-tab="constructions">
+              Конструкции <span id="constructionsCount" class="status-badge status-badge--pending">0</span>
+            </button>
+            <button class="tabs__button" data-tab="documents">
+              Документы <span id="documentsCount" class="status-badge status-badge--pending">0</span>
+            </button>
+            <button class="tabs__button" data-tab="team">
+              Команда <span id="teamCount" class="status-badge status-badge--pending">0</span>
+            </button>
+            <button class="tabs__button" data-tab="workload">
+              Загруженность
+            </button>
+          </div>
+        </div>
+        
+        <div class="tabs__content">
+          <!-- Constructions Tab -->
+          <div id="constructions-tab" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Конструкции</h3>
+              <button class="button button--primary" id="newConstructionButton" onclick="showNewConstructionModal()">
+                + Новая конструкция
+              </button>
+            </div>
+            
+            <div class="table-container">
+              <table class="table">
+                <thead class="table__head">
+                  <tr>
+                    <th class="table__header">Название конструкции</th>
+                    <th class="table__header">Количество документов</th>
+                    <th class="table__header">Дата создания</th>
+                    <th class="table__header">Действия</th>
+                  </tr>
+                </thead>
+                <tbody class="table__body" id="constructionsTableBody">
+                  <!-- Конструкции будут загружены здесь -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Documents Tab -->
+          <div id="documents-tab" class="tab-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Документы</h3>
+              <button class="button button--primary" id="uploadDocumentButton" onclick="showUploadModal()">
+                📤 Загрузить документ
+              </button>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+              <select id="documentTypeFilter" class="form__select" style="min-width: 200px;">
+                <option value="all">Все типы документов</option>
+                <option value="km">КМ - Конструкции металлические</option>
+                <option value="kz">КЖ - Конструкции железобетонные</option>
+                <option value="rpz">РПЗ - Расчетно-пояснительная записка</option>
+                <option value="tz">ТЗ - Техническое задание</option>
+                <option value="gp">ГП - Генплан</option>
+                <option value="igi">ИГИ - Инженерно-геологические изыскания</option>
+                <option value="spozu">СПОЗУ - Схема планировочной организации</option>
+                <option value="contract">Договор</option>
+              </select>
+              <select id="documentContextFilter" class="form__select" style="min-width: 200px;">
+                <option value="all">Все контексты</option>
+                <option value="initial_data">Исходные данные</option>
+                <option value="project_doc">Проектная документация</option>
+              </select>
+            </div>
+            
+            <div class="table-container">
+              <table class="table">
+                <thead class="table__head">
+                  <tr>
+                    <th class="table__header">Название файла</th>
+                    <th class="table__header">Тип</th>
+                    <th class="table__header">Контекст</th>
+                    <th class="table__header">Конструкция</th>
+                    <th class="table__header">Размер</th>
+                    <th class="table__header">Дата загрузки</th>
+                    <th class="table__header">Действия</th>
+                  </tr>
+                </thead>
+                <tbody class="table__body" id="documentsTableBody">
+                  <!-- Документы будут загружены здесь -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Team Tab -->
+          <div id="team-tab" class="tab-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Команда проекта</h3>
+              <button class="button button--primary" id="addTeamMemberButton" onclick="showAddTeamMemberModal()">
+                + Добавить участника
+              </button>
+            </div>
+            
+            <div class="table-container">
+              <table class="table">
+                <thead class="table__head">
+                  <tr>
+                    <th class="table__header">ФИО</th>
+                    <th class="table__header">Email</th>
+                    <th class="table__header">Роль</th>
+                    <th class="table__header">Компания</th>
+                    <th class="table__header">Дата добавления</th>
+                    <th class="table__header">Действия</th>
+                  </tr>
+                </thead>
+                <tbody class="table__body" id="teamTableBody">
+                  <!-- Участники команды будут загружены здесь -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Workload Tab -->
+          <div id="workload-tab" class="tab-content" style="display: none;">
+            <h3 style="margin-bottom: 1.5rem;">Загруженность по проекту</h3>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+              <select id="workloadPeriod" class="form__select">
+                <option value="week">Текущая неделя</option>
+                <option value="month">Текущий месяц</option>
+              </select>
+              <select id="workloadEmployee" class="form__select">
+                <option value="all">Все сотрудники</option>
+              </select>
+            </div>
+
+            <div class="workload-calendar" id="workloadCalendar">
+              <!-- Календарь загруженности будет отрендерен здесь -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Construction Modal -->
+  <div class="modal-overlay" id="newConstructionModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Новая конструкция</h3>
+        <button class="modal__close" onclick="hideNewConstructionModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="newConstructionForm">
+          <div class="form__group">
+            <label for="constructionName" class="form__label form__label--required">Название конструкции</label>
+            <input 
+              type="text" 
+              id="constructionName" 
+              class="form__input" 
+              placeholder="Например: Фундаментная плита корпуса А" 
+              required
+            >
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideNewConstructionModal()">Отмена</button>
+        <button class="button button--primary" onclick="createConstruction()">Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Document Modal -->
+  <div class="modal-overlay" id="uploadDocumentModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Загрузить документ</h3>
+        <button class="modal__close" onclick="hideUploadModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="uploadDocumentForm">
+          <div class="file-upload" id="fileUpload">
+            <input type="file" id="fileInput" class="file-upload__input" accept=".pdf,.dwg,.doc,.docx,.xls,.xlsx" multiple>
+            <div class="file-upload__icon">📄</div>
+            <div class="file-upload__text">Перетащите файлы сюда или нажмите для выбора</div>
+            <div class="file-upload__hint">Поддерживаемые форматы: PDF, DWG, DOC, DOCX, XLS, XLSX (до 100 МБ)</div>
+          </div>
+
+          <div class="form__group">
+            <label for="documentType" class="form__label form__label--required">Тип документа</label>
+            <select id="documentType" class="form__select" required>
+              <option value="">Выберите тип</option>
+              <option value="km">КМ - Конструкции металлические</option>
+              <option value="kz">КЖ - Конструкции железобетонные</option>
+              <option value="rpz">РПЗ - Расчетно-пояснительная записка</option>
+              <option value="tz">ТЗ - Техническое задание</option>
+              <option value="gp">ГП - Генплан</option>
+              <option value="igi">ИГИ - Инженерно-геологические изыскания</option>
+              <option value="spozu">СПОЗУ - Схема планировочной организации</option>
+              <option value="contract">Договор</option>
+            </select>
+          </div>
+
+          <div class="form__group">
+            <label for="documentContext" class="form__label form__label--required">Контекст документа</label>
+            <select id="documentContext" class="form__select" required>
+              <option value="">Выберите контекст</option>
+              <option value="initial_data">Исходные данные</option>
+              <option value="project_doc">Проектная документация</option>
+            </select>
+          </div>
+
+          <div class="form__group">
+            <label for="constructionSelect" class="form__label">Конструкция (опционально)</label>
+            <select id="constructionSelect" class="form__select">
+              <option value="">Не привязан к конструкции</option>
+            </select>
+          </div>
+
+          <div class="progress-bar" id="uploadProgress" style="display: none;">
+            <div class="progress-bar__fill" id="progressFill"></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideUploadModal()">Отмена</button>
+        <button class="button button--primary" id="uploadButton" onclick="uploadDocuments()">Загрузить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Team Member Modal -->
+  <div class="modal-overlay" id="addTeamMemberModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Добавить участника</h3>
+        <button class="modal__close" onclick="hideAddTeamMemberModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="addTeamMemberForm">
+          <div class="form__group">
+            <label for="employeeSelect" class="form__label form__label--required">Сотрудник</label>
+            <select id="employeeSelect" class="form__select" required>
+              <option value="">Выберите сотрудника</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideAddTeamMemberModal()">Отмена</button>
+        <button class="button button--primary" onclick="addTeamMember()">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Глобальные переменные
+    let currentUser = null;
+    let currentProject = null;
+    let constructions = [];
+    let documents = [];
+    let teamMembers = [];
+    let activeTab = 'constructions';
+
+    // Получение ID проекта из URL
+    function getProjectIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    // Проверка авторизации
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!user || !accessToken) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUser = JSON.parse(user);
+      
+      // Обновление информации о пользователе
+      document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+      document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+      document.getElementById('userAvatar').textContent = `${currentUser.firstName[0]}${currentUser.lastName[0]}`;
+      
+      updateUIForRole();
+    }
+
+    // Получение текста роли
+    function getRoleText(role) {
+      const roles = {
+        'Admin': 'Администратор',
+        'Manager': 'Менеджер',
+        'Employee': 'Сотрудник',
+        'Customer': 'Заказчик'
+      };
+      return roles[role] || role;
+    }
+
+    // Обновление UI в зависимости от роли
+    function updateUIForRole() {
+      const employeesNav = document.getElementById('employeesNav');
+      const newConstructionButton = document.getElementById('newConstructionButton');
+      const uploadDocumentButton = document.getElementById('uploadDocumentButton');
+      const addTeamMemberButton = document.getElementById('addTeamMemberButton');
+      
+      if (currentUser.role === 'Employee') {
+        employeesNav.style.display = 'none';
+        newConstructionButton.style.display = 'none';
+        uploadDocumentButton.textContent = '👁 Просмотр документов';
+        uploadDocumentButton.onclick = null;
+        addTeamMemberButton.style.display = 'none';
+      }
+    }
+
+    // Выход из системы
+    function logout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    }
+
+    // Демонстрационные данные
+    const demoProjects = [
+      {
+        id: '1',
+        name: 'ЖК Солнечный',
+        type: 'main',
+        customerId: '1',
+        customerName: 'ООО "СтройИнвест"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2024-01-15',
+        expirationDate: '2024-12-31',
+        cost: 25000000,
+        status: 'active',
+        constructions: 3,
+        documents: 12
+      },
+      {
+        id: '2',
+        name: 'ТЦ Европа',
+        type: 'main',
+        customerId: '2',
+        customerName: 'АО "Торговые центры"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2024-02-01',
+        expirationDate: '2024-08-30',
+        cost: 45000000,
+        status: 'overdue',
+        constructions: 5,
+        documents: 24
+      }
+    ];
+
+    const demoConstructions = [
+      {
+        id: '1',
+        projectId: '1',
+        name: 'Фундаментная плита корпуса А',
+        createdAt: '2024-02-01',
+        documentsCount: 5
+      },
+      {
+        id: '2', 
+        projectId: '1',
+        name: 'Несущие стены корпуса А',
+        createdAt: '2024-02-15',
+        documentsCount: 3
+      },
+      {
+        id: '3',
+        projectId: '1', 
+        name: 'Перекрытия корпуса А',
+        createdAt: '2024-03-01',
+        documentsCount: 4
+      }
+    ];
+
+    const demoDocuments = [
+      {
+        id: '1',
+        projectId: '1',
+        constructionId: '1',
+        fileName: 'КЖ-01_Фундаментная_плита.pdf',
+        originalName: 'КЖ-01_Фундаментная_плита.pdf',
+        type: 'kz',
+        context: 'project_doc',
+        size: 2500000,
+        uploadedAt: '2024-02-05',
+        version: 1
+      },
+      {
+        id: '2',
+        projectId: '1',
+        constructionId: null,
+        fileName: 'ТЗ_ЖК_Солнечный.docx',
+        originalName: 'ТЗ_ЖК_Солнечный.docx',
+        type: 'tz',
+        context: 'initial_data',
+        size: 850000,
+        uploadedAt: '2024-01-20',
+        version: 1
+      },
+      {
+        id: '3',
+        projectId: '1',
+        constructionId: '2',
+        fileName: 'КЖ-02_Несущие_стены.dwg',
+        originalName: 'КЖ-02_Несущие_стены.dwg',
+        type: 'kz',
+        context: 'project_doc',
+        size: 4200000,
+        uploadedAt: '2024-02-20',
+        version: 1
+      }
+    ];
+
+    const demoTeamMembers = [
+      {
+        id: '1',
+        projectId: '1',
+        userId: '2',
+        userName: 'Елена Петрова',
+        userEmail: 'manager@lencondb.com',
+        userRole: 'Manager',
+        companyName: 'ЛенконБюро',
+        addedAt: '2024-01-15'
+      },
+      {
+        id: '2',
+        projectId: '1',
+        userId: '3',
+        userName: 'Иван Конструкторов',
+        userEmail: 'employee@lencondb.com',
+        userRole: 'Employee',
+        companyName: 'ЛенконБюро',
+        addedAt: '2024-01-20'
+      }
+    ];
+
+    const demoEmployees = [
+      { id: '3', name: 'Иван Конструкторов', email: 'employee@lencondb.com' },
+      { id: '4', name: 'Мария Чертежникова', email: 'maria@lencondb.com' },
+      { id: '5', name: 'Петр Проектировщик', email: 'petr@lencondb.com' }
+    ];
+
+    // Загрузка проекта
+    function loadProject() {
+      const projectId = getProjectIdFromUrl();
+      if (!projectId) {
+        window.location.href = 'projects.html';
+        return;
+      }
+
+      currentProject = demoProjects.find(p => p.id === projectId);
+      if (!currentProject) {
+        window.location.href = 'not-found.html';
+        return;
+      }
+
+      // Обновление заголовков
+      document.getElementById('projectBreadcrumb').textContent = currentProject.name;
+      document.getElementById('projectTitle').textContent = currentProject.name;
+      document.getElementById('projectSubtitle').textContent = `${currentProject.customerName} • ${getStatusText(currentProject.status)}`;
+
+      // Отображение информации о проекте
+      renderProjectInfo();
+      loadProjectData();
+    }
+
+    // Отрисовка информации о проекте
+    function renderProjectInfo() {
+      const infoContent = document.getElementById('projectInfoContent');
+      infoContent.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Заказчик</div>
+            <div style="font-weight: 500;">${currentProject.customerName}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Менеджер</div>
+            <div style="font-weight: 500;">${currentProject.managerName || 'Не назначен'}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Дата договора</div>
+            <div style="font-weight: 500;">${formatDate(currentProject.contractDate)}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Срок сдачи</div>
+            <div style="font-weight: 500;">${formatDate(currentProject.expirationDate)}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Стоимость</div>
+            <div style="font-weight: 500;">${formatCurrency(currentProject.cost)}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Статус</div>
+            <span class="status-badge status-badge--${currentProject.status}">
+              ${getStatusText(currentProject.status)}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Загрузка данных проекта
+    function loadProjectData() {
+      constructions = demoConstructions.filter(c => c.projectId === currentProject.id);
+      documents = demoDocuments.filter(d => d.projectId === currentProject.id);
+      teamMembers = demoTeamMembers.filter(t => t.projectId === currentProject.id);
+
+      // Обновление счетчиков в табах
+      document.getElementById('constructionsCount').textContent = constructions.length;
+      document.getElementById('documentsCount').textContent = documents.length;
+      document.getElementById('teamCount').textContent = teamMembers.length;
+
+      renderActiveTab();
+    }
+
+    // Отрисовка активного таба
+    function renderActiveTab() {
+      switch (activeTab) {
+        case 'constructions':
+          renderConstructions();
+          break;
+        case 'documents':
+          renderDocuments();
+          loadConstructionsForDocumentModal();
+          break;
+        case 'team':
+          renderTeam();
+          loadEmployeesForTeamModal();
+          break;
+        case 'workload':
+          renderWorkload();
+          break;
+      }
+    }
+
+    // Отрисовка конструкций
+    function renderConstructions() {
+      const tbody = document.getElementById('constructionsTableBody');
+      
+      if (constructions.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center" style="padding: 2rem;">
+              <p>Конструкции не созданы</p>
+              <button class="button button--primary" onclick="showNewConstructionModal()">Создать первую конструкцию</button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = constructions.map(construction => `
+        <tr class="table__row">
+          <td class="table__cell">
+            <div style="font-weight: 500;">${construction.name}</div>
+          </td>
+          <td class="table__cell">${construction.documentsCount}</td>
+          <td class="table__cell">${formatDate(construction.createdAt)}</td>
+          <td class="table__cell table__cell--actions">
+            <div class="table__actions">
+              <button class="button button--small button--secondary" onclick="editConstruction('${construction.id}')">
+                Редактировать
+              </button>
+              ${currentUser.role !== 'Employee' ?
+                `<button class="button button--small button--danger" onclick="deleteConstruction('${construction.id}')">
+                  Удалить
+                </button>` :
+                ''
+              }
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Отрисовка документов
+    function renderDocuments() {
+      const tbody = document.getElementById('documentsTableBody');
+      
+      // Применение фильтров
+      let filteredDocuments = [...documents];
+      
+      const typeFilter = document.getElementById('documentTypeFilter').value;
+      const contextFilter = document.getElementById('documentContextFilter').value;
+      
+      if (typeFilter !== 'all') {
+        filteredDocuments = filteredDocuments.filter(doc => doc.type === typeFilter);
+      }
+      
+      if (contextFilter !== 'all') {
+        filteredDocuments = filteredDocuments.filter(doc => doc.context === contextFilter);
+      }
+      
+      if (filteredDocuments.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center" style="padding: 2rem;">
+              <p>Документы не найдены</p>
+              ${currentUser.role !== 'Employee' ?
+                '<button class="button button--primary" onclick="showUploadModal()">Загрузить первый документ</button>' :
+                ''
+              }
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredDocuments.map(doc => {
+        const construction = constructions.find(c => c.id === doc.constructionId);
+        return `
+          <tr class="table__row">
+            <td class="table__cell">
+              <div style="font-weight: 500;">${doc.originalName}</div>
+            </td>
+            <td class="table__cell">${getDocumentTypeText(doc.type)}</td>
+            <td class="table__cell">${getDocumentContextText(doc.context)}</td>
+            <td class="table__cell">${construction ? construction.name : 'Без конструкции'}</td>
+            <td class="table__cell">${formatFileSize(doc.size)}</td>
+            <td class="table__cell">${formatDate(doc.uploadedAt)}</td>
+            <td class="table__cell table__cell--actions">
+              <div class="table__actions">
+                <button class="button button--small button--secondary" onclick="downloadDocument('${doc.id}')">
+                  📥 Скачать
+                </button>
+                <button class="button button--small button--secondary" onclick="previewDocument('${doc.id}')">
+                  👁 Просмотр
+                </button>
+                ${currentUser.role !== 'Employee' ?
+                  `<button class="button button--small button--danger" onclick="deleteDocument('${doc.id}')">
+                    Удалить
+                  </button>` :
+                  ''
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Отрисовка команды
+    function renderTeam() {
+      const tbody = document.getElementById('teamTableBody');
+      
+      if (teamMembers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center" style="padding: 2rem;">
+              <p>Участники не добавлены</p>
+              ${currentUser.role !== 'Employee' ?
+                '<button class="button button--primary" onclick="showAddTeamMemberModal()">Добавить первого участника</button>' :
+                ''
+              }
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = teamMembers.map(member => `
+        <tr class="table__row">
+          <td class="table__cell">
+            <div style="font-weight: 500;">${member.userName}</div>
+          </td>
+          <td class="table__cell">${member.userEmail}</td>
+          <td class="table__cell">${getRoleText(member.userRole)}</td>
+          <td class="table__cell">${member.companyName}</td>
+          <td class="table__cell">${formatDate(member.addedAt)}</td>
+          <td class="table__cell table__cell--actions">
+            <div class="table__actions">
+              ${currentUser.role !== 'Employee' && member.userRole !== 'Manager' ?
+                `<button class="button button--small button--danger" onclick="removeTeamMember('${member.id}')">
+                  Удалить
+                </button>` :
+                ''
+              }
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Отрисовка загруженности
+    function renderWorkload() {
+      const calendar = document.getElementById('workloadCalendar');
+      calendar.innerHTML = `
+        <div class="text-center" style="padding: 2rem;">
+          <p>Календарь загруженности по проекту</p>
+          <p style="color: var(--text-secondary); font-size: 0.875rem;">
+            Здесь будет отображаться загруженность сотрудников по данному проекту
+          </p>
+        </div>
+      `;
+    }
+
+    // Утилиты для форматирования
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU');
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0
+      }).format(amount);
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Б';
+      const k = 1024;
+      const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getStatusText(status) {
+      const statuses = {
+        'active': 'Активный',
+        'completed': 'Завершен',
+        'overdue': 'Просрочен',
+        'pending': 'В ожидании'
+      };
+      return statuses[status] || status;
+    }
+
+    function getDocumentTypeText(type) {
+      const types = {
+        'km': 'КМ',
+        'kz': 'КЖ',
+        'rpz': 'РПЗ',
+        'tz': 'ТЗ',
+        'gp': 'ГП',
+        'igi': 'ИГИ',
+        'spozu': 'СПОЗУ',
+        'contract': 'Договор'
+      };
+      return types[type] || type;
+    }
+
+    function getDocumentContextText(context) {
+      const contexts = {
+        'initial_data': 'Исходные данные',
+        'project_doc': 'Проектная документация'
+      };
+      return contexts[context] || context;
+    }
+
+    // Управление табами
+    function switchTab(tabName) {
+      // Скрыть все табы
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Убрать активный класс с кнопок
+      document.querySelectorAll('.tabs__button').forEach(button => {
+        button.classList.remove('tabs__button--active');
+      });
+      
+      // Показать активный таб
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('tabs__button--active');
+      
+      activeTab = tabName;
+      renderActiveTab();
+    }
+
+    // Модальные окна
+    function showNewConstructionModal() {
+      document.getElementById('newConstructionModal').classList.add('modal-overlay--open');
+    }
+
+    function hideNewConstructionModal() {
+      document.getElementById('newConstructionModal').classList.remove('modal-overlay--open');
+      document.getElementById('newConstructionForm').reset();
+    }
+
+    function showUploadModal() {
+      if (currentUser.role === 'Employee') return;
+      document.getElementById('uploadDocumentModal').classList.add('modal-overlay--open');
+    }
+
+    function hideUploadModal() {
+      document.getElementById('uploadDocumentModal').classList.remove('modal-overlay--open');
+      document.getElementById('uploadDocumentForm').reset();
+    }
+
+    function showAddTeamMemberModal() {
+      document.getElementById('addTeamMemberModal').classList.add('modal-overlay--open');
+    }
+
+    function hideAddTeamMemberModal() {
+      document.getElementById('addTeamMemberModal').classList.remove('modal-overlay--open');
+      document.getElementById('addTeamMemberForm').reset();
+    }
+
+    // Функции для работы с данными
+    function createConstruction() {
+      const form = document.getElementById('newConstructionForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const newConstruction = {
+        id: Date.now().toString(),
+        projectId: currentProject.id,
+        name: document.getElementById('constructionName').value,
+        createdAt: new Date().toISOString().split('T')[0],
+        documentsCount: 0
+      };
+
+      constructions.push(newConstruction);
+      document.getElementById('constructionsCount').textContent = constructions.length;
+      renderConstructions();
+      hideNewConstructionModal();
+    }
+
+    function deleteConstruction(id) {
+      if (!confirm('Вы уверены, что хотите удалить эту конструкцию?')) return;
+      
+      constructions = constructions.filter(c => c.id !== id);
+      document.getElementById('constructionsCount').textContent = constructions.length;
+      renderConstructions();
+    }
+
+    function uploadDocuments() {
+      // Имитация загрузки документа
+      const fileInput = document.getElementById('fileInput');
+      const files = fileInput.files;
+      
+      if (files.length === 0) {
+        alert('Выберите файлы для загрузки');
+        return;
+      }
+      
+      const uploadButton = document.getElementById('uploadButton');
+      const progressBar = document.getElementById('uploadProgress');
+      const progressFill = document.getElementById('progressFill');
+      
+      uploadButton.disabled = true;
+      uploadButton.textContent = 'Загрузка...';
+      progressBar.style.display = 'block';
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        progressFill.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          
+          // Добавление документов в список
+          Array.from(files).forEach((file, index) => {
+            const newDocument = {
+              id: (Date.now() + index).toString(),
+              projectId: currentProject.id,
+              constructionId: document.getElementById('constructionSelect').value || null,
+              fileName: file.name,
+              originalName: file.name,
+              type: document.getElementById('documentType').value,
+              context: document.getElementById('documentContext').value,
+              size: file.size,
+              uploadedAt: new Date().toISOString().split('T')[0],
+              version: 1
+            };
+            
+            documents.push(newDocument);
+          });
+          
+          document.getElementById('documentsCount').textContent = documents.length;
+          renderDocuments();
+          hideUploadModal();
+          
+          uploadButton.disabled = false;
+          uploadButton.textContent = 'Загрузить';
+          progressBar.style.display = 'none';
+          progressFill.style.width = '0%';
+        }
+      }, 200);
+    }
+
+    function deleteDocument(id) {
+      if (!confirm('Вы уверены, что хотите удалить этот документ?')) return;
+      
+      documents = documents.filter(d => d.id !== id);
+      document.getElementById('documentsCount').textContent = documents.length;
+      renderDocuments();
+    }
+
+    function addTeamMember() {
+      const employeeId = document.getElementById('employeeSelect').value;
+      if (!employeeId) return;
+      
+      const employee = demoEmployees.find(e => e.id === employeeId);
+      if (!employee) return;
+      
+      // Проверка, что сотрудник еще не добавлен
+      if (teamMembers.find(member => member.userId === employeeId)) {
+        alert('Этот сотрудник уже участвует в проекте');
+        return;
+      }
+      
+      const newTeamMember = {
+        id: Date.now().toString(),
+        projectId: currentProject.id,
+        userId: employeeId,
+        userName: employee.name,
+        userEmail: employee.email,
+        userRole: 'Employee',
+        companyName: 'ЛенконБюро',
+        addedAt: new Date().toISOString().split('T')[0]
+      };
+      
+      teamMembers.push(newTeamMember);
+      document.getElementById('teamCount').textContent = teamMembers.length;
+      renderTeam();
+      hideAddTeamMemberModal();
+    }
+
+    function removeTeamMember(id) {
+      if (!confirm('Вы уверены, что хотите удалить участника из проекта?')) return;
+      
+      teamMembers = teamMembers.filter(member => member.id !== id);
+      document.getElementById('teamCount').textContent = teamMembers.length;
+      renderTeam();
+    }
+
+    // Загрузка данных для модальных окон
+    function loadConstructionsForDocumentModal() {
+      const constructionSelect = document.getElementById('constructionSelect');
+      constructionSelect.innerHTML = '<option value="">Не привязан к конструкции</option>';
+      
+      constructions.forEach(construction => {
+        const option = document.createElement('option');
+        option.value = construction.id;
+        option.textContent = construction.name;
+        constructionSelect.appendChild(option);
+      });
+    }
+
+    function loadEmployeesForTeamModal() {
+      const employeeSelect = document.getElementById('employeeSelect');
+      employeeSelect.innerHTML = '<option value="">Выберите сотрудника</option>';
+      
+      // Фильтруем сотрудников, которые еще не в проекте
+      const availableEmployees = demoEmployees.filter(employee => 
+        !teamMembers.find(member => member.userId === employee.id)
+      );
+      
+      availableEmployees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = employee.name;
+        employeeSelect.appendChild(option);
+      });
+    }
+
+    // Функции действий с документами
+    function downloadDocument(id) {
+      const document = documents.find(d => d.id === id);
+      if (document) {
+        alert(`Скачивание документа: ${document.originalName}`);
+      }
+    }
+
+    function previewDocument(id) {
+      const document = documents.find(d => d.id === id);
+      if (document) {
+        alert(`Предпросмотр документа: ${document.originalName}`);
+      }
+    }
+
+    function editConstruction(id) {
+      const construction = constructions.find(c => c.id === id);
+      if (construction) {
+        const newName = prompt('Новое название конструкции:', construction.name);
+        if (newName && newName.trim()) {
+          construction.name = newName.trim();
+          renderConstructions();
+        }
+      }
+    }
+
+    // Обработчики событий
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadProject();
+    });
+
+    // Обработчики для табов
+    document.querySelectorAll('.tabs__button').forEach(button => {
+      button.addEventListener('click', () => {
+        const tabName = button.getAttribute('data-tab');
+        switchTab(tabName);
+      });
+    });
+
+    // Фильтры документов
+    document.getElementById('documentTypeFilter').addEventListener('change', renderDocuments);
+    document.getElementById('documentContextFilter').addEventListener('change', renderDocuments);
+
+    // Drag & Drop для файлов
+    const fileUpload = document.getElementById('fileUpload');
+    const fileInput = document.getElementById('fileInput');
+
+    fileUpload.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileUpload.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileUpload.classList.add('file-upload--dragover');
+    });
+
+    fileUpload.addEventListener('dragleave', () => {
+      fileUpload.classList.remove('file-upload--dragover');
+    });
+
+    fileUpload.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileUpload.classList.remove('file-upload--dragover');
+      fileInput.files = e.dataTransfer.files;
+      
+      if (fileInput.files.length > 0) {
+        const fileText = fileUpload.querySelector('.file-upload__text');
+        fileText.textContent = `Выбрано файлов: ${fileInput.files.length}`;
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        const fileText = fileUpload.querySelector('.file-upload__text');
+        fileText.textContent = `Выбрано файлов: ${fileInput.files.length}`;
+      }
+    });
+
+    // Закрытие модальных окон
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('modal-overlay--open');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay--open').forEach(modal => {
+          modal.classList.remove('modal-overlay--open');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

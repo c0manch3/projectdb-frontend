@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Проекты - LenconDB</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="projects.html" class="header__logo">LenconDB</a>
+    
+    <nav class="header__nav">
+      <a href="projects.html" class="header__nav-link header__nav-link--active">Проекты</a>
+      <a href="employees.html" class="header__nav-link" id="employeesNav">Сотрудники</a>
+      <a href="companies.html" class="header__nav-link">Компании</a>
+      <a href="workload.html" class="header__nav-link">Загруженность</a>
+    </nav>
+    
+    <div class="header__user">
+      <div class="header__user-info">
+        <div class="header__user-name" id="userName">Загрузка...</div>
+        <div class="header__user-role" id="userRole">Загрузка...</div>
+      </div>
+      <div class="header__user-avatar" id="userAvatar">?</div>
+      <button class="button button--secondary button--small" onclick="logout()">Выйти</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="page-header">
+      <div class="container">
+        <h1 class="page-header__title">Проекты</h1>
+        <p class="page-header__subtitle">Управление строительными проектами и документооборотом</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Filters and Search -->
+      <div class="card">
+        <div class="filters">
+          <div class="filters__group">
+            <label class="filters__label" for="statusFilter">Статус:</label>
+            <select id="statusFilter" class="form__select filters__select">
+              <option value="all">Все</option>
+              <option value="active">Активные</option>
+              <option value="completed">Завершенные</option>
+              <option value="overdue">Просроченные</option>
+            </select>
+          </div>
+          
+          <div class="filters__group">
+            <label class="filters__label" for="typeFilter">Тип:</label>
+            <select id="typeFilter" class="form__select filters__select">
+              <option value="all">Все</option>
+              <option value="main">Основные</option>
+              <option value="additional">Дополнительные</option>
+            </select>
+          </div>
+          
+          <div class="filters__group">
+            <label class="filters__label" for="customerFilter">Заказчик:</label>
+            <select id="customerFilter" class="form__select filters__select">
+              <option value="all">Все</option>
+            </select>
+          </div>
+
+          <div class="search-input">
+            <input 
+              type="text" 
+              id="searchInput" 
+              class="form__input search-input__field" 
+              placeholder="Поиск проектов..."
+            >
+            <span class="search-input__icon">🔍</span>
+          </div>
+
+          <button class="button button--primary" id="newProjectButton" onclick="showNewProjectModal()">
+            + Новый проект
+          </button>
+        </div>
+      </div>
+
+      <!-- Projects Table -->
+      <div class="table-container">
+        <table class="table">
+          <thead class="table__head">
+            <tr>
+              <th class="table__header table__header--sortable" data-sort="name">Название проекта</th>
+              <th class="table__header table__header--sortable" data-sort="customer">Заказчик</th>
+              <th class="table__header table__header--sortable" data-sort="manager">Менеджер</th>
+              <th class="table__header table__header--sortable" data-sort="contractDate">Дата договора</th>
+              <th class="table__header table__header--sortable" data-sort="expirationDate">Срок сдачи</th>
+              <th class="table__header table__header--sortable" data-sort="cost">Стоимость</th>
+              <th class="table__header table__header--sortable" data-sort="status">Статус</th>
+              <th class="table__header">Действия</th>
+            </tr>
+          </thead>
+          <tbody class="table__body" id="projectsTableBody">
+            <!-- Проекты будут загружены здесь -->
+          </tbody>
+        </table>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center" style="padding: 2rem;">
+          <p>Загрузка проектов...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center" style="padding: 2rem; display: none;">
+          <p>Проекты не найдены</p>
+          <button class="button button--primary" onclick="showNewProjectModal()">Создать первый проект</button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div class="pagination__info">
+          Показано <span id="itemsShown">0</span> из <span id="totalItems">0</span> проектов
+        </div>
+        <div class="pagination__controls">
+          <button class="pagination__button" id="prevButton" onclick="goToPage(currentPage - 1)">← Назад</button>
+          <div id="pageNumbers"></div>
+          <button class="pagination__button" id="nextButton" onclick="goToPage(currentPage + 1)">Далее →</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Project Modal -->
+  <div class="modal-overlay" id="newProjectModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Новый проект</h3>
+        <button class="modal__close" onclick="hideNewProjectModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="newProjectForm">
+          <div class="form__group">
+            <label for="projectName" class="form__label form__label--required">Название проекта</label>
+            <input type="text" id="projectName" class="form__input" placeholder="ЖК Солнечный" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="projectType" class="form__label form__label--required">Тип проекта</label>
+            <select id="projectType" class="form__select" required>
+              <option value="">Выберите тип</option>
+              <option value="main">Основной</option>
+              <option value="additional">Дополнительное соглашение</option>
+            </select>
+          </div>
+
+          <div class="form__group" id="mainProjectGroup" style="display: none;">
+            <label for="mainProject" class="form__label form__label--required">Основной проект</label>
+            <select id="mainProject" class="form__select">
+              <option value="">Выберите основной проект</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="projectCustomer" class="form__label form__label--required">Заказчик</label>
+            <select id="projectCustomer" class="form__select" required>
+              <option value="">Выберите заказчика</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="projectManager" class="form__label">Менеджер проекта</label>
+            <select id="projectManager" class="form__select">
+              <option value="">Назначить позже</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="contractDate" class="form__label form__label--required">Дата договора</label>
+            <input type="date" id="contractDate" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="expirationDate" class="form__label form__label--required">Срок сдачи</label>
+            <input type="date" id="expirationDate" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="projectCost" class="form__label form__label--required">Стоимость (руб.)</label>
+            <input type="number" id="projectCost" class="form__input" placeholder="5000000" required min="0" step="1000">
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideNewProjectModal()">Отмена</button>
+        <button class="button button--primary" id="createProjectButton" onclick="createProject()">Создать проект</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Глобальные переменные
+    let currentUser = null;
+    let projects = [];
+    let filteredProjects = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let sortBy = 'name';
+    let sortOrder = 'asc';
+
+    // Проверка авторизации
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!user || !accessToken) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUser = JSON.parse(user);
+      
+      // Обновление информации о пользователе
+      document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+      document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+      document.getElementById('userAvatar').textContent = `${currentUser.firstName[0]}${currentUser.lastName[0]}`;
+      
+      // Показ/скрытие элементов в зависимости от роли
+      updateUIForRole();
+    }
+
+    // Получение текста роли
+    function getRoleText(role) {
+      const roles = {
+        'Admin': 'Администратор',
+        'Manager': 'Менеджер',
+        'Employee': 'Сотрудник',
+        'Customer': 'Заказчик'
+      };
+      return roles[role] || role;
+    }
+
+    // Обновление UI в зависимости от роли
+    function updateUIForRole() {
+      const newProjectButton = document.getElementById('newProjectButton');
+      const employeesNav = document.getElementById('employeesNav');
+      
+      if (currentUser.role === 'Employee') {
+        newProjectButton.style.display = 'none';
+        employeesNav.style.display = 'none';
+      }
+    }
+
+    // Выход из системы
+    function logout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    }
+
+    // Демонстрационные данные
+    const demoProjects = [
+      {
+        id: '1',
+        name: 'ЖК Солнечный',
+        type: 'main',
+        customerId: '1',
+        customerName: 'ООО "СтройИнвест"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2024-01-15',
+        expirationDate: '2024-12-31',
+        cost: 25000000,
+        status: 'active',
+        constructions: 3,
+        documents: 12
+      },
+      {
+        id: '2',
+        name: 'ТЦ Европа',
+        type: 'main',
+        customerId: '2',
+        customerName: 'АО "Торговые центры"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2024-02-01',
+        expirationDate: '2024-08-30',
+        cost: 45000000,
+        status: 'overdue',
+        constructions: 5,
+        documents: 24
+      },
+      {
+        id: '3',
+        name: 'ДС №12 доп.согл. №1',
+        type: 'additional',
+        mainProjectId: '1',
+        customerId: '1',
+        customerName: 'ООО "СтройИнвест"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2024-06-01',
+        expirationDate: '2025-03-31',
+        cost: 5000000,
+        status: 'active',
+        constructions: 1,
+        documents: 4
+      },
+      {
+        id: '4',
+        name: 'Офисное здание "Бизнес-Парк"',
+        type: 'main',
+        customerId: '3',
+        customerName: 'ЗАО "Недвижимость Плюс"',
+        managerId: '2',
+        managerName: 'Елена Петрова',
+        contractDate: '2023-09-15',
+        expirationDate: '2024-03-15',
+        cost: 18000000,
+        status: 'completed',
+        constructions: 2,
+        documents: 18
+      }
+    ];
+
+    const demoCompanies = [
+      { id: '1', name: 'ООО "СтройИнвест"' },
+      { id: '2', name: 'АО "Торговые центры"' },
+      { id: '3', name: 'ЗАО "Недвижимость Плюс"' }
+    ];
+
+    const demoManagers = [
+      { id: '2', name: 'Елена Петрова' },
+      { id: '4', name: 'Михаил Архитектов' }
+    ];
+
+    // Загрузка данных
+    function loadData() {
+      projects = demoProjects;
+      applyFilters();
+      loadCompaniesForFilters();
+      loadManagersForModal();
+      loadCompaniesForModal();
+      loadMainProjectsForModal();
+    }
+
+    // Загрузка компаний для фильтров
+    function loadCompaniesForFilters() {
+      const customerFilter = document.getElementById('customerFilter');
+      customerFilter.innerHTML = '<option value="all">Все</option>';
+      
+      demoCompanies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company.id;
+        option.textContent = company.name;
+        customerFilter.appendChild(option);
+      });
+    }
+
+    // Загрузка данных для модального окна
+    function loadCompaniesForModal() {
+      const customerSelect = document.getElementById('projectCustomer');
+      customerSelect.innerHTML = '<option value="">Выберите заказчика</option>';
+      
+      demoCompanies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company.id;
+        option.textContent = company.name;
+        customerSelect.appendChild(option);
+      });
+    }
+
+    function loadManagersForModal() {
+      const managerSelect = document.getElementById('projectManager');
+      managerSelect.innerHTML = '<option value="">Назначить позже</option>';
+      
+      demoManagers.forEach(manager => {
+        const option = document.createElement('option');
+        option.value = manager.id;
+        option.textContent = manager.name;
+        managerSelect.appendChild(option);
+      });
+    }
+
+    function loadMainProjectsForModal() {
+      const mainProjectSelect = document.getElementById('mainProject');
+      mainProjectSelect.innerHTML = '<option value="">Выберите основной проект</option>';
+      
+      const mainProjects = projects.filter(p => p.type === 'main');
+      mainProjects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.id;
+        option.textContent = project.name;
+        mainProjectSelect.appendChild(option);
+      });
+    }
+
+    // Применение фильтров
+    function applyFilters() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const typeFilter = document.getElementById('typeFilter').value;
+      const customerFilter = document.getElementById('customerFilter').value;
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+      filteredProjects = projects.filter(project => {
+        // Фильтр по статусу
+        if (statusFilter !== 'all' && project.status !== statusFilter) return false;
+        
+        // Фильтр по типу
+        if (typeFilter !== 'all' && project.type !== typeFilter) return false;
+        
+        // Фильтр по заказчику
+        if (customerFilter !== 'all' && project.customerId !== customerFilter) return false;
+        
+        // Поиск по названию
+        if (searchQuery && !project.name.toLowerCase().includes(searchQuery)) return false;
+        
+        // Фильтр по роли (Employee видит только свои проекты)
+        if (currentUser.role === 'Employee') {
+          // В реальном приложении здесь была бы проверка участия в проекте
+          return true;
+        }
+        
+        return true;
+      });
+
+      renderProjects();
+    }
+
+    // Отрисовка проектов
+    function renderProjects() {
+      const tbody = document.getElementById('projectsTableBody');
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      
+      loadingState.style.display = 'none';
+      
+      if (filteredProjects.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        updatePagination(0);
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      // Сортировка
+      const sortedProjects = [...filteredProjects].sort((a, b) => {
+        let valueA = a[sortBy];
+        let valueB = b[sortBy];
+        
+        if (sortBy === 'cost') {
+          valueA = parseInt(valueA);
+          valueB = parseInt(valueB);
+        }
+        
+        if (sortBy === 'customerName' || sortBy === 'managerName') {
+          valueA = valueA || '';
+          valueB = valueB || '';
+        }
+        
+        if (sortOrder === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+
+      // Пагинация
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedProjects = sortedProjects.slice(startIndex, endIndex);
+
+      tbody.innerHTML = paginatedProjects.map(project => `
+        <tr class="table__row" onclick="goToProject('${project.id}')">
+          <td class="table__cell">
+            <div style="font-weight: 500;">${project.name}</div>
+            ${project.type === 'additional' ? 
+              `<div style="font-size: 0.75rem; color: var(--text-secondary);">Доп. соглашение</div>` : 
+              ''
+            }
+          </td>
+          <td class="table__cell">${project.customerName}</td>
+          <td class="table__cell">${project.managerName || 'Не назначен'}</td>
+          <td class="table__cell">${formatDate(project.contractDate)}</td>
+          <td class="table__cell">${formatDate(project.expirationDate)}</td>
+          <td class="table__cell">${formatCurrency(project.cost)}</td>
+          <td class="table__cell">
+            <span class="status-badge status-badge--${project.status}">
+              ${getStatusText(project.status)}
+            </span>
+          </td>
+          <td class="table__cell table__cell--actions">
+            <div class="table__actions">
+              <button class="button button--small button--secondary" onclick="event.stopPropagation(); goToProject('${project.id}')">
+                Открыть
+              </button>
+              ${currentUser.role === 'Admin' ? 
+                `<button class="button button--small button--danger" onclick="event.stopPropagation(); deleteProject('${project.id}')">
+                  Удалить
+                </button>` :
+                ''
+              }
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      updatePagination(sortedProjects.length);
+    }
+
+    // Обновление пагинации
+    function updatePagination(totalItems) {
+      document.getElementById('totalItems').textContent = totalItems;
+      
+      const startIndex = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
+      const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+      document.getElementById('itemsShown').textContent = totalItems > 0 ? `${startIndex}-${endIndex}` : '0';
+
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const prevButton = document.getElementById('prevButton');
+      const nextButton = document.getElementById('nextButton');
+      
+      prevButton.disabled = currentPage <= 1;
+      nextButton.disabled = currentPage >= totalPages;
+
+      // Генерация номеров страниц
+      const pageNumbers = document.getElementById('pageNumbers');
+      pageNumbers.innerHTML = '';
+      
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        const button = document.createElement('button');
+        button.className = `pagination__button ${i === currentPage ? 'pagination__button--active' : ''}`;
+        button.textContent = i;
+        button.onclick = () => goToPage(i);
+        pageNumbers.appendChild(button);
+      }
+    }
+
+    // Переход на страницу
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+      if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        renderProjects();
+      }
+    }
+
+    // Утилиты
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU');
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0
+      }).format(amount);
+    }
+
+    function getStatusText(status) {
+      const statuses = {
+        'active': 'Активный',
+        'completed': 'Завершен',
+        'overdue': 'Просрочен',
+        'pending': 'В ожидании'
+      };
+      return statuses[status] || status;
+    }
+
+    // Переход к проекту
+    function goToProject(projectId) {
+      window.location.href = `project-detail.html?id=${projectId}`;
+    }
+
+    // Удаление проекта
+    function deleteProject(projectId) {
+      if (!confirm('Вы уверены, что хотите удалить этот проект?')) return;
+      
+      projects = projects.filter(p => p.id !== projectId);
+      applyFilters();
+    }
+
+    // Модальное окно нового проекта
+    function showNewProjectModal() {
+      document.getElementById('newProjectModal').classList.add('modal-overlay--open');
+      loadMainProjectsForModal();
+    }
+
+    function hideNewProjectModal() {
+      document.getElementById('newProjectModal').classList.remove('modal-overlay--open');
+      document.getElementById('newProjectForm').reset();
+      document.getElementById('mainProjectGroup').style.display = 'none';
+    }
+
+    // Создание проекта
+    function createProject() {
+      const form = document.getElementById('newProjectForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const formData = new FormData(form);
+      const projectData = {
+        id: Date.now().toString(),
+        name: document.getElementById('projectName').value,
+        type: document.getElementById('projectType').value,
+        customerId: document.getElementById('projectCustomer').value,
+        customerName: demoCompanies.find(c => c.id === document.getElementById('projectCustomer').value)?.name || '',
+        managerId: document.getElementById('projectManager').value || null,
+        managerName: demoManagers.find(m => m.id === document.getElementById('projectManager').value)?.name || null,
+        contractDate: document.getElementById('contractDate').value,
+        expirationDate: document.getElementById('expirationDate').value,
+        cost: parseInt(document.getElementById('projectCost').value),
+        status: 'active',
+        constructions: 0,
+        documents: 0
+      };
+
+      if (projectData.type === 'additional') {
+        projectData.mainProjectId = document.getElementById('mainProject').value;
+      }
+
+      projects.unshift(projectData);
+      applyFilters();
+      hideNewProjectModal();
+    }
+
+    // Обработчики событий
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadData();
+    });
+
+    // Фильтры
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    document.getElementById('typeFilter').addEventListener('change', applyFilters);
+    document.getElementById('customerFilter').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    // Сортировка
+    document.querySelectorAll('.table__header--sortable').forEach(header => {
+      header.addEventListener('click', () => {
+        const newSortBy = header.getAttribute('data-sort');
+        
+        if (sortBy === newSortBy) {
+          sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortBy = newSortBy;
+          sortOrder = 'asc';
+        }
+
+        // Обновление UI сортировки
+        document.querySelectorAll('.table__header--sortable').forEach(h => {
+          h.classList.remove('table__header--sorted-asc', 'table__header--sorted-desc');
+        });
+        
+        header.classList.add(`table__header--sorted-${sortOrder}`);
+        
+        renderProjects();
+      });
+    });
+
+    // Тип проекта
+    document.getElementById('projectType').addEventListener('change', function() {
+      const mainProjectGroup = document.getElementById('mainProjectGroup');
+      if (this.value === 'additional') {
+        mainProjectGroup.style.display = 'block';
+        document.getElementById('mainProject').required = true;
+      } else {
+        mainProjectGroup.style.display = 'none';
+        document.getElementById('mainProject').required = false;
+      }
+    });
+
+    // Закрытие модального окна по клику вне его
+    document.getElementById('newProjectModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideNewProjectModal();
+      }
+    });
+
+    // Закрытие модального окна по Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        hideNewProjectModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сотрудники - LenconDB</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="projects.html" class="header__logo">LenconDB</a>
+    
+    <nav class="header__nav">
+      <a href="projects.html" class="header__nav-link">Проекты</a>
+      <a href="employees.html" class="header__nav-link header__nav-link--active">Сотрудники</a>
+      <a href="companies.html" class="header__nav-link">Компании</a>
+      <a href="workload.html" class="header__nav-link">Загруженность</a>
+    </nav>
+    
+    <div class="header__user">
+      <div class="header__user-info">
+        <div class="header__user-name" id="userName">Загрузка...</div>
+        <div class="header__user-role" id="userRole">Загрузка...</div>
+      </div>
+      <div class="header__user-avatar" id="userAvatar">?</div>
+      <button class="button button--secondary button--small" onclick="logout()">Выйти</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="page-header">
+      <div class="container">
+        <h1 class="page-header__title">Сотрудники</h1>
+        <p class="page-header__subtitle">Управление пользователями и их ролями в системе</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Filters and Search -->
+      <div class="card">
+        <div class="filters">
+          <div class="filters__group">
+            <label class="filters__label" for="roleFilter">Роль:</label>
+            <select id="roleFilter" class="form__select filters__select">
+              <option value="all">Все</option>
+              <option value="Admin">Администратор</option>
+              <option value="Manager">Менеджер</option>
+              <option value="Employee">Сотрудник</option>
+              <option value="Customer">Заказчик</option>
+            </select>
+          </div>
+          
+          <div class="filters__group">
+            <label class="filters__label" for="companyFilter">Компания:</label>
+            <select id="companyFilter" class="form__select filters__select">
+              <option value="all">Все</option>
+            </select>
+          </div>
+
+          <div class="search-input">
+            <input 
+              type="text" 
+              id="searchInput" 
+              class="form__input search-input__field" 
+              placeholder="Поиск по имени, email..."
+            >
+            <span class="search-input__icon">🔍</span>
+          </div>
+
+          <button class="button button--primary" id="newEmployeeButton" onclick="showNewEmployeeModal()">
+            + Добавить сотрудника
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;" id="totalEmployees">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Всего сотрудников</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;" id="activeEmployees">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Активных</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--warning); margin-bottom: 0.5rem;" id="managersCount">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Менеджеров</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__content text-center">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary); margin-bottom: 0.5rem;" id="employeesCount">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">Конструкторов</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employees Table -->
+      <div class="table-container">
+        <table class="table">
+          <thead class="table__head">
+            <tr>
+              <th class="table__header table__header--sortable" data-sort="firstName">ФИО</th>
+              <th class="table__header table__header--sortable" data-sort="email">Email</th>
+              <th class="table__header table__header--sortable" data-sort="phone">Телефон</th>
+              <th class="table__header table__header--sortable" data-sort="role">Роль</th>
+              <th class="table__header table__header--sortable" data-sort="companyName">Компания</th>
+              <th class="table__header table__header--sortable" data-sort="dateBirth">Дата рождения</th>
+              <th class="table__header table__header--sortable" data-sort="createdAt">Дата создания</th>
+              <th class="table__header">Действия</th>
+            </tr>
+          </thead>
+          <tbody class="table__body" id="employeesTableBody">
+            <!-- Сотрудники будут загружены здесь -->
+          </tbody>
+        </table>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center" style="padding: 2rem;">
+          <p>Загрузка сотрудников...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center" style="padding: 2rem; display: none;">
+          <p>Сотрудники не найдены</p>
+          <button class="button button--primary" onclick="showNewEmployeeModal()">Добавить первого сотрудника</button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div class="pagination__info">
+          Показано <span id="itemsShown">0</span> из <span id="totalItems">0</span> сотрудников
+        </div>
+        <div class="pagination__controls">
+          <button class="pagination__button" id="prevButton" onclick="goToPage(currentPage - 1)">← Назад</button>
+          <div id="pageNumbers"></div>
+          <button class="pagination__button" id="nextButton" onclick="goToPage(currentPage + 1)">Далее →</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Employee Modal -->
+  <div class="modal-overlay" id="newEmployeeModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Новый сотрудник</h3>
+        <button class="modal__close" onclick="hideNewEmployeeModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="newEmployeeForm">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form__group">
+              <label for="firstName" class="form__label form__label--required">Имя</label>
+              <input type="text" id="firstName" class="form__input" placeholder="Иван" required>
+            </div>
+            
+            <div class="form__group">
+              <label for="lastName" class="form__label form__label--required">Фамилия</label>
+              <input type="text" id="lastName" class="form__input" placeholder="Иванов" required>
+            </div>
+          </div>
+          
+          <div class="form__group">
+            <label for="email" class="form__label form__label--required">Email</label>
+            <input type="email" id="email" class="form__input" placeholder="ivan@company.com" required>
+            <div class="form__error" id="emailError" style="display: none;"></div>
+          </div>
+          
+          <div class="form__group">
+            <label for="phone" class="form__label form__label--required">Телефон</label>
+            <input type="tel" id="phone" class="form__input" placeholder="+7 (999) 123-45-67" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="dateBirth" class="form__label form__label--required">Дата рождения</label>
+            <input type="date" id="dateBirth" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="role" class="form__label form__label--required">Роль</label>
+            <select id="role" class="form__select" required>
+              <option value="">Выберите роль</option>
+              <option value="Admin">Администратор</option>
+              <option value="Manager">Менеджер</option>
+              <option value="Employee">Сотрудник</option>
+              <option value="Customer">Заказчик</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="companyId" class="form__label form__label--required">Компания</label>
+            <select id="companyId" class="form__select" required>
+              <option value="">Выберите компанию</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="password" class="form__label form__label--required">Временный пароль</label>
+            <input type="password" id="password" class="form__input" placeholder="Минимум 6 символов" required minlength="6">
+            <div class="form__help">Пользователь сможет изменить пароль после первого входа</div>
+          </div>
+
+          <div class="form__group">
+            <label for="telegramId" class="form__label">Telegram ID</label>
+            <input type="number" id="telegramId" class="form__input" placeholder="123456789">
+            <div class="form__help">Опционально: для интеграции с Telegram ботом учета времени</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideNewEmployeeModal()">Отмена</button>
+        <button class="button button--primary" id="createEmployeeButton" onclick="createEmployee()">
+          <span id="createButtonText">Создать</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Employee Modal -->
+  <div class="modal-overlay" id="editEmployeeModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Редактировать сотрудника</h3>
+        <button class="modal__close" onclick="hideEditEmployeeModal()">×</button>
+      </div>
+      <div class="modal__content">
+        <form class="form" id="editEmployeeForm">
+          <input type="hidden" id="editEmployeeId">
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form__group">
+              <label for="editFirstName" class="form__label form__label--required">Имя</label>
+              <input type="text" id="editFirstName" class="form__input" required>
+            </div>
+            
+            <div class="form__group">
+              <label for="editLastName" class="form__label form__label--required">Фамилия</label>
+              <input type="text" id="editLastName" class="form__input" required>
+            </div>
+          </div>
+          
+          <div class="form__group">
+            <label for="editEmail" class="form__label form__label--required">Email</label>
+            <input type="email" id="editEmail" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="editPhone" class="form__label form__label--required">Телефон</label>
+            <input type="tel" id="editPhone" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="editDateBirth" class="form__label form__label--required">Дата рождения</label>
+            <input type="date" id="editDateBirth" class="form__input" required>
+          </div>
+          
+          <div class="form__group">
+            <label for="editRole" class="form__label form__label--required">Роль</label>
+            <select id="editRole" class="form__select" required>
+              <option value="Admin">Администратор</option>
+              <option value="Manager">Менеджер</option>
+              <option value="Employee">Сотрудник</option>
+              <option value="Customer">Заказчик</option>
+            </select>
+          </div>
+          
+          <div class="form__group">
+            <label for="editCompanyId" class="form__label form__label--required">Компания</label>
+            <select id="editCompanyId" class="form__select" required>
+            </select>
+          </div>
+
+          <div class="form__group">
+            <label for="editTelegramId" class="form__label">Telegram ID</label>
+            <input type="number" id="editTelegramId" class="form__input">
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="button button--secondary" onclick="hideEditEmployeeModal()">Отмена</button>
+        <button class="button button--primary" onclick="updateEmployee()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Глобальные переменные
+    let currentUser = null;
+    let employees = [];
+    let filteredEmployees = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let sortBy = 'firstName';
+    let sortOrder = 'asc';
+
+    // Проверка авторизации
+    function checkAuth() {
+      const user = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!user || !accessToken) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUser = JSON.parse(user);
+      
+      // Проверка прав доступа
+      if (currentUser.role === 'Employee') {
+        window.location.href = 'projects.html';
+        return;
+      }
+      
+      // Обновление информации о пользователе
+      document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+      document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+      document.getElementById('userAvatar').textContent = `${currentUser.firstName[0]}${currentUser.lastName[0]}`;
+      
+      updateUIForRole();
+    }
+
+    // Получение текста роли
+    function getRoleText(role) {
+      const roles = {
+        'Admin': 'Администратор',
+        'Manager': 'Менеджер',
+        'Employee': 'Сотрудник',
+        'Customer': 'Заказчик'
+      };
+      return roles[role] || role;
+    }
+
+    // Обновление UI в зависимости от роли
+    function updateUIForRole() {
+      const newEmployeeButton = document.getElementById('newEmployeeButton');
+      
+      if (currentUser.role === 'Manager') {
+        // Менеджер может только просматривать сотрудников
+        newEmployeeButton.style.display = 'none';
+      }
+    }
+
+    // Выход из системы
+    function logout() {
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    }
+
+    // Демонстрационные данные
+    const demoEmployees = [
+      {
+        id: '1',
+        email: 'admin@lencondb.com',
+        firstName: 'Админ',
+        lastName: 'Системы',
+        phone: '+7 (999) 111-11-11',
+        dateBirth: '1985-03-15',
+        role: 'Admin',
+        companyId: '1',
+        companyName: 'ЛенконБюро',
+        telegramId: null,
+        createdAt: '2024-01-01'
+      },
+      {
+        id: '2',
+        email: 'manager@lencondb.com',
+        firstName: 'Елена',
+        lastName: 'Петрова',
+        phone: '+7 (999) 222-22-22',
+        dateBirth: '1978-07-22',
+        role: 'Manager',
+        companyId: '1',
+        companyName: 'ЛенконБюро',
+        telegramId: 123456789,
+        createdAt: '2024-01-01'
+      },
+      {
+        id: '3',
+        email: 'employee@lencondb.com',
+        firstName: 'Иван',
+        lastName: 'Конструкторов',
+        phone: '+7 (999) 333-33-33',
+        dateBirth: '1992-11-08',
+        role: 'Employee',
+        companyId: '1',
+        companyName: 'ЛенконБюро',
+        telegramId: 987654321,
+        createdAt: '2024-01-05'
+      },
+      {
+        id: '4',
+        email: 'maria@lencondb.com',
+        firstName: 'Мария',
+        lastName: 'Чертежникова',
+        phone: '+7 (999) 444-44-44',
+        dateBirth: '1988-05-12',
+        role: 'Employee',
+        companyId: '1',
+        companyName: 'ЛенконБюро',
+        telegramId: null,
+        createdAt: '2024-01-10'
+      },
+      {
+        id: '5',
+        email: 'petr@lencondb.com',
+        firstName: 'Петр',
+        lastName: 'Проектировщик',
+        phone: '+7 (999) 555-55-55',
+        dateBirth: '1990-09-25',
+        role: 'Employee',
+        companyId: '1',
+        companyName: 'ЛенконБюро',
+        telegramId: 456789123,
+        createdAt: '2024-01-15'
+      },
+      {
+        id: '6',
+        email: 'customer@company.com',
+        firstName: 'Александр',
+        lastName: 'Заказчиков',
+        phone: '+7 (999) 666-66-66',
+        dateBirth: '1975-12-03',
+        role: 'Customer',
+        companyId: '2',
+        companyName: 'ООО "СтройИнвест"',
+        telegramId: null,
+        createdAt: '2024-02-01'
+      }
+    ];
+
+    const demoCompanies = [
+      { id: '1', name: 'ЛенконБюро' },
+      { id: '2', name: 'ООО "СтройИнвест"' },
+      { id: '3', name: 'АО "Торговые центры"' },
+      { id: '4', name: 'ЗАО "Недвижимость Плюс"' }
+    ];
+
+    // Загрузка данных
+    function loadData() {
+      employees = demoEmployees;
+      applyFilters();
+      loadCompaniesForFilters();
+      loadCompaniesForModals();
+      updateStatistics();
+    }
+
+    // Загрузка компаний для фильтров
+    function loadCompaniesForFilters() {
+      const companyFilter = document.getElementById('companyFilter');
+      companyFilter.innerHTML = '<option value="all">Все</option>';
+      
+      demoCompanies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company.id;
+        option.textContent = company.name;
+        companyFilter.appendChild(option);
+      });
+    }
+
+    // Загрузка компаний для модальных окон
+    function loadCompaniesForModals() {
+      const selects = [
+        document.getElementById('companyId'),
+        document.getElementById('editCompanyId')
+      ];
+      
+      selects.forEach(select => {
+        select.innerHTML = '<option value="">Выберите компанию</option>';
+        
+        demoCompanies.forEach(company => {
+          const option = document.createElement('option');
+          option.value = company.id;
+          option.textContent = company.name;
+          select.appendChild(option);
+        });
+      });
+    }
+
+    // Обновление статистики
+    function updateStatistics() {
+      document.getElementById('totalEmployees').textContent = employees.length;
+      document.getElementById('activeEmployees').textContent = employees.filter(e => e.role !== 'Customer').length;
+      document.getElementById('managersCount').textContent = employees.filter(e => e.role === 'Manager').length;
+      document.getElementById('employeesCount').textContent = employees.filter(e => e.role === 'Employee').length;
+    }
+
+    // Применение фильтров
+    function applyFilters() {
+      const roleFilter = document.getElementById('roleFilter').value;
+      const companyFilter = document.getElementById('companyFilter').value;
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+      filteredEmployees = employees.filter(employee => {
+        // Фильтр по роли
+        if (roleFilter !== 'all' && employee.role !== roleFilter) return false;
+        
+        // Фильтр по компании
+        if (companyFilter !== 'all' && employee.companyId !== companyFilter) return false;
+        
+        // Поиск по имени и email
+        if (searchQuery) {
+          const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+          const email = employee.email.toLowerCase();
+          if (!fullName.includes(searchQuery) && !email.includes(searchQuery)) return false;
+        }
+        
+        return true;
+      });
+
+      renderEmployees();
+    }
+
+    // Отрисовка сотрудников
+    function renderEmployees() {
+      const tbody = document.getElementById('employeesTableBody');
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      
+      loadingState.style.display = 'none';
+      
+      if (filteredEmployees.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        updatePagination(0);
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      // Сортировка
+      const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+        let valueA = a[sortBy];
+        let valueB = b[sortBy];
+        
+        if (sortBy === 'firstName') {
+          valueA = `${a.firstName} ${a.lastName}`;
+          valueB = `${b.firstName} ${b.lastName}`;
+        }
+        
+        if (typeof valueA === 'string') {
+          valueA = valueA.toLowerCase();
+          valueB = valueB.toLowerCase();
+        }
+        
+        if (sortOrder === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+
+      // Пагинация
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedEmployees = sortedEmployees.slice(startIndex, endIndex);
+
+      tbody.innerHTML = paginatedEmployees.map(employee => `
+        <tr class="table__row">
+          <td class="table__cell">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="header__user-avatar" style="width: 2rem; height: 2rem; font-size: 0.75rem;">
+                ${employee.firstName[0]}${employee.lastName[0]}
+              </div>
+              <div>
+                <div style="font-weight: 500;">${employee.firstName} ${employee.lastName}</div>
+                ${employee.telegramId ? 
+                  '<div style="font-size: 0.75rem; color: var(--success);">📱 Telegram подключен</div>' : 
+                  '<div style="font-size: 0.75rem; color: var(--text-secondary);">📱 Telegram не подключен</div>'
+                }
+              </div>
+            </div>
+          </td>
+          <td class="table__cell">${employee.email}</td>
+          <td class="table__cell">${formatPhone(employee.phone)}</td>
+          <td class="table__cell">
+            <span class="status-badge ${getRoleBadgeClass(employee.role)}">
+              ${getRoleText(employee.role)}
+            </span>
+          </td>
+          <td class="table__cell">${employee.companyName}</td>
+          <td class="table__cell">${formatDate(employee.dateBirth)}</td>
+          <td class="table__cell">${formatDate(employee.createdAt)}</td>
+          <td class="table__cell table__cell--actions">
+            <div class="table__actions">
+              <button class="button button--small button--secondary" onclick="showEditEmployeeModal('${employee.id}')">
+                Редактировать
+              </button>
+              ${currentUser.role === 'Admin' && employee.id !== currentUser.id ? 
+                `<button class="button button--small button--danger" onclick="deleteEmployee('${employee.id}')">
+                  Удалить
+                </button>` :
+                ''
+              }
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      updatePagination(sortedEmployees.length);
+    }
+
+    // Получение класса бейджа роли
+    function getRoleBadgeClass(role) {
+      const classes = {
+        'Admin': 'status-badge--danger',
+        'Manager': 'status-badge--warning',
+        'Employee': 'status-badge--active',
+        'Customer': 'status-badge--pending'
+      };
+      return classes[role] || 'status-badge--pending';
+    }
+
+    // Обновление пагинации
+    function updatePagination(totalItems) {
+      document.getElementById('totalItems').textContent = totalItems;
+      
+      const startIndex = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
+      const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+      document.getElementById('itemsShown').textContent = totalItems > 0 ? `${startIndex}-${endIndex}` : '0';
+
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const prevButton = document.getElementById('prevButton');
+      const nextButton = document.getElementById('nextButton');
+      
+      prevButton.disabled = currentPage <= 1;
+      nextButton.disabled = currentPage >= totalPages;
+
+      // Генерация номеров страниц
+      const pageNumbers = document.getElementById('pageNumbers');
+      pageNumbers.innerHTML = '';
+      
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        const button = document.createElement('button');
+        button.className = `pagination__button ${i === currentPage ? 'pagination__button--active' : ''}`;
+        button.textContent = i;
+        button.onclick = () => goToPage(i);
+        pageNumbers.appendChild(button);
+      }
+    }
+
+    // Переход на страницу
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+      if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        renderEmployees();
+      }
+    }
+
+    // Утилиты форматирования
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU');
+    }
+
+    function formatPhone(phone) {
+      // Простое форматирование телефона
+      return phone || 'Не указан';
+    }
+
+    // Модальные окна
+    function showNewEmployeeModal() {
+      if (currentUser.role !== 'Admin') return;
+      document.getElementById('newEmployeeModal').classList.add('modal-overlay--open');
+    }
+
+    function hideNewEmployeeModal() {
+      document.getElementById('newEmployeeModal').classList.remove('modal-overlay--open');
+      document.getElementById('newEmployeeForm').reset();
+      clearErrors();
+    }
+
+    function showEditEmployeeModal(employeeId) {
+      const employee = employees.find(e => e.id === employeeId);
+      if (!employee) return;
+
+      document.getElementById('editEmployeeId').value = employee.id;
+      document.getElementById('editFirstName').value = employee.firstName;
+      document.getElementById('editLastName').value = employee.lastName;
+      document.getElementById('editEmail').value = employee.email;
+      document.getElementById('editPhone').value = employee.phone;
+      document.getElementById('editDateBirth').value = employee.dateBirth;
+      document.getElementById('editRole').value = employee.role;
+      document.getElementById('editCompanyId').value = employee.companyId;
+      document.getElementById('editTelegramId').value = employee.telegramId || '';
+
+      document.getElementById('editEmployeeModal').classList.add('modal-overlay--open');
+    }
+
+    function hideEditEmployeeModal() {
+      document.getElementById('editEmployeeModal').classList.remove('modal-overlay--open');
+      document.getElementById('editEmployeeForm').reset();
+    }
+
+    // Очистка ошибок
+    function clearErrors() {
+      const emailError = document.getElementById('emailError');
+      if (emailError) {
+        emailError.style.display = 'none';
+      }
+    }
+
+    // Создание сотрудника
+    function createEmployee() {
+      const form = document.getElementById('newEmployeeForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const formData = new FormData(form);
+      const email = document.getElementById('email').value;
+      
+      // Проверка уникальности email
+      if (employees.find(e => e.email === email)) {
+        const emailError = document.getElementById('emailError');
+        emailError.textContent = 'Пользователь с таким email уже существует';
+        emailError.style.display = 'block';
+        return;
+      }
+
+      const createButton = document.getElementById('createEmployeeButton');
+      const createButtonText = document.getElementById('createButtonText');
+      
+      createButton.disabled = true;
+      createButtonText.textContent = 'Создание...';
+
+      // Имитация API запроса
+      setTimeout(() => {
+        const company = demoCompanies.find(c => c.id === document.getElementById('companyId').value);
+        
+        const newEmployee = {
+          id: Date.now().toString(),
+          email: document.getElementById('email').value,
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          phone: document.getElementById('phone').value,
+          dateBirth: document.getElementById('dateBirth').value,
+          role: document.getElementById('role').value,
+          companyId: document.getElementById('companyId').value,
+          companyName: company ? company.name : '',
+          telegramId: document.getElementById('telegramId').value || null,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+
+        employees.push(newEmployee);
+        applyFilters();
+        updateStatistics();
+        hideNewEmployeeModal();
+        
+        createButton.disabled = false;
+        createButtonText.textContent = 'Создать';
+      }, 1000);
+    }
+
+    // Обновление сотрудника
+    function updateEmployee() {
+      const form = document.getElementById('editEmployeeForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const employeeId = document.getElementById('editEmployeeId').value;
+      const employee = employees.find(e => e.id === employeeId);
+      if (!employee) return;
+
+      const company = demoCompanies.find(c => c.id === document.getElementById('editCompanyId').value);
+
+      employee.firstName = document.getElementById('editFirstName').value;
+      employee.lastName = document.getElementById('editLastName').value;
+      employee.email = document.getElementById('editEmail').value;
+      employee.phone = document.getElementById('editPhone').value;
+      employee.dateBirth = document.getElementById('editDateBirth').value;
+      employee.role = document.getElementById('editRole').value;
+      employee.companyId = document.getElementById('editCompanyId').value;
+      employee.companyName = company ? company.name : '';
+      employee.telegramId = document.getElementById('editTelegramId').value || null;
+
+      applyFilters();
+      updateStatistics();
+      hideEditEmployeeModal();
+    }
+
+    // Удаление сотрудника
+    function deleteEmployee(employeeId) {
+      if (!confirm('Вы уверены, что хотите удалить этого сотрудника?')) return;
+      
+      employees = employees.filter(e => e.id !== employeeId);
+      applyFilters();
+      updateStatistics();
+    }
+
+    // Обработчики событий
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadData();
+    });
+
+    // Фильтры и поиск
+    document.getElementById('roleFilter').addEventListener('change', applyFilters);
+    document.getElementById('companyFilter').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    // Сортировка
+    document.querySelectorAll('.table__header--sortable').forEach(header => {
+      header.addEventListener('click', () => {
+        const newSortBy = header.getAttribute('data-sort');
+        
+        if (sortBy === newSortBy) {
+          sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortBy = newSortBy;
+          sortOrder = 'asc';
+        }
+
+        // Обновление UI сортировки
+        document.querySelectorAll('.table__header--sortable').forEach(h => {
+          h.classList.remove('table__header--sorted-asc', 'table__header--sorted-desc');
+        });
+        
+        header.classList.add(`table__header--sorted-${sortOrder}`);
+        
+        renderEmployees();
+      });
+    });
+
+    // Закрытие модальных окон
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('modal-overlay--open');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay--open').forEach(modal => {
+          modal.classList.remove('modal-overlay--open');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
