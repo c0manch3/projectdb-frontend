@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async';
+import { PageTitle } from '../../const';
 import Header from '../../components/layout/header/header';
 import PageHeader from '../../components/layout/page_header/page_header';
 import Card from '../../components/common/card/card';
@@ -16,6 +18,9 @@ import EmptyState from '../../components/common/empty_state/empty_state';
 function Projects(): JSX.Element {
   return (
     <>
+      <Helmet>
+        <title>{PageTitle.Projects}</title>
+      </Helmet>
       {/* Header */}
       <Header activeNavItem="projects" />
 

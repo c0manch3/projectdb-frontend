@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async';
+import { PageTitle } from '../../const';
 import Header from '../../components/layout/header/header';
 import PageHeader from '../../components/layout/page_header/page_header';
 import Card from '../../components/common/card/card';
@@ -14,6 +16,9 @@ import FormTextarea from '../../components/forms/form_textarea/form_textarea';
 function Workload(): JSX.Element {
   return (
     <>
+      <Helmet>
+        <title>{PageTitle.Workload}</title>
+      </Helmet>
       {/* Header */}
       <Header activeNavItem="workload" />
 

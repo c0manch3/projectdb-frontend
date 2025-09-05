@@ -1,6 +1,13 @@
+import { Helmet } from 'react-helmet-async';
+import { PageTitle } from '../../const';
+
 function Login(): JSX.Element {
   return (
-    <div className="login">
+    <>
+      <Helmet>
+        <title>{PageTitle.Login}</title>
+      </Helmet>
+      <div className="login">
       <div className="login__container">
         <div className="login__logo">
           <h1 className="login__title">LenconDB</h1>
@@ -44,6 +51,7 @@ function Login(): JSX.Element {
         </form>
       </div>
     </div>
+    </>
   );
 }
 

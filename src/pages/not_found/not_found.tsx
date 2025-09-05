@@ -1,6 +1,12 @@
+import { Helmet } from 'react-helmet-async';
+import { PageTitle } from '../../const';
+
 function NotFound(): JSX.Element {
   return (
     <>
+      <Helmet>
+        <title>{PageTitle.NotFound}</title>
+      </Helmet>
       {/* Header */}
       <header className="header">
         <a href="projects.html" className="header__logo">LenconDB</a>

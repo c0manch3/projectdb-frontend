@@ -1,6 +1,12 @@
+import { Helmet } from 'react-helmet-async';
+import { PageTitle } from '../../const';
+
 function UserProfile(): JSX.Element {
   return (
     <>
+      <Helmet>
+        <title>{PageTitle.Profile}</title>
+      </Helmet>
       {/* Header */}
       <header className="header">
         <a href="projects.html" className="header__logo">LenconDB</a>
