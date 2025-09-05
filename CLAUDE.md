@@ -121,3 +121,13 @@ git push origin development
 ```
 
 This simplified workflow allows for faster development while maintaining clear commit history and progress tracking.
+
+## Documentation Storage
+
+All project documentation should be stored in the `about-project/` folder:
+
+- **`about-project/RPD.md`** - Product Requirements Document with full project specifications
+- **`about-project/PROJECT_STATUS.md`** - Current project status, progress, and development roadmap
+- **Additional documentation** - Any new project documentation, technical specs, or progress reports should be placed in the `about-project/` folder
+
+This centralized approach ensures all project documentation is easily accessible and well-organized for current and future team members.
