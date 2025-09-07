@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-import { PageTitle } from '../../const';
+import { Link } from 'react-router-dom';
+import { PageTitle, AppRoute } from '../../const';
 
 function UserProfile(): JSX.Element {
   return (
@@ -9,13 +10,13 @@ function UserProfile(): JSX.Element {
       </Helmet>
       {/* Header */}
       <header className="header">
-        <a href="projects.html" className="header__logo">LenconDB</a>
+        <Link to={AppRoute.Projects} className="header__logo">LenconDB</Link>
         
         <nav className="header__nav">
-          <a href="projects.html" className="header__nav-link">Проекты</a>
-          <a href="employees.html" className="header__nav-link" id="employeesNav">Сотрудники</a>
-          <a href="companies.html" className="header__nav-link">Компании</a>
-          <a href="workload.html" className="header__nav-link">Загруженность</a>
+          <Link to={AppRoute.Projects} className="header__nav-link">Проекты</Link>
+          <Link to={AppRoute.Employees} className="header__nav-link" id="employeesNav">Сотрудники</Link>
+          <Link to={AppRoute.Companies} className="header__nav-link">Компании</Link>
+          <Link to={AppRoute.Workload} className="header__nav-link">Загруженность</Link>
         </nav>
         
         <div className="header__user">
@@ -33,7 +34,7 @@ function UserProfile(): JSX.Element {
         <div className="page-header">
           <div className="container">
             <div className="breadcrumbs">
-              <a href="projects.html" className="breadcrumbs__link">Главная</a>
+              <Link to={AppRoute.Projects} className="breadcrumbs__link">Главная</Link>
               <span className="breadcrumbs__separator">›</span>
               <span className="breadcrumbs__item">Профиль пользователя</span>
             </div>

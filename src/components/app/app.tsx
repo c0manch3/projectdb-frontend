@@ -1,6 +1,13 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppRoute, AuthorizationStatus } from '../../const';
-import { PrivateRoute } from '../common';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppRoute } from '../../const';
+import { PrivateRoute, ErrorBoundary } from '../common';
+import { checkAuthStatus } from '../../store/slices/auth_slice';
+import type { RootState } from '../../store/types';
+import type { AppDispatch } from '../../store';
+
+// Direct imports for all page components
 import Login from '../../pages/login/login';
 import Projects from '../../pages/projects/projects';
 import ProjectDetail from '../../pages/project_detail/project_detail';
@@ -11,73 +18,99 @@ import UserProfile from '../../pages/user_profile/user_profile';
 import NotFound from '../../pages/not_found/not_found';
 
 function App(): JSX.Element {
-  // TODO: Заменить на реальный статус авторизации из store
-  const authorizationStatus = AuthorizationStatus.NoAuth;
+  const dispatch = useDispatch<AppDispatch>();
+  const { isInitialized, loading } = useSelector((state: RootState) => state.auth);
+
+  // Check authentication status on app initialization
+  useEffect(() => {
+    dispatch(checkAuthStatus());
+  }, [dispatch]);
+
+  // Show loading screen while auth is being initialized
+  if (!isInitialized || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-medium text-gray-900 mb-2">LenconDB</h2>
+          <p className="text-gray-600">Инициализация приложения...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path={AppRoute.Login} element={<Login />} />
-        
-        {/* Default Route - Redirect to main page (projects) */}
-        <Route path={AppRoute.Root} element={<Navigate to={AppRoute.Projects} replace />} />
-        
-        {/* Protected Routes */}
-        <Route 
-          path={AppRoute.Projects} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <Projects />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path={AppRoute.ProjectDetail} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <ProjectDetail />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path={AppRoute.Employees} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <Employees />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path={AppRoute.Companies} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <Companies />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path={AppRoute.Workload} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <Workload />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path={AppRoute.Profile} 
-          element={
-            <PrivateRoute authorizationStatus={authorizationStatus}>
-              <UserProfile />
-            </PrivateRoute>
-          } 
-        />
-        
-        {/* Error Routes */}
-        <Route path={AppRoute.NotFound} element={<NotFound />} />
-        <Route path="*" element={<Navigate to={AppRoute.NotFound} replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route 
+            path={AppRoute.Login} 
+            element={<Login />} 
+          />
+          
+          {/* Default Route - Redirect to main page (projects) */}
+          <Route path={AppRoute.Root} element={<Navigate to={AppRoute.Projects} replace />} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path={AppRoute.Projects} 
+            element={
+              <PrivateRoute>
+                <Projects />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path={AppRoute.ProjectDetail} 
+            element={
+              <PrivateRoute>
+                <ProjectDetail />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path={AppRoute.Employees} 
+            element={
+              <PrivateRoute>
+                <Employees />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path={AppRoute.Companies} 
+            element={
+              <PrivateRoute>
+                <Companies />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path={AppRoute.Workload} 
+            element={
+              <PrivateRoute>
+                <Workload />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path={AppRoute.Profile} 
+            element={
+              <PrivateRoute>
+                <UserProfile />
+              </PrivateRoute>
+            } 
+          />
+          
+          {/* Error Routes */}
+          <Route 
+            path={AppRoute.NotFound} 
+            element={<NotFound />} 
+          />
+          <Route path="*" element={<Navigate to={AppRoute.NotFound} replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

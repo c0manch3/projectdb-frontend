@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-import { PageTitle } from '../../const';
+import { Link } from 'react-router-dom';
+import { PageTitle, AppRoute } from '../../const';
 
 function NotFound(): JSX.Element {
   return (
@@ -9,13 +10,13 @@ function NotFound(): JSX.Element {
       </Helmet>
       {/* Header */}
       <header className="header">
-        <a href="projects.html" className="header__logo">LenconDB</a>
+        <Link to={AppRoute.Projects} className="header__logo">LenconDB</Link>
         
         <nav className="header__nav">
-          <a href="projects.html" className="header__nav-link">Проекты</a>
-          <a href="employees.html" className="header__nav-link" id="employeesNav">Сотрудники</a>
-          <a href="companies.html" className="header__nav-link">Компании</a>
-          <a href="workload.html" className="header__nav-link">Загруженность</a>
+          <Link to={AppRoute.Projects} className="header__nav-link">Проекты</Link>
+          <Link to={AppRoute.Employees} className="header__nav-link" id="employeesNav">Сотрудники</Link>
+          <Link to={AppRoute.Companies} className="header__nav-link">Компании</Link>
+          <Link to={AppRoute.Workload} className="header__nav-link">Загруженность</Link>
         </nav>
         
         <div className="header__user">
@@ -43,10 +44,10 @@ function NotFound(): JSX.Element {
             <div className="not-found__links">
               <h3 className="not-found__links-title">Полезные ссылки:</h3>
               <div className="not-found__buttons">
-                <a href="projects.html" className="button button--primary">Проекты</a>
-                <a href="companies.html" className="button button--secondary">Компании</a>
-                <a href="workload.html" className="button button--secondary">Загруженность</a>
-                <a href="user-profile.html" className="button button--secondary">Профиль</a>
+                <Link to={AppRoute.Projects} className="button button--primary">Проекты</Link>
+                <Link to={AppRoute.Companies} className="button button--secondary">Компании</Link>
+                <Link to={AppRoute.Workload} className="button button--secondary">Загруженность</Link>
+                <Link to={AppRoute.Profile} className="button button--secondary">Профиль</Link>
               </div>
             </div>
             
@@ -63,9 +64,9 @@ function NotFound(): JSX.Element {
               </div>
             </div>
 
-            <a href="projects.html" className="button button--primary button--large">
+            <Link to={AppRoute.Projects} className="button button--primary button--large">
               Вернуться на главную
-            </a>
+            </Link>
           </div>
         </div>
       </main>
