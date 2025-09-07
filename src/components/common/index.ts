@@ -7,4 +7,5 @@ export { default as Pagination } from './pagination/pagination';
 export { default as LoadingState } from './loading_state/loading_state';
 export { default as EmptyState } from './empty_state/empty_state';
 export { default as PrivateRoute } from './private_route/private_route';
+export { default as RoleBasedRoute } from './role_based_route/role_based_route';
 export { default as ErrorBoundary } from './error_boundary/error_boundary';

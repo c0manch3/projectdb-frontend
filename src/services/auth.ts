@@ -1,5 +1,6 @@
 import { apiRequest } from './api';
 import { User } from '../store/types';
+import { decodeJWT, isTokenExpired } from '../utils/jwt';
 
 // Types for authentication API
 export interface LoginCredentials {
@@ -35,17 +36,20 @@ export const authService = {
       const response = await apiRequest.post<LoginApiResponse>('/auth/login', credentials);
       const apiData = response.data;
       
+      // Decode JWT token to get additional user info including role
+      const jwtPayload = decodeJWT(apiData.accessToken);
+      
       // Transform API response to our internal format
       const user: User = {
-        id: 'temp-id', // Will be replaced when we get user details from another endpoint
+        id: jwtPayload?.sub || 'temp-id', // Use ID from JWT token or fallback
         email: apiData.email,
         firstName: apiData.firstName,
         lastName: apiData.lastName,
         phone: '', // Not provided in login response
         dateBirth: '', // Not provided in login response
-        companyId: '', // Not provided in login response
+        companyId: jwtPayload?.companyId || '', // From JWT token or empty
         // telegramId is optional, so we can omit it
-        role: 'Admin', // Assuming from JWT token, could decode to get actual role
+        role: jwtPayload?.role || 'Employee', // Extract from JWT token or default to Employee
         createdAt: new Date().toISOString(), // Default value
         updatedAt: new Date().toISOString(), // Default value
       };
@@ -100,9 +104,24 @@ export const authService = {
 
   // Verify token validity
   async verifyToken(): Promise<boolean> {
-    // For now, we'll assume token is valid if it exists
-    // TODO: Implement proper token verification when endpoint is available
-    return true;
+    try {
+      const accessToken = tokenStorage.getAccessToken();
+      if (!accessToken) {
+        return false;
+      }
+      
+      // Check if token is expired
+      if (isTokenExpired(accessToken)) {
+        return false;
+      }
+      
+      // TODO: Implement server-side token verification when endpoint is available
+      // For now, just check if token can be decoded and is not expired
+      return true;
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return false;
+    }
   },
 };
 
@@ -129,7 +148,24 @@ export const tokenStorage = {
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
-        return JSON.parse(userData);
+        const storedUser = JSON.parse(userData);
+        
+        // If we have a stored access token, try to get updated role from JWT
+        const accessToken = this.getAccessToken();
+        if (accessToken) {
+          const jwtPayload = decodeJWT(accessToken);
+          if (jwtPayload) {
+            // Update user with fresh data from JWT
+            return {
+              ...storedUser,
+              id: jwtPayload.sub || storedUser.id,
+              role: jwtPayload.role || storedUser.role,
+              companyId: jwtPayload.companyId || storedUser.companyId,
+            };
+          }
+        }
+        
+        return storedUser;
       } catch (error) {
         console.error('Error parsing user data from localStorage:', error);
         return null;
@@ -147,6 +183,16 @@ export const tokenStorage = {
   hasValidTokens(): boolean {
     const accessToken = this.getAccessToken();
     const refreshToken = this.getRefreshToken();
-    return Boolean(accessToken && refreshToken);
+    
+    if (!accessToken || !refreshToken) {
+      return false;
+    }
+    
+    // Check if access token is expired
+    if (isTokenExpired(accessToken)) {
+      return false;
+    }
+    
+    return true;
   },
 };

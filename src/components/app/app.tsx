@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppRoute } from '../../const';
-import { PrivateRoute, ErrorBoundary } from '../common';
+import { PrivateRoute, RoleBasedRoute, ErrorBoundary } from '../common';
 import { checkAuthStatus } from '../../store/slices/auth_slice';
 import type { RootState } from '../../store/types';
 import type { AppDispatch } from '../../store';
@@ -72,25 +72,25 @@ function App(): JSX.Element {
           <Route 
             path={AppRoute.Employees} 
             element={
-              <PrivateRoute>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
                 <Employees />
-              </PrivateRoute>
+              </RoleBasedRoute>
             } 
           />
           <Route 
             path={AppRoute.Companies} 
             element={
-              <PrivateRoute>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
                 <Companies />
-              </PrivateRoute>
+              </RoleBasedRoute>
             } 
           />
           <Route 
             path={AppRoute.Workload} 
             element={
-              <PrivateRoute>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
                 <Workload />
-              </PrivateRoute>
+              </RoleBasedRoute>
             } 
           />
           <Route 

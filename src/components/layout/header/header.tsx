@@ -61,6 +61,24 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
     }
   };
 
+  // Check if user has access to a specific navigation item
+  const hasAccessToNavItem = (navItem: string) => {
+    if (!user) return false;
+    
+    switch (navItem) {
+      case 'employees':
+        return user.role === 'Admin' || user.role === 'Manager';
+      case 'companies':
+        return user.role === 'Admin' || user.role === 'Manager';
+      case 'workload':
+        return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Employee';
+      case 'projects':
+        return true; // All authenticated users can access projects
+      default:
+        return false;
+    }
+  };
+
   return (
     <header className="header">
       <Link to={AppRoute.Projects} className="header__logo">
@@ -68,30 +86,38 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
       </Link>
       
       <nav className="header__nav">
-        <Link 
-          to={AppRoute.Projects}
-          className={`header__nav-link ${currentActiveNavItem === 'projects' ? 'header__nav-link--active' : ''}`}
-        >
-          Проекты
-        </Link>
-        <Link 
-          to={AppRoute.Employees}
-          className={`header__nav-link ${currentActiveNavItem === 'employees' ? 'header__nav-link--active' : ''}`}
-        >
-          Сотрудники
-        </Link>
-        <Link 
-          to={AppRoute.Companies}
-          className={`header__nav-link ${currentActiveNavItem === 'companies' ? 'header__nav-link--active' : ''}`}
-        >
-          Компании
-        </Link>
-        <Link 
-          to={AppRoute.Workload}
-          className={`header__nav-link ${currentActiveNavItem === 'workload' ? 'header__nav-link--active' : ''}`}
-        >
-          Загруженность
-        </Link>
+        {hasAccessToNavItem('projects') && (
+          <Link 
+            to={AppRoute.Projects}
+            className={`header__nav-link ${currentActiveNavItem === 'projects' ? 'header__nav-link--active' : ''}`}
+          >
+            Проекты
+          </Link>
+        )}
+        {hasAccessToNavItem('employees') && (
+          <Link 
+            to={AppRoute.Employees}
+            className={`header__nav-link ${currentActiveNavItem === 'employees' ? 'header__nav-link--active' : ''}`}
+          >
+            Сотрудники
+          </Link>
+        )}
+        {hasAccessToNavItem('companies') && (
+          <Link 
+            to={AppRoute.Companies}
+            className={`header__nav-link ${currentActiveNavItem === 'companies' ? 'header__nav-link--active' : ''}`}
+          >
+            Компании
+          </Link>
+        )}
+        {hasAccessToNavItem('workload') && (
+          <Link 
+            to={AppRoute.Workload}
+            className={`header__nav-link ${currentActiveNavItem === 'workload' ? 'header__nav-link--active' : ''}`}
+          >
+            Загруженность
+          </Link>
+        )}
       </nav>
       
       <div className="header__user">

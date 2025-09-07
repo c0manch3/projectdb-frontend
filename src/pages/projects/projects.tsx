@@ -15,7 +15,22 @@ import FormInput from '../../components/forms/form_input/form_input';
 import LoadingState from '../../components/common/loading_state/loading_state';
 import EmptyState from '../../components/common/empty_state/empty_state';
 
+// Redux imports
+import { useAppSelector } from '../../store';
+import { selectCurrentUser } from '../../store/slices/auth_slice';
+
+// Role utility imports
+import { canCreateProjects, canSeeCustomerFilters } from '../../utils/roles';
+
 function Projects(): JSX.Element {
+  // Get current user from Redux store
+  const currentUser = useAppSelector(selectCurrentUser);
+  const userRole = currentUser?.role || null;
+
+  // Determine role-based permissions
+  const canCreateProject = canCreateProjects(userRole);
+  const canSeeCustomerFilter = canSeeCustomerFilters(userRole);
+
   return (
     <>
       <Helmet>
@@ -54,21 +69,25 @@ function Projects(): JSX.Element {
                 </FormSelect>
               </Filters.Group>
               
-              <Filters.Group>
-                <Filters.Label htmlFor="customerFilter">Заказчик:</Filters.Label>
-                <FormSelect id="customerFilter" className="filters__select">
-                  <option value="all">Все</option>
-                </FormSelect>
-              </Filters.Group>
+              {canSeeCustomerFilter && (
+                <Filters.Group>
+                  <Filters.Label htmlFor="customerFilter">Заказчик:</Filters.Label>
+                  <FormSelect id="customerFilter" className="filters__select">
+                    <option value="all">Все</option>
+                  </FormSelect>
+                </Filters.Group>
+              )}
 
               <SearchInput 
                 id="searchInput" 
                 placeholder="Поиск проектов..."
               />
 
-              <Button id="newProjectButton">
-                + Новый проект
-              </Button>
+              {canCreateProject && (
+                <Button id="newProjectButton">
+                  + Новый проект
+                </Button>
+              )}
             </Filters>
           </Card>
 
@@ -100,7 +119,7 @@ function Projects(): JSX.Element {
               id="emptyState" 
               message="Проекты не найдены" 
               show={false}
-              actionButton={<Button>Создать первый проект</Button>}
+              actionButton={canCreateProject ? <Button>Создать первый проект</Button> : undefined}
             />
           </Table.Container>
 
