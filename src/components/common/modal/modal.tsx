@@ -47,14 +47,19 @@ interface ModalProps {
 }
 
 function Modal({ children, isOpen = false, onClose, id, className = '' }: ModalProps): JSX.Element {
-  const overlayClasses = ['modal-overlay', className].filter(Boolean).join(' ');
-  const overlayStyle = isOpen ? {} : { display: 'none' };
+  const overlayClasses = [
+    'modal-overlay', 
+    isOpen ? 'modal-overlay--open' : '',
+    className
+  ].filter(Boolean).join(' ');
+
+  // Don't render at all when closed (for better performance)
+  if (!isOpen) return <></>;
 
   return (
     <div 
       className={overlayClasses} 
-      id={id} 
-      style={overlayStyle}
+      id={id}
       onClick={(e) => {
         if (e.target === e.currentTarget && onClose) {
           onClose();

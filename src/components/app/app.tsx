@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { Toaster } from 'react-hot-toast';
 import { AppRoute } from '../../const';
 import { PrivateRoute, RoleBasedRoute, ErrorBoundary } from '../common';
 import { checkAuthStatus } from '../../store/slices/auth_slice';
@@ -42,6 +43,26 @@ function App(): JSX.Element {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: '#4ade80',
+              },
+            },
+            error: {
+              style: {
+                background: '#ef4444',
+              },
+            },
+          }}
+        />
         <Routes>
           {/* Public Routes */}
           <Route 

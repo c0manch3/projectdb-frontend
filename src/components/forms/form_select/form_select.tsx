@@ -1,18 +1,22 @@
-import { SelectHTMLAttributes, ReactNode } from 'react';
+import { SelectHTMLAttributes, ReactNode, forwardRef } from 'react';
 
 interface FormSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   children: ReactNode;
   className?: string;
 }
 
-function FormSelect({ children, className = '', ...props }: FormSelectProps): JSX.Element {
-  const classes = ['form__select', className].filter(Boolean).join(' ');
+const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
+  ({ children, className = '', ...props }, ref) => {
+    const classes = ['form__select', className].filter(Boolean).join(' ');
 
-  return (
-    <select className={classes} {...props}>
-      {children}
-    </select>
-  );
-}
+    return (
+      <select ref={ref} className={classes} {...props}>
+        {children}
+      </select>
+    );
+  }
+);
+
+FormSelect.displayName = 'FormSelect';
 
 export default FormSelect;

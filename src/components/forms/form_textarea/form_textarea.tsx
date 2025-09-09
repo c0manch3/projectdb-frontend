@@ -1,15 +1,19 @@
-import { TextareaHTMLAttributes } from 'react';
+import { TextareaHTMLAttributes, forwardRef } from 'react';
 
 interface FormTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   className?: string;
 }
 
-function FormTextarea({ className = '', ...props }: FormTextareaProps): JSX.Element {
-  const classes = ['form__textarea', className].filter(Boolean).join(' ');
+const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
+  ({ className = '', ...props }, ref) => {
+    const classes = ['form__textarea', className].filter(Boolean).join(' ');
 
-  return (
-    <textarea className={classes} {...props} />
-  );
-}
+    return (
+      <textarea ref={ref} className={classes} {...props} />
+    );
+  }
+);
+
+FormTextarea.displayName = 'FormTextarea';
 
 export default FormTextarea;
