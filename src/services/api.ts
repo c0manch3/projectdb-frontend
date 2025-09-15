@@ -1,6 +1,6 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { store } from '../store';
-import { updateAccessToken, logoutUser } from '../store/slices/auth_slice';
+import { updateAccessToken, logout } from '../store/slices/auth_slice';
 
 // API Configuration
 export const API_BASE_URL = 'http://localhost:3000';
@@ -64,23 +64,15 @@ api.interceptors.response.use(
           
         } catch (refreshError) {
           // Refresh token is invalid, logout user
-          store.dispatch(logoutUser());
-          
-          // Clear stored tokens from localStorage
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          
+          store.dispatch(logout());
+
           // Redirect to login page
           window.location.href = '/login';
           return Promise.reject(refreshError);
         }
       } else {
         // No refresh token available, logout user
-        store.dispatch(logoutUser());
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        store.dispatch(logout());
         window.location.href = '/login';
       }
     }

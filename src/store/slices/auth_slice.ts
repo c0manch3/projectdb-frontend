@@ -34,16 +34,9 @@ export const loginUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async () => {
-    try {
-      // Call logout API
-      await authService.logout();
-    } catch (error) {
-      // Continue with local logout even if API call fails
-      console.warn('Logout API call failed:', error);
-    } finally {
-      // Always clear local storage
-      tokenStorage.clearAll();
-    }
+    // Client-side logout: only clear local storage and state
+    // No API call to backend as per requirements
+    tokenStorage.clearAll();
   }
 );
 
@@ -131,6 +124,20 @@ const authSlice = createSlice({
 
     // Reset auth state
     resetAuthState: () => initialState,
+
+    // Client-side logout (synchronous)
+    logout: (state) => {
+      // Clear local storage
+      tokenStorage.clearAll();
+      // Reset state to initial values
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.isAuthenticated = false;
+      state.isInitialized = true;
+      state.loading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     // Login user
@@ -226,6 +233,7 @@ export const {
   setUser,
   clearError,
   resetAuthState,
+  logout,
 } = authSlice.actions;
 
 // Export reducer

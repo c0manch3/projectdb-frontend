@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppRoute } from '../../../const';
-import { logoutUser } from '../../../store/slices/auth_slice';
+import { logout } from '../../../store/slices/auth_slice';
 import type { RootState } from '../../../store/types';
 import type { AppDispatch } from '../../../store';
 
@@ -25,16 +25,11 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
     return 'projects'; // default
   })();
 
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser());
-      navigate(AppRoute.Login);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Even if logout fails, redirect to login page
-      navigate(AppRoute.Login);
-    }
+  // Handle logout (client-side only)
+  const handleLogout = () => {
+    // Use synchronous logout for immediate client-side logout
+    dispatch(logout());
+    navigate(AppRoute.Login);
   };
 
   // Generate user avatar letters
