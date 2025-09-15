@@ -47,7 +47,6 @@ export const authService = {
         lastName: apiData.lastName,
         phone: '', // Not provided in login response
         dateBirth: '', // Not provided in login response
-        companyId: jwtPayload?.companyId || '', // From JWT token or empty
         // telegramId is optional, so we can omit it
         role: jwtPayload?.role || 'Employee', // Extract from JWT token or default to Employee
         createdAt: new Date().toISOString(), // Default value
@@ -160,7 +159,6 @@ export const tokenStorage = {
               ...storedUser,
               id: jwtPayload.sub || storedUser.id,
               role: jwtPayload.role || storedUser.role,
-              companyId: jwtPayload.companyId || storedUser.companyId,
             };
           }
         }

@@ -8,14 +8,13 @@ export interface User {
   lastName: string;
   phone: string;
   dateBirth: string;
-  companyId: string;
   telegramId?: number;
   role: UserRole;
   createdAt: string;
   updatedAt: string;
 }
 
-export type UserRole = 'Admin' | 'Manager' | 'Employee' | 'Customer';
+export type UserRole = 'Admin' | 'Manager' | 'Employee';
 
 export interface Project {
   id: string;
@@ -32,9 +31,12 @@ export interface Project {
   updatedAt: string;
 }
 
+export type CompanyType = 'Customer' | 'Contractor';
+
 export interface Company {
   id: string;
   name: string;
+  type: CompanyType;
   address?: string;
   phone?: string;
   email?: string;
@@ -125,7 +127,6 @@ export interface UsersState {
   current: User | null;
   filters: {
     role: UserRole | null;
-    companyId: string | null;
     search: string;
   };
   loading: boolean;

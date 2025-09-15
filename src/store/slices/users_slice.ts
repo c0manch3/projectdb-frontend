@@ -7,7 +7,7 @@ import { employeesService, CreateEmployeeDto, UpdateEmployeeDto, EmployeesFilter
 // Fetch all employees with optional filters
 export const fetchEmployees = createAsyncThunk(
   'users/fetchEmployees',
-  async (filters?: EmployeesFilters, { rejectWithValue }) => {
+  async (filters: EmployeesFilters | undefined, { rejectWithValue }) => {
     try {
       const employees = await employeesService.getEmployees(filters);
       return employees;
@@ -114,7 +114,6 @@ const initialState: ExtendedUsersState = {
   current: null,
   filters: {
     role: null,
-    companyId: null,
     search: '',
   },
   loading: false,
@@ -372,7 +371,6 @@ export const selectFilteredUsers = createSelector(
   (list, filters) => {
     return list.filter(user => {
       if (filters.role && user.role !== filters.role) return false;
-      if (filters.companyId && user.companyId !== filters.companyId) return false;
       if (filters.search) {
         const search = filters.search.toLowerCase();
         const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
@@ -393,10 +391,6 @@ export const selectUsersByRole = createSelector(
   (list, role) => list.filter(user => user.role === role)
 );
 
-export const selectUsersByCompany = createSelector(
-  [(state: { users: ExtendedUsersState }) => state.users.list, (_, companyId: string) => companyId],
-  (list, companyId) => list.filter(user => user.companyId === companyId)
-);
 
 // Selector to get company by ID
 export const selectCompanyById = createSelector(

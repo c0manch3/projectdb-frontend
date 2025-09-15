@@ -51,12 +51,6 @@ export const isEmployee = (role: UserRole | null): boolean => {
   return role === 'Employee';
 };
 
-/**
- * Check if user role is Customer
- */
-export const isCustomer = (role: UserRole | null): boolean => {
-  return role === 'Customer';
-};
 
 /**
  * Check if user has administrative privileges (Admin or Manager)

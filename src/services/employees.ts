@@ -1,6 +1,5 @@
 import { apiRequest } from './api';
 import { User, UserRole, Company } from '../store/types';
-import { AxiosRequestConfig } from 'axios';
 
 // DTOs for employee operations
 export interface CreateEmployeeDto {
@@ -9,7 +8,6 @@ export interface CreateEmployeeDto {
   lastName: string;
   phone: string;
   dateBirth: string; // ISO date string
-  companyId: string;
   password: string;
   role: UserRole;
   telegramId?: number;
@@ -21,14 +19,12 @@ export interface UpdateEmployeeDto {
   lastName?: string;
   phone?: string;
   dateBirth?: string;
-  companyId?: string;
   role?: UserRole;
   telegramId?: number;
 }
 
 export interface EmployeesFilters {
   role?: UserRole;
-  companyId?: string;
   search?: string;
 }
 
@@ -51,9 +47,6 @@ export const employeesService = {
       
       if (filters?.role) {
         params.append('role', filters.role);
-      }
-      if (filters?.companyId) {
-        params.append('companyId', filters.companyId);
       }
       if (filters?.search) {
         params.append('search', filters.search);
@@ -96,8 +89,8 @@ export const employeesService = {
     try {
       // Validate required fields
       const requiredFields: (keyof CreateEmployeeDto)[] = [
-        'email', 'firstName', 'lastName', 'phone', 'dateBirth', 
-        'companyId', 'password', 'role'
+        'email', 'firstName', 'lastName', 'phone', 'dateBirth',
+        'password', 'role'
       ];
       
       for (const field of requiredFields) {
@@ -245,9 +238,3 @@ export const employeesService = {
   }
 };
 
-// Export types for use in components
-export type {
-  CreateEmployeeDto,
-  UpdateEmployeeDto,
-  EmployeesFilters
-};

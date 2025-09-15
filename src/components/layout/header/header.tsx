@@ -54,8 +54,6 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
         return 'Менеджер';
       case 'Employee':
         return 'Сотрудник';
-      case 'Customer':
-        return 'Заказчик';
       default:
         return role;
     }

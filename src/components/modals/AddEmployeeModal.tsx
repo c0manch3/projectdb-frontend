@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 
 import Modal from '../common/modal/modal';
@@ -12,14 +12,10 @@ import FormSelect from '../forms/form_select/form_select';
 import FormGroup from '../forms/form_group/form_group';
 
 import type { AppDispatch } from '../../store';
-import { 
+import {
   createEmployee,
   fetchEmployees,
-  fetchEmployeeStats,
-  fetchCompanies,
-  selectCompanies,
-  selectCompaniesLoading,
-  selectUsersLoading
+  fetchEmployeeStats
 } from '../../store/slices/users_slice';
 import type { CreateEmployeeDto } from '../../services/employees';
 import type { UserRole } from '../../store/types';
@@ -47,12 +43,9 @@ const createEmployeeSchema = z.object({
     .min(1, 'Пароль обязателен для заполнения')
     .min(6, 'Пароль должен содержать минимум 6 символов'),
   
-  role: z.enum(['Admin', 'Manager', 'Employee', 'Customer'] as const, {
+  role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
-  
-  companyId: z.string()
-    .min(1, 'Компания обязательна для выбора'),
   
   dateBirth: z.string()
     .min(1, 'Дата рождения обязательна для заполнения')
@@ -79,10 +72,6 @@ interface AddEmployeeModalProps {
 function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
   
-  // Redux state
-  const companies = useSelector(selectCompanies);
-  const companiesLoading = useSelector(selectCompaniesLoading);
-  const usersLoading = useSelector(selectUsersLoading);
   
   // Form setup with validation
   const {
@@ -99,24 +88,17 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
       phone: '',
       password: '',
       role: 'Employee',
-      companyId: '',
       dateBirth: ''
     }
   });
 
-  // Load companies when modal opens
-  useEffect(() => {
-    if (isOpen && companies.length === 0) {
-      dispatch(fetchCompanies());
-    }
-  }, [isOpen, companies.length, dispatch]);
 
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     try {
       const createEmployeeDto: CreateEmployeeDto = {
-        ...data,
-        telegramId: undefined // Optional field
+        ...data
+        // telegramId is optional and can be omitted
       };
 
       await dispatch(createEmployee(createEmployeeDto)).unwrap();
@@ -151,8 +133,7 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
   const roleOptions: { value: UserRole; label: string }[] = [
     { value: 'Employee', label: 'Сотрудник' },
     { value: 'Manager', label: 'Менеджер' },
-    { value: 'Admin', label: 'Администратор' },
-    { value: 'Customer', label: 'Заказчик' }
+    { value: 'Admin', label: 'Администратор' }
   ];
 
   if (!isOpen) return <></>;
@@ -241,48 +222,24 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
               )}
             </FormGroup>
 
-            {/* Role and Company Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <FormGroup>
-                <label htmlFor="role">Роль *</label>
-                <FormSelect
-                  id="role"
-                  {...register('role')}
-                  className={errors.role ? 'error' : ''}
-                >
-                  {roleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </FormSelect>
-                {errors.role && (
-                  <span className="error-message">{errors.role.message}</span>
-                )}
-              </FormGroup>
-
-              <FormGroup>
-                <label htmlFor="companyId">Компания *</label>
-                <FormSelect
-                  id="companyId"
-                  {...register('companyId')}
-                  className={errors.companyId ? 'error' : ''}
-                  disabled={companiesLoading}
-                >
-                  <option value="">
-                    {companiesLoading ? 'Загрузка...' : 'Выберите компанию'}
+            {/* Role */}
+            <FormGroup>
+              <label htmlFor="role">Роль *</label>
+              <FormSelect
+                id="role"
+                {...register('role')}
+                className={errors.role ? 'error' : ''}
+              >
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </FormSelect>
-                {errors.companyId && (
-                  <span className="error-message">{errors.companyId.message}</span>
-                )}
-              </FormGroup>
-            </div>
+                ))}
+              </FormSelect>
+              {errors.role && (
+                <span className="error-message">{errors.role.message}</span>
+              )}
+            </FormGroup>
 
             {/* Date of Birth */}
             <FormGroup>
@@ -313,7 +270,7 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || companiesLoading}
+            disabled={isSubmitting}
           >
             {isSubmitting ? 'Создание...' : 'Создать сотрудника'}
           </Button>

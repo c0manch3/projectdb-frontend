@@ -15,6 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:watch` - Run Jest tests in watch mode
 - `npm run test:coverage` - Run Jest tests with coverage report
 
+## Backend Configuration
+
+- **Backend API** runs on `localhost:3000` during development
+- All API requests are configured to communicate with the backend server at this address
+
 ## Architecture
 
 This is a React + TypeScript frontend application using:

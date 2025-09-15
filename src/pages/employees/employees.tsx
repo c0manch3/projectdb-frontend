@@ -19,11 +19,9 @@ import EditEmployeeModal from '../../components/modals/EditEmployeeModal';
 import ConfirmDeleteModal from '../../components/modals/ConfirmDeleteModal';
 
 import type { AppDispatch } from '../../store';
-import { 
-  fetchEmployees, 
+import {
+  fetchEmployees,
   fetchEmployeeStats,
-  createEmployee,
-  updateEmployee,
   deleteEmployee,
   updateFilters,
   selectFilteredUsers,
@@ -35,7 +33,6 @@ import {
 } from '../../store/slices/users_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { User, UserRole } from '../../store/types';
-import type { CreateEmployeeDto, UpdateEmployeeDto } from '../../services/employees';
 
 function Employees(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -116,7 +113,6 @@ function Employees(): JSX.Element {
       case 'Admin': return 'Администратор';
       case 'Manager': return 'Менеджер';
       case 'Employee': return 'Сотрудник';
-      case 'Customer': return 'Заказчик';
       default: return role;
     }
   };
@@ -179,7 +175,6 @@ function Employees(): JSX.Element {
                   <option value="Admin">Администратор</option>
                   <option value="Manager">Менеджер</option>
                   <option value="Employee">Сотрудник</option>
-                  <option value="Customer">Заказчик</option>
                 </FormSelect>
               </Filters.Group>
               
