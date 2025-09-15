@@ -251,7 +251,7 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
             </FormGroup>
 
             {/* Address and Postal Code */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+            <div className="form__grid--address">
               <FormGroup>
                 <label htmlFor="address">Адрес</label>
                 <FormInput
@@ -282,7 +282,7 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
             </div>
 
             {/* Contact Information */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form__grid--two-columns">
               <FormGroup>
                 <label htmlFor="phone">Телефон</label>
                 <FormInput
@@ -328,14 +328,14 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
             </FormGroup>
 
             {/* Divider for Company Details */}
-            <div style={{ margin: '1.5rem 0', borderTop: '1px solid #e0e0e0', paddingTop: '1.5rem' }}>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+            <div className="form__section-divider">
+              <h3 className="form__section-title">
                 Реквизиты компании
               </h3>
             </div>
 
             {/* Tax Information */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div className="form__grid--three-columns">
               <FormGroup>
                 <label htmlFor="inn">ИНН</label>
                 <FormInput
@@ -380,8 +380,8 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
             </div>
 
             {/* Divider for Banking Details */}
-            <div style={{ margin: '1.5rem 0', borderTop: '1px solid #e0e0e0', paddingTop: '1.5rem' }}>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+            <div className="form__section-divider">
+              <h3 className="form__section-title">
                 Банковские реквизиты
               </h3>
             </div>
@@ -401,7 +401,7 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
               )}
             </FormGroup>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+            <div className="form__grid--banking">
               <FormGroup>
                 <label htmlFor="account">Расчётный счёт</label>
                 <FormInput
@@ -453,7 +453,6 @@ function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps): JSX.Element
             variant="secondary"
             onClick={handleClose}
             disabled={isSubmitting}
-            style={{ marginRight: '1rem' }}
           >
             Отмена
           </Button>
