@@ -1,4 +1,7 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
+import toast from 'react-hot-toast';
 import { PageTitle } from '../../const';
 import Header from '../../components/layout/header/header';
 import PageHeader from '../../components/layout/page_header/page_header';
@@ -6,280 +9,336 @@ import Card from '../../components/common/card/card';
 import Button from '../../components/common/button/button';
 import SearchInput from '../../components/common/search_input/search_input';
 import Filters from '../../components/common/filters/filters';
-import StatCard from '../../components/data_display/stat_card/stat_card';
-import Modal from '../../components/common/modal/modal';
-import FormGroup from '../../components/forms/form_group/form_group';
-import FormInput from '../../components/forms/form_input/form_input';
 import FormSelect from '../../components/forms/form_select/form_select';
-import FormTextarea from '../../components/forms/form_textarea/form_textarea';
+import StatCard from '../../components/data_display/stat_card/stat_card';
+import Table from '../../components/data_display/table/table';
 import LoadingState from '../../components/common/loading_state/loading_state';
 import EmptyState from '../../components/common/empty_state/empty_state';
+import AddCompanyModal from '../../components/modals/AddCompanyModal';
+import EditCompanyModal from '../../components/modals/EditCompanyModal';
+import CompanyDetailsModal from '../../components/modals/CompanyDetailsModal';
+import ConfirmDeleteCompanyModal from '../../components/modals/ConfirmDeleteCompanyModal';
+
+import type { AppDispatch } from '../../store';
+import {
+  fetchCompaniesData,
+  fetchCompanyStats,
+  deleteCompany,
+  updateCompanyFilters,
+  selectFilteredCompanies,
+  selectCompaniesLoading,
+  selectCompanyError,
+  selectCompanyStats,
+  selectCompanyStatsLoading,
+  selectCompanyFilters
+} from '../../store/slices/users_slice';
+import { selectCurrentUser } from '../../store/slices/auth_slice';
+import type { Company, CompanyType } from '../../store/types';
 
 function Companies(): JSX.Element {
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Redux state
+  const filteredCompanies = useSelector(selectFilteredCompanies);
+  const loading = useSelector(selectCompaniesLoading);
+  const error = useSelector(selectCompanyError);
+  const stats = useSelector(selectCompanyStats);
+  const statsLoading = useSelector(selectCompanyStatsLoading);
+  const filters = useSelector(selectCompanyFilters);
+  const currentUser = useSelector(selectCurrentUser);
+
+  // Local state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check user permissions
+  const canManageCompanies = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  const canViewCompanies = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+
+  // Load data on component mount
+  useEffect(() => {
+    if (canViewCompanies) {
+      dispatch(fetchCompaniesData());
+      dispatch(fetchCompanyStats());
+    }
+  }, [dispatch, canViewCompanies]);
+
+  // Handle filter changes
+  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const type = e.target.value === 'all' ? null : e.target.value as CompanyType;
+    dispatch(updateCompanyFilters({ type }));
+  };
+
+  const handleSearchChange = (value: string) => {
+    dispatch(updateCompanyFilters({ search: value }));
+  };
+
+  // Handle company actions
+  const handleView = (company: Company) => {
+    setSelectedCompany(company);
+    setShowDetailsModal(true);
+  };
+
+  const handleEdit = (company: Company) => {
+    setSelectedCompany(company);
+    setShowEditModal(true);
+  };
+
+  const handleEditFromDetails = (company: Company) => {
+    setShowDetailsModal(false);
+    setSelectedCompany(company);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (company: Company) => {
+    setSelectedCompany(company);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async (company: Company) => {
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteCompany(company.id)).unwrap();
+      toast.success('Компания успешно удалена');
+      dispatch(fetchCompaniesData());
+      dispatch(fetchCompanyStats());
+      setShowDeleteModal(false);
+      setSelectedCompany(null);
+    } catch (error: any) {
+      toast.error(error || 'Ошибка при удалении компании');
+      console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Helper functions
+  const getCompanyTypeDisplayName = (type: CompanyType) => {
+    switch (type) {
+      case 'Customer': return 'Заказчик';
+      case 'Contractor': return 'Подрядчик';
+      default: return type;
+    }
+  };
+
+  // If user doesn't have permission, show access denied
+  if (!canViewCompanies) {
+    return (
+      <>
+        <Helmet>
+          <title>{PageTitle.Companies}</title>
+        </Helmet>
+        <Header activeNavItem="companies" />
+        <main className="main">
+          <div className="container">
+            <div className="access-denied">
+              <h2>Доступ запрещен</h2>
+              <p>У вас нет прав для просмотра списка компаний</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
         <title>{PageTitle.Companies}</title>
       </Helmet>
-      {/* Header */}
       <Header activeNavItem="companies" />
 
-      {/* Main Content */}
       <main className="main">
-        <PageHeader 
-          title="Компании" 
-          subtitle="Управление компаниями-заказчиками и подрядчиками" 
+        <PageHeader
+          title="Компании"
+          subtitle="Управление клиентами и подрядчиками в системе"
         />
 
         <div className="container">
-          {/* Search and Actions */}
+          {/* Error Message */}
+          {error && (
+            <Card>
+              <div className="error-message" style={{ color: 'red', padding: '1rem' }}>
+                {error}
+              </div>
+            </Card>
+          )}
+
+          {/* Filters and Search */}
           <Card>
             <Filters>
-              <SearchInput 
-                id="searchInput" 
-                placeholder="Поиск по названию компании..."
+              <Filters.Group>
+                <Filters.Label htmlFor="typeFilter">Тип:</Filters.Label>
+                <FormSelect
+                  id="typeFilter"
+                  className="filters__select"
+                  value={filters.type || 'all'}
+                  onChange={handleTypeFilterChange}
+                >
+                  <option value="all">Все</option>
+                  <option value="Customer">Заказчик</option>
+                  <option value="Contractor">Подрядчик</option>
+                </FormSelect>
+              </Filters.Group>
+
+              <SearchInput
+                id="searchInput"
+                placeholder="Поиск по названию, email, адресу..."
+                value={filters.search}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange(e.target.value)}
               />
 
-              <Button id="newCompanyButton">
-                + Новая компания
-              </Button>
+              {canManageCompanies && (
+                <Button
+                  id="newCompanyButton"
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  + Добавить компанию
+                </Button>
+              )}
             </Filters>
           </Card>
 
           {/* Statistics Cards */}
           <StatCard.Grid>
-            <StatCard 
-              value={0} 
-              label="Всего компаний" 
-              color="primary" 
-              id="totalCompanies" 
+            <StatCard
+              value={statsLoading ? 0 : stats.total}
+              label="Всего компаний"
+              color="primary"
+              id="totalCompanies"
             />
-            <StatCard 
-              value={0} 
-              label="Активных проектов" 
-              color="success" 
-              id="activeProjects" 
+            <StatCard
+              value={statsLoading ? 0 : stats.active}
+              label="Активных"
+              color="success"
+              id="activeCompanies"
             />
-            <StatCard 
-              value={0} 
-              label="Заказчиков" 
-              color="warning" 
-              id="customersCount" 
+            <StatCard
+              value={statsLoading ? 0 : stats.customers}
+              label="Заказчиков"
+              color="warning"
+              id="customersCount"
             />
-            <StatCard 
-              value={0} 
-              label="Подрядчиков" 
-              color="secondary" 
-              id="contractorsCount" 
+            <StatCard
+              value={statsLoading ? 0 : stats.contractors}
+              label="Подрядчиков"
+              color="secondary"
+              id="contractorsCount"
             />
           </StatCard.Grid>
 
-          {/* Companies Grid */}
-          <div id="companiesGrid" className="project-grid">
-            {/* Карточки компаний будут загружены здесь */}
-          </div>
-
-          {/* Loading State */}
-          <LoadingState id="loadingState" message="Загрузка компаний..." />
-
-          {/* Empty State */}
-          <EmptyState 
-            id="emptyState" 
-            message="Компании не найдены" 
-            show={false}
-            actionButton={<Button>Создать первую компанию</Button>}
-          />
+          {/* Companies Table */}
+          <Table.Container>
+            {loading ? (
+              <LoadingState message="Загрузка компаний..." />
+            ) : filteredCompanies.length === 0 ? (
+              <EmptyState
+                message="Компании не найдены"
+                show={true}
+                actionButton={canManageCompanies ? (
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    Добавить первую компанию
+                  </Button>
+                ) : undefined}
+              />
+            ) : (
+              <Table>
+                <Table.Head>
+                  <tr>
+                    <Table.Header>Название</Table.Header>
+                    <Table.Header>Тип</Table.Header>
+                    <Table.Header>Email</Table.Header>
+                    <Table.Header>Телефон</Table.Header>
+                    <Table.Header>Действия</Table.Header>
+                  </tr>
+                </Table.Head>
+                <Table.Body id="companiesTableBody">
+                  {filteredCompanies.map((company) => (
+                    <tr key={company.id}>
+                      <td>{company.name}</td>
+                      <td>{getCompanyTypeDisplayName(company.type)}</td>
+                      <td>{company.email || 'Не указан'}</td>
+                      <td>{company.phone || 'Не указан'}</td>
+                      <td>
+                        <Button
+                          size="small"
+                          variant="secondary"
+                          onClick={() => handleView(company)}
+                          style={{ marginRight: '0.5rem' }}
+                        >
+                          Просмотр
+                        </Button>
+                        {canManageCompanies && (
+                          <>
+                            <Button
+                              size="small"
+                              variant="secondary"
+                              onClick={() => handleEdit(company)}
+                              style={{ marginRight: '0.5rem' }}
+                            >
+                              Редактировать
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="secondary"
+                              onClick={() => handleDelete(company)}
+                            >
+                              Удалить
+                            </Button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </Table.Body>
+              </Table>
+            )}
+          </Table.Container>
         </div>
       </main>
 
-      {/* New Company Modal */}
-      <Modal id="newCompanyModal">
-        <Modal.Header>Новая компания</Modal.Header>
-        <Modal.Content>
-          <form className="form" id="newCompanyForm">
-            <FormGroup>
-              <FormGroup.Label htmlFor="companyName" required>Название компании</FormGroup.Label>
-              <FormInput 
-                type="text" 
-                id="companyName" 
-                placeholder='ООО "СтройКомпания"' 
-                required
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="companyType" required>Тип компании</FormGroup.Label>
-              <FormSelect id="companyType" required>
-                <option value="">Выберите тип</option>
-                <option value="customer">Заказчик</option>
-                <option value="contractor">Подрядчик</option>
-                <option value="partner">Партнер</option>
-              </FormSelect>
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="inn">ИНН</FormGroup.Label>
-              <FormInput 
-                type="text" 
-                id="inn" 
-                placeholder="1234567890" 
-                maxLength={12}
-                pattern="[0-9]{10,12}"
-              />
-              <FormGroup.Help>10 цифр для организаций, 12 для ИП</FormGroup.Help>
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="kpp">КПП</FormGroup.Label>
-              <FormInput 
-                type="text" 
-                id="kpp" 
-                placeholder="123456789" 
-                maxLength={9}
-                pattern="[0-9]{9}"
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="address">Юридический адрес</FormGroup.Label>
-              <FormTextarea 
-                id="address" 
-                placeholder="г. Санкт-Петербург, ул. Примерная, д. 1, оф. 100"
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="phone">Телефон</FormGroup.Label>
-              <FormInput 
-                type="tel" 
-                id="phone" 
-                placeholder="+7 (812) 123-45-67"
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="email">Email</FormGroup.Label>
-              <FormInput 
-                type="email" 
-                id="email" 
-                placeholder="info@company.com"
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="website">Сайт</FormGroup.Label>
-              <FormInput 
-                type="url" 
-                id="website" 
-                placeholder="https://company.com"
-              />
-            </FormGroup>
-            
-            <FormGroup>
-              <FormGroup.Label htmlFor="description">Описание</FormGroup.Label>
-              <FormTextarea 
-                id="description" 
-                placeholder="Краткое описание деятельности компании"
-              />
-            </FormGroup>
-          </form>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button variant="secondary">Отмена</Button>
-          <Button id="createCompanyButton">
-            <span id="createButtonText">Создать</span>
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Company Details Modal */}
-      <div className="modal-overlay" id="companyDetailsModal">
-        <div className="modal">
-          <div className="modal__header">
-            <h3 className="modal__title" id="detailsModalTitle">Информация о компании</h3>
-            <button className="modal__close">×</button>
-          </div>
-          <div className="modal__content">
-            <div id="companyDetailsContent">
-              {/* Содержимое будет заполнено динамически */}
-            </div>
-          </div>
-          <div className="modal__footer">
-            <button className="button button--secondary">Закрыть</button>
-            <button className="button button--primary" id="editCompanyButton">
-              Редактировать
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Add Company Modal */}
+      <AddCompanyModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
 
       {/* Edit Company Modal */}
-      <div className="modal-overlay" id="editCompanyModal">
-        <div className="modal">
-          <div className="modal__header">
-            <h3 className="modal__title">Редактировать компанию</h3>
-            <button className="modal__close">×</button>
-          </div>
-          <div className="modal__content">
-            <form className="form" id="editCompanyForm">
-              <input type="hidden" id="editCompanyId" />
-              
-              <div className="form__group">
-                <label htmlFor="editCompanyName" className="form__label form__label--required">Название компании</label>
-                <input type="text" id="editCompanyName" className="form__input" required />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editCompanyType" className="form__label form__label--required">Тип компании</label>
-                <select id="editCompanyType" className="form__select" required>
-                  <option value="customer">Заказчик</option>
-                  <option value="contractor">Подрядчик</option>
-                  <option value="partner">Партнер</option>
-                </select>
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editInn" className="form__label">ИНН</label>
-                <input type="text" id="editInn" className="form__input" maxLength={12} pattern="[0-9]{10,12}" />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editKpp" className="form__label">КПП</label>
-                <input type="text" id="editKpp" className="form__input" maxLength={9} pattern="[0-9]{9}" />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editAddress" className="form__label">Юридический адрес</label>
-                <textarea id="editAddress" className="form__textarea"></textarea>
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editPhone" className="form__label">Телефон</label>
-                <input type="tel" id="editPhone" className="form__input" />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editEmail" className="form__label">Email</label>
-                <input type="email" id="editEmail" className="form__input" />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editWebsite" className="form__label">Сайт</label>
-                <input type="url" id="editWebsite" className="form__input" />
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="editDescription" className="form__label">Описание</label>
-                <textarea id="editDescription" className="form__textarea"></textarea>
-              </div>
-            </form>
-          </div>
-          <div className="modal__footer">
-            <button className="button button--secondary">Отмена</button>
-            <button className="button button--primary">Сохранить</button>
-          </div>
-        </div>
-      </div>
+      <EditCompanyModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedCompany(null);
+        }}
+        company={selectedCompany}
+      />
+
+      {/* Company Details Modal */}
+      <CompanyDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedCompany(null);
+        }}
+        company={selectedCompany}
+        onEdit={canManageCompanies ? handleEditFromDetails : undefined}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmDeleteCompanyModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedCompany(null);
+        }}
+        company={selectedCompany}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
+      />
     </>
   );
 }

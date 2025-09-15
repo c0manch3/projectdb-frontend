@@ -58,3 +58,24 @@ export const isEmployee = (role: UserRole | null): boolean => {
 export const hasAdminPrivileges = (role: UserRole | null): boolean => {
   return isAdmin(role) || isManager(role);
 };
+
+/**
+ * Roles that can manage companies
+ */
+const COMPANY_MANAGEMENT_ROLES: UserRole[] = ['Admin', 'Manager'];
+
+/**
+ * Check if user role can manage companies
+ */
+export const canManageCompanies = (role: UserRole | null): boolean => {
+  if (!role) return false;
+  return COMPANY_MANAGEMENT_ROLES.includes(role);
+};
+
+/**
+ * Check if user role can view companies
+ */
+export const canViewCompanies = (role: UserRole | null): boolean => {
+  if (!role) return false;
+  return COMPANY_MANAGEMENT_ROLES.includes(role);
+};

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import type { UsersState, User, UserRole, Company } from '../types';
+import type { UsersState, User, UserRole, Company, CompanyType } from '../types';
 import { employeesService, CreateEmployeeDto, UpdateEmployeeDto, EmployeesFilters } from '../../services/employees';
+import { companiesService, CreateCompanyDto, UpdateCompanyDto, CompaniesFilters } from '../../services/companies';
 
 // Async thunks for employee operations
 
@@ -95,17 +96,110 @@ export const fetchEmployeeStats = createAsyncThunk(
   }
 );
 
+// Company-related async thunks
+
+// Fetch all companies with optional filters
+export const fetchCompaniesData = createAsyncThunk(
+  'users/fetchCompaniesData',
+  async (filters: CompaniesFilters | undefined, { rejectWithValue }) => {
+    try {
+      const companies = await companiesService.getCompanies(filters);
+      return companies;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при загрузке компаний');
+    }
+  }
+);
+
+// Fetch company by ID
+export const fetchCompanyById = createAsyncThunk(
+  'users/fetchCompanyById',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const company = await companiesService.getCompanyById(id);
+      return company;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при загрузке данных компании');
+    }
+  }
+);
+
+// Create new company
+export const createCompany = createAsyncThunk(
+  'users/createCompany',
+  async (companyData: CreateCompanyDto, { rejectWithValue }) => {
+    try {
+      const newCompany = await companiesService.createCompany(companyData);
+      return newCompany;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при создании компании');
+    }
+  }
+);
+
+// Update company
+export const updateCompany = createAsyncThunk(
+  'users/updateCompany',
+  async ({ id, data }: { id: string; data: UpdateCompanyDto }, { rejectWithValue }) => {
+    try {
+      const updatedCompany = await companiesService.updateCompany(id, data);
+      return updatedCompany;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при обновлении данных компании');
+    }
+  }
+);
+
+// Delete company
+export const deleteCompany = createAsyncThunk(
+  'users/deleteCompany',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await companiesService.deleteCompany(id);
+      return id;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при удалении компании');
+    }
+  }
+);
+
+// Fetch company statistics
+export const fetchCompanyStats = createAsyncThunk(
+  'users/fetchCompanyStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const stats = await companiesService.getCompanyStats();
+      return stats;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при загрузке статистики компаний');
+    }
+  }
+);
+
 // Extended state interface for additional data
 interface ExtendedUsersState extends UsersState {
   companies: Company[];
+  currentCompany: Company | null;
+  companyFilters: {
+    type: CompanyType | null;
+    search: string;
+  };
   stats: {
     total: number;
     active: number;
     managers: number;
     employees: number;
   };
+  companyStats: {
+    total: number;
+    customers: number;
+    contractors: number;
+    active: number;
+  };
   companiesLoading: boolean;
+  companyError: string | null;
   statsLoading: boolean;
+  companyStatsLoading: boolean;
 }
 
 // Initial state
@@ -119,14 +213,27 @@ const initialState: ExtendedUsersState = {
   loading: false,
   error: null,
   companies: [],
+  currentCompany: null,
+  companyFilters: {
+    type: null,
+    search: '',
+  },
   stats: {
     total: 0,
     active: 0,
     managers: 0,
     employees: 0,
   },
+  companyStats: {
+    total: 0,
+    customers: 0,
+    contractors: 0,
+    active: 0,
+  },
   companiesLoading: false,
+  companyError: null,
   statsLoading: false,
+  companyStatsLoading: false,
 };
 
 // Users slice
@@ -217,6 +324,78 @@ const usersSlice = createSlice({
 
     // Reset users state
     resetUsersState: () => initialState,
+
+    // Company-related actions
+
+    // Set companies loading state
+    setCompaniesLoading: (state, action: PayloadAction<boolean>) => {
+      state.companiesLoading = action.payload;
+      if (action.payload) {
+        state.companyError = null;
+      }
+    },
+
+    // Set company error state
+    setCompanyError: (state, action: PayloadAction<string | null>) => {
+      state.companyError = action.payload;
+      state.companiesLoading = false;
+    },
+
+    // Set companies list
+    setCompanies: (state, action: PayloadAction<Company[]>) => {
+      state.companies = action.payload;
+      state.companiesLoading = false;
+      state.companyError = null;
+    },
+
+    // Add new company
+    addCompany: (state, action: PayloadAction<Company>) => {
+      state.companies.unshift(action.payload);
+    },
+
+    // Update company
+    updateCompanyInState: (state, action: PayloadAction<Company>) => {
+      const index = state.companies.findIndex(company => company.id === action.payload.id);
+      if (index !== -1) {
+        state.companies[index] = action.payload;
+      }
+      if (state.currentCompany && state.currentCompany.id === action.payload.id) {
+        state.currentCompany = action.payload;
+      }
+    },
+
+    // Remove company
+    removeCompany: (state, action: PayloadAction<string>) => {
+      state.companies = state.companies.filter(company => company.id !== action.payload);
+      if (state.currentCompany && state.currentCompany.id === action.payload) {
+        state.currentCompany = null;
+      }
+    },
+
+    // Set current company
+    setCurrentCompany: (state, action: PayloadAction<Company | null>) => {
+      state.currentCompany = action.payload;
+    },
+
+    // Update company filters
+    updateCompanyFilters: (state, action: PayloadAction<Partial<typeof initialState.companyFilters>>) => {
+      state.companyFilters = { ...state.companyFilters, ...action.payload };
+    },
+
+    // Reset company filters
+    resetCompanyFilters: (state) => {
+      state.companyFilters = initialState.companyFilters;
+    },
+
+    // Set company search query
+    setCompanySearchQuery: (state, action: PayloadAction<string>) => {
+      state.companyFilters.search = action.payload;
+    },
+
+    // Clear company error
+    clearCompanyError: (state) => {
+      state.companyError = null;
+    },
   },
   extraReducers: (builder) => {
     // Fetch employees
@@ -326,6 +505,102 @@ const usersSlice = createSlice({
       })
       .addCase(fetchEmployeeStats.rejected, (state) => {
         state.statsLoading = false;
+      })
+
+      // Fetch companies
+      .addCase(fetchCompaniesData.pending, (state) => {
+        state.companiesLoading = true;
+        state.companyError = null;
+      })
+      .addCase(fetchCompaniesData.fulfilled, (state, action) => {
+        state.companiesLoading = false;
+        state.companies = action.payload;
+        state.companyError = null;
+      })
+      .addCase(fetchCompaniesData.rejected, (state, action) => {
+        state.companiesLoading = false;
+        state.companyError = action.payload as string;
+      })
+
+      // Fetch company by ID
+      .addCase(fetchCompanyById.pending, (state) => {
+        state.companiesLoading = true;
+        state.companyError = null;
+      })
+      .addCase(fetchCompanyById.fulfilled, (state, action) => {
+        state.companiesLoading = false;
+        state.currentCompany = action.payload;
+        state.companyError = null;
+      })
+      .addCase(fetchCompanyById.rejected, (state, action) => {
+        state.companiesLoading = false;
+        state.companyError = action.payload as string;
+      })
+
+      // Create company
+      .addCase(createCompany.pending, (state) => {
+        state.companiesLoading = true;
+        state.companyError = null;
+      })
+      .addCase(createCompany.fulfilled, (state, action) => {
+        state.companiesLoading = false;
+        state.companies.unshift(action.payload);
+        state.companyError = null;
+      })
+      .addCase(createCompany.rejected, (state, action) => {
+        state.companiesLoading = false;
+        state.companyError = action.payload as string;
+      })
+
+      // Update company
+      .addCase(updateCompany.pending, (state) => {
+        state.companiesLoading = true;
+        state.companyError = null;
+      })
+      .addCase(updateCompany.fulfilled, (state, action) => {
+        state.companiesLoading = false;
+        const index = state.companies.findIndex(company => company.id === action.payload.id);
+        if (index !== -1) {
+          state.companies[index] = action.payload;
+        }
+        if (state.currentCompany && state.currentCompany.id === action.payload.id) {
+          state.currentCompany = action.payload;
+        }
+        state.companyError = null;
+      })
+      .addCase(updateCompany.rejected, (state, action) => {
+        state.companiesLoading = false;
+        state.companyError = action.payload as string;
+      })
+
+      // Delete company
+      .addCase(deleteCompany.pending, (state) => {
+        state.companiesLoading = true;
+        state.companyError = null;
+      })
+      .addCase(deleteCompany.fulfilled, (state, action) => {
+        state.companiesLoading = false;
+        state.companies = state.companies.filter(company => company.id !== action.payload);
+        if (state.currentCompany && state.currentCompany.id === action.payload) {
+          state.currentCompany = null;
+        }
+        state.companyError = null;
+      })
+      .addCase(deleteCompany.rejected, (state, action) => {
+        state.companiesLoading = false;
+        state.companyError = action.payload as string;
+      })
+
+      // Fetch company stats
+      .addCase(fetchCompanyStats.pending, (state) => {
+        state.companyStatsLoading = true;
+      })
+      .addCase(fetchCompanyStats.fulfilled, (state, action) => {
+        state.companyStatsLoading = false;
+        state.companyStats = action.payload;
+      })
+      .addCase(fetchCompanyStats.rejected, (state) => {
+        state.companyStatsLoading = false;
       });
   },
 });
@@ -345,6 +620,18 @@ export const {
   setSearchQuery,
   clearError,
   resetUsersState,
+  // Company actions
+  setCompaniesLoading,
+  setCompanyError,
+  setCompanies,
+  addCompany,
+  updateCompanyInState,
+  removeCompany,
+  setCurrentCompany,
+  updateCompanyFilters,
+  resetCompanyFilters,
+  setCompanySearchQuery,
+  clearCompanyError,
 } = usersSlice.actions;
 
 // Export reducer
@@ -362,8 +649,13 @@ export const selectUsersSearchQuery = (state: { users: ExtendedUsersState }) => 
 // New selectors for companies and stats
 export const selectCompanies = (state: { users: ExtendedUsersState }) => state.users.companies;
 export const selectCompaniesLoading = (state: { users: ExtendedUsersState }) => state.users.companiesLoading;
+export const selectCompanyError = (state: { users: ExtendedUsersState }) => state.users.companyError;
+export const selectCurrentCompany = (state: { users: ExtendedUsersState }) => state.users.currentCompany;
+export const selectCompanyFilters = (state: { users: ExtendedUsersState }) => state.users.companyFilters;
 export const selectEmployeeStats = (state: { users: ExtendedUsersState }) => state.users.stats;
 export const selectStatsLoading = (state: { users: ExtendedUsersState }) => state.users.statsLoading;
+export const selectCompanyStats = (state: { users: ExtendedUsersState }) => state.users.companyStats;
+export const selectCompanyStatsLoading = (state: { users: ExtendedUsersState }) => state.users.companyStatsLoading;
 
 // Complex selectors with memoization
 export const selectFilteredUsers = createSelector(
@@ -392,8 +684,32 @@ export const selectUsersByRole = createSelector(
 );
 
 
+// Complex selectors with memoization for companies
+export const selectFilteredCompanies = createSelector(
+  [selectCompanies, selectCompanyFilters],
+  (companies, filters) => {
+    return companies.filter(company => {
+      if (filters.type && company.type !== filters.type) return false;
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        return (
+          company.name.toLowerCase().includes(search) ||
+          (company.email && company.email.toLowerCase().includes(search)) ||
+          (company.address && company.address.toLowerCase().includes(search))
+        );
+      }
+      return true;
+    });
+  }
+);
+
 // Selector to get company by ID
 export const selectCompanyById = createSelector(
   [(state: { users: ExtendedUsersState }) => state.users.companies, (_, companyId: string) => companyId],
   (companies, companyId) => companies.find(company => company.id === companyId) || null
+);
+
+export const selectCompaniesByType = createSelector(
+  [(state: { users: ExtendedUsersState }) => state.users.companies, (_, type: CompanyType) => type],
+  (companies, type) => companies.filter(company => company.type === type)
 );

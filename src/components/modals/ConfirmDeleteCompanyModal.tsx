@@ -7,7 +7,7 @@ interface ConfirmDeleteCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
   company: Company | null;
-  onConfirm: (company: Company) => void;
+  onConfirm: (company: Company) => Promise<void>;
   isDeleting?: boolean;
 }
 
@@ -18,9 +18,9 @@ function ConfirmDeleteCompanyModal({
   onConfirm, 
   isDeleting = false 
 }: ConfirmDeleteCompanyModalProps): JSX.Element {
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (company) {
-      onConfirm(company);
+      await onConfirm(company);
     }
   };
 

@@ -7,7 +7,7 @@ interface CompanyDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   company: Company | null;
-  onEdit?: (company: Company) => void;
+  onEdit?: ((company: Company) => void) | undefined;
 }
 
 function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetailsModalProps): JSX.Element {
@@ -17,13 +17,12 @@ function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetail
     }
   };
 
-  const getCompanyTypeDisplayName = (type: string | undefined): string => {
-    const typeMap: { [key: string]: string } = {
-      'customer': 'Заказчик',
-      'contractor': 'Подрядчик', 
-      'partner': 'Партнер'
-    };
-    return type ? (typeMap[type] || type) : 'Не указан';
+  const getCompanyTypeDisplayName = (type: string): string => {
+    switch (type) {
+      case 'Customer': return 'Заказчик';
+      case 'Contractor': return 'Подрядчик';
+      default: return type;
+    }
   };
 
   if (!isOpen || !company) return <></>;
@@ -49,15 +48,9 @@ function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetail
               <span className="company-details__value">{getCompanyTypeDisplayName(company.type)}</span>
             </div>
 
-            {company.inn && (
-              <div className="company-details__field">
-                <label className="company-details__label">ИНН:</label>
-                <span className="company-details__value">{company.inn}</span>
-              </div>
-            )}
           </div>
 
-          {(company.address || company.phone || company.email) && (
+          {(company.address || company.phone || company.email || company.website) && (
             <div className="company-details__section">
               <h3 className="company-details__title">Контактная информация</h3>
               
@@ -80,6 +73,17 @@ function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetail
                   <label className="company-details__label">Email:</label>
                   <span className="company-details__value">
                     <a href={`mailto:${company.email}`}>{company.email}</a>
+                  </span>
+                </div>
+              )}
+
+              {company.website && (
+                <div className="company-details__field">
+                  <label className="company-details__label">Веб-сайт:</label>
+                  <span className="company-details__value">
+                    <a href={company.website} target="_blank" rel="noopener noreferrer">
+                      {company.website}
+                    </a>
                   </span>
                 </div>
               )}
