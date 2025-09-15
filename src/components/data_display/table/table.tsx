@@ -92,9 +92,25 @@ function Table({ children, className = '', ...props }: TableProps): JSX.Element 
   );
 }
 
+interface TableCellProps {
+  children: ReactNode;
+  className?: string;
+}
+
+function TableCell({ children, className = '' }: TableCellProps): JSX.Element {
+  const classes = ['table__cell', className].filter(Boolean).join(' ');
+
+  return (
+    <td className={classes}>
+      {children}
+    </td>
+  );
+}
+
 Table.Container = TableContainer;
 Table.Head = TableHead;
 Table.Body = TableBody;
 Table.Header = TableHeader;
+Table.Cell = TableCell;
 
 export default Table;
