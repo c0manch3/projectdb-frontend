@@ -9,6 +9,14 @@ export interface CreateCompanyDto {
   phone?: string;
   email?: string;
   website?: string;
+  postalCode?: string;
+  inn?: string;
+  kpp?: string;
+  ogrn?: string;
+  account?: string;
+  bank?: string;
+  bik?: string;
+  corrAccount?: string;
 }
 
 export interface UpdateCompanyDto {
@@ -18,6 +26,14 @@ export interface UpdateCompanyDto {
   phone?: string;
   email?: string;
   website?: string;
+  postalCode?: string;
+  inn?: string;
+  kpp?: string;
+  ogrn?: string;
+  account?: string;
+  bank?: string;
+  bik?: string;
+  corrAccount?: string;
 }
 
 export interface CompaniesFilters {
@@ -34,6 +50,44 @@ export interface CompaniesApiResponse {
 export interface CompanyApiResponse {
   company: Company;
 }
+
+// Validation functions for company fields
+const validateCompanyFields = {
+  postalCode(value: string): boolean {
+    // Russian postal code: 6 digits
+    return /^\d{6}$/.test(value);
+  },
+
+  inn(value: string): boolean {
+    // INN: 10 or 12 digits
+    return /^\d{10}$/.test(value) || /^\d{12}$/.test(value);
+  },
+
+  kpp(value: string): boolean {
+    // KPP: 9 digits
+    return /^\d{9}$/.test(value);
+  },
+
+  ogrn(value: string): boolean {
+    // OGRN: 13 or 15 digits
+    return /^\d{13}$/.test(value) || /^\d{15}$/.test(value);
+  },
+
+  bik(value: string): boolean {
+    // BIK: 9 digits
+    return /^\d{9}$/.test(value);
+  },
+
+  account(value: string): boolean {
+    // Account number: 20 digits
+    return /^\d{20}$/.test(value);
+  },
+
+  corrAccount(value: string): boolean {
+    // Correspondent account: 20 digits
+    return /^\d{20}$/.test(value);
+  }
+};
 
 // Company service with all CRUD operations
 export const companiesService = {
@@ -117,6 +171,35 @@ export const companiesService = {
         }
       }
 
+      // Validate new company fields
+      if (companyData.postalCode && !validateCompanyFields.postalCode(companyData.postalCode)) {
+        throw new Error('Почтовый индекс должен содержать 6 цифр');
+      }
+
+      if (companyData.inn && !validateCompanyFields.inn(companyData.inn)) {
+        throw new Error('ИНН должен содержать 10 или 12 цифр');
+      }
+
+      if (companyData.kpp && !validateCompanyFields.kpp(companyData.kpp)) {
+        throw new Error('КПП должен содержать 9 цифр');
+      }
+
+      if (companyData.ogrn && !validateCompanyFields.ogrn(companyData.ogrn)) {
+        throw new Error('ОГРН должен содержать 13 или 15 цифр');
+      }
+
+      if (companyData.bik && !validateCompanyFields.bik(companyData.bik)) {
+        throw new Error('БИК должен содержать 9 цифр');
+      }
+
+      if (companyData.account && !validateCompanyFields.account(companyData.account)) {
+        throw new Error('Расчётный счёт должен содержать 20 цифр');
+      }
+
+      if (companyData.corrAccount && !validateCompanyFields.corrAccount(companyData.corrAccount)) {
+        throw new Error('Корреспондентский счёт должен содержать 20 цифр');
+      }
+
       const response = await apiRequest.post<Company>('/company/create', companyData);
       return response.data;
     } catch (error: any) {
@@ -158,6 +241,35 @@ export const companiesService = {
         } catch {
           throw new Error('Неверный формат сайта компании');
         }
+      }
+
+      // Validate new company fields
+      if (companyData.postalCode && !validateCompanyFields.postalCode(companyData.postalCode)) {
+        throw new Error('Почтовый индекс должен содержать 6 цифр');
+      }
+
+      if (companyData.inn && !validateCompanyFields.inn(companyData.inn)) {
+        throw new Error('ИНН должен содержать 10 или 12 цифр');
+      }
+
+      if (companyData.kpp && !validateCompanyFields.kpp(companyData.kpp)) {
+        throw new Error('КПП должен содержать 9 цифр');
+      }
+
+      if (companyData.ogrn && !validateCompanyFields.ogrn(companyData.ogrn)) {
+        throw new Error('ОГРН должен содержать 13 или 15 цифр');
+      }
+
+      if (companyData.bik && !validateCompanyFields.bik(companyData.bik)) {
+        throw new Error('БИК должен содержать 9 цифр');
+      }
+
+      if (companyData.account && !validateCompanyFields.account(companyData.account)) {
+        throw new Error('Расчётный счёт должен содержать 20 цифр');
+      }
+
+      if (companyData.corrAccount && !validateCompanyFields.corrAccount(companyData.corrAccount)) {
+        throw new Error('Корреспондентский счёт должен содержать 20 цифр');
       }
 
       const response = await apiRequest.patch<Company>(`/company/${id}`, companyData);

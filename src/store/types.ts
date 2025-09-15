@@ -41,6 +41,14 @@ export interface Company {
   phone?: string;
   email?: string;
   website?: string;
+  postalCode?: string;
+  inn?: string;
+  kpp?: string;
+  ogrn?: string;
+  account?: string;
+  bank?: string;
+  bik?: string;
+  corrAccount?: string;
   createdAt: string;
   updatedAt: string;
 }

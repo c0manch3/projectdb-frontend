@@ -50,14 +50,21 @@ function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetail
 
           </div>
 
-          {(company.address || company.phone || company.email || company.website) && (
+          {(company.address || company.postalCode || company.phone || company.email || company.website) && (
             <div className="company-details__section">
               <h3 className="company-details__title">Контактная информация</h3>
-              
+
               {company.address && (
                 <div className="company-details__field">
                   <label className="company-details__label">Адрес:</label>
                   <span className="company-details__value">{company.address}</span>
+                </div>
+              )}
+
+              {company.postalCode && (
+                <div className="company-details__field">
+                  <label className="company-details__label">Почтовый индекс:</label>
+                  <span className="company-details__value">{company.postalCode}</span>
                 </div>
               )}
 
@@ -85,6 +92,67 @@ function CompanyDetailsModal({ isOpen, onClose, company, onEdit }: CompanyDetail
                       {company.website}
                     </a>
                   </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(company.inn || company.kpp || company.ogrn) && (
+            <div className="company-details__section">
+              <h3 className="company-details__title">Реквизиты компании</h3>
+
+              {company.inn && (
+                <div className="company-details__field">
+                  <label className="company-details__label">ИНН:</label>
+                  <span className="company-details__value">{company.inn}</span>
+                </div>
+              )}
+
+              {company.kpp && (
+                <div className="company-details__field">
+                  <label className="company-details__label">КПП:</label>
+                  <span className="company-details__value">{company.kpp}</span>
+                </div>
+              )}
+
+              {company.ogrn && (
+                <div className="company-details__field">
+                  <label className="company-details__label">ОГРН:</label>
+                  <span className="company-details__value">{company.ogrn}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(company.bank || company.account || company.bik || company.corrAccount) && (
+            <div className="company-details__section">
+              <h3 className="company-details__title">Банковские реквизиты</h3>
+
+              {company.bank && (
+                <div className="company-details__field">
+                  <label className="company-details__label">Банк:</label>
+                  <span className="company-details__value">{company.bank}</span>
+                </div>
+              )}
+
+              {company.account && (
+                <div className="company-details__field">
+                  <label className="company-details__label">Расчётный счёт:</label>
+                  <span className="company-details__value">{company.account}</span>
+                </div>
+              )}
+
+              {company.bik && (
+                <div className="company-details__field">
+                  <label className="company-details__label">БИК:</label>
+                  <span className="company-details__value">{company.bik}</span>
+                </div>
+              )}
+
+              {company.corrAccount && (
+                <div className="company-details__field">
+                  <label className="company-details__label">Корреспондентский счёт:</label>
+                  <span className="company-details__value">{company.corrAccount}</span>
                 </div>
               )}
             </div>

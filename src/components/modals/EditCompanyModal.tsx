@@ -60,7 +60,58 @@ const editCompanySchema = z.object({
       } catch {
         return false;
       }
-    }, 'Неверный формат сайта компании')
+    }, 'Неверный формат сайта компании'),
+
+  postalCode: z.string()
+    .optional()
+    .refine((code) => {
+      if (!code || code.trim() === '') return true;
+      return /^\d{6}$/.test(code);
+    }, 'Почтовый индекс должен содержать 6 цифр'),
+
+  inn: z.string()
+    .optional()
+    .refine((inn) => {
+      if (!inn || inn.trim() === '') return true;
+      return /^\d{10}$/.test(inn) || /^\d{12}$/.test(inn);
+    }, 'ИНН должен содержать 10 или 12 цифр'),
+
+  kpp: z.string()
+    .optional()
+    .refine((kpp) => {
+      if (!kpp || kpp.trim() === '') return true;
+      return /^\d{9}$/.test(kpp);
+    }, 'КПП должен содержать 9 цифр'),
+
+  ogrn: z.string()
+    .optional()
+    .refine((ogrn) => {
+      if (!ogrn || ogrn.trim() === '') return true;
+      return /^\d{13}$/.test(ogrn) || /^\d{15}$/.test(ogrn);
+    }, 'ОГРН должен содержать 13 или 15 цифр'),
+
+  account: z.string()
+    .optional()
+    .refine((account) => {
+      if (!account || account.trim() === '') return true;
+      return /^\d{20}$/.test(account);
+    }, 'Расчётный счёт должен содержать 20 цифр'),
+
+  bank: z.string().optional(),
+
+  bik: z.string()
+    .optional()
+    .refine((bik) => {
+      if (!bik || bik.trim() === '') return true;
+      return /^\d{9}$/.test(bik);
+    }, 'БИК должен содержать 9 цифр'),
+
+  corrAccount: z.string()
+    .optional()
+    .refine((corrAccount) => {
+      if (!corrAccount || corrAccount.trim() === '') return true;
+      return /^\d{20}$/.test(corrAccount);
+    }, 'Корреспондентский счёт должен содержать 20 цифр')
 });
 
 type FormData = z.infer<typeof editCompanySchema>;
@@ -93,7 +144,15 @@ function EditCompanyModal({ isOpen, onClose, company }: EditCompanyModalProps): 
         address: company.address || '',
         phone: company.phone || '',
         email: company.email || '',
-        website: company.website || ''
+        website: company.website || '',
+        postalCode: company.postalCode || '',
+        inn: company.inn || '',
+        kpp: company.kpp || '',
+        ogrn: company.ogrn || '',
+        account: company.account || '',
+        bank: company.bank || '',
+        bik: company.bik || '',
+        corrAccount: company.corrAccount || ''
       });
     }
   }, [isOpen, company, reset]);
@@ -113,7 +172,15 @@ function EditCompanyModal({ isOpen, onClose, company }: EditCompanyModalProps): 
         ...(data.address?.trim() && { address: data.address.trim() }),
         ...(data.phone?.trim() && { phone: data.phone.trim() }),
         ...(data.email?.trim() && { email: data.email.trim() }),
-        ...(data.website?.trim() && { website: data.website.trim() })
+        ...(data.website?.trim() && { website: data.website.trim() }),
+        ...(data.postalCode?.trim() && { postalCode: data.postalCode.trim() }),
+        ...(data.inn?.trim() && { inn: data.inn.trim() }),
+        ...(data.kpp?.trim() && { kpp: data.kpp.trim() }),
+        ...(data.ogrn?.trim() && { ogrn: data.ogrn.trim() }),
+        ...(data.account?.trim() && { account: data.account.trim() }),
+        ...(data.bank?.trim() && { bank: data.bank.trim() }),
+        ...(data.bik?.trim() && { bik: data.bik.trim() }),
+        ...(data.corrAccount?.trim() && { corrAccount: data.corrAccount.trim() })
       };
 
       await dispatch(updateCompany({ id: company.id, data: updateCompanyDto })).unwrap();
@@ -195,20 +262,36 @@ function EditCompanyModal({ isOpen, onClose, company }: EditCompanyModalProps): 
               )}
             </FormGroup>
 
-            {/* Address */}
-            <FormGroup>
-              <label htmlFor="address">Адрес</label>
-              <FormInput
-                id="address"
-                type="text"
-                placeholder="Введите адрес"
-                {...register('address')}
-                className={errors.address ? 'error' : ''}
-              />
-              {errors.address && (
-                <span className="error-message">{errors.address.message}</span>
-              )}
-            </FormGroup>
+            {/* Address and Postal Code */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <FormGroup>
+                <label htmlFor="address">Адрес</label>
+                <FormInput
+                  id="address"
+                  type="text"
+                  placeholder="Введите адрес"
+                  {...register('address')}
+                  className={errors.address ? 'error' : ''}
+                />
+                {errors.address && (
+                  <span className="error-message">{errors.address.message}</span>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label htmlFor="postalCode">Почтовый индекс</label>
+                <FormInput
+                  id="postalCode"
+                  type="text"
+                  placeholder="123456"
+                  {...register('postalCode')}
+                  className={errors.postalCode ? 'error' : ''}
+                />
+                {errors.postalCode && (
+                  <span className="error-message">{errors.postalCode.message}</span>
+                )}
+              </FormGroup>
+            </div>
 
             {/* Contact Information */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -253,6 +336,124 @@ function EditCompanyModal({ isOpen, onClose, company }: EditCompanyModalProps): 
               />
               {errors.website && (
                 <span className="error-message">{errors.website.message}</span>
+              )}
+            </FormGroup>
+
+            {/* Divider for Company Details */}
+            <div style={{ margin: '1.5rem 0', borderTop: '1px solid #e0e0e0', paddingTop: '1.5rem' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                Реквизиты компании
+              </h3>
+            </div>
+
+            {/* Tax Information */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <FormGroup>
+                <label htmlFor="inn">ИНН</label>
+                <FormInput
+                  id="inn"
+                  type="text"
+                  placeholder="1234567890"
+                  {...register('inn')}
+                  className={errors.inn ? 'error' : ''}
+                />
+                {errors.inn && (
+                  <span className="error-message">{errors.inn.message}</span>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label htmlFor="kpp">КПП</label>
+                <FormInput
+                  id="kpp"
+                  type="text"
+                  placeholder="123456789"
+                  {...register('kpp')}
+                  className={errors.kpp ? 'error' : ''}
+                />
+                {errors.kpp && (
+                  <span className="error-message">{errors.kpp.message}</span>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label htmlFor="ogrn">ОГРН</label>
+                <FormInput
+                  id="ogrn"
+                  type="text"
+                  placeholder="1234567890123"
+                  {...register('ogrn')}
+                  className={errors.ogrn ? 'error' : ''}
+                />
+                {errors.ogrn && (
+                  <span className="error-message">{errors.ogrn.message}</span>
+                )}
+              </FormGroup>
+            </div>
+
+            {/* Divider for Banking Details */}
+            <div style={{ margin: '1.5rem 0', borderTop: '1px solid #e0e0e0', paddingTop: '1.5rem' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                Банковские реквизиты
+              </h3>
+            </div>
+
+            {/* Bank Information */}
+            <FormGroup>
+              <label htmlFor="bank">Наименование банка</label>
+              <FormInput
+                id="bank"
+                type="text"
+                placeholder="ПАО Сбербанк"
+                {...register('bank')}
+                className={errors.bank ? 'error' : ''}
+              />
+              {errors.bank && (
+                <span className="error-message">{errors.bank.message}</span>
+              )}
+            </FormGroup>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <FormGroup>
+                <label htmlFor="account">Расчётный счёт</label>
+                <FormInput
+                  id="account"
+                  type="text"
+                  placeholder="12345678901234567890"
+                  {...register('account')}
+                  className={errors.account ? 'error' : ''}
+                />
+                {errors.account && (
+                  <span className="error-message">{errors.account.message}</span>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label htmlFor="bik">БИК</label>
+                <FormInput
+                  id="bik"
+                  type="text"
+                  placeholder="123456789"
+                  {...register('bik')}
+                  className={errors.bik ? 'error' : ''}
+                />
+                {errors.bik && (
+                  <span className="error-message">{errors.bik.message}</span>
+                )}
+              </FormGroup>
+            </div>
+
+            <FormGroup>
+              <label htmlFor="corrAccount">Корреспондентский счёт</label>
+              <FormInput
+                id="corrAccount"
+                type="text"
+                placeholder="12345678901234567890"
+                {...register('corrAccount')}
+                className={errors.corrAccount ? 'error' : ''}
+              />
+              {errors.corrAccount && (
+                <span className="error-message">{errors.corrAccount.message}</span>
               )}
             </FormGroup>
           </div>
