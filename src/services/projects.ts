@@ -76,7 +76,7 @@ export const projectsService = {
       }
 
       const queryString = params.toString();
-      const url = queryString ? `/projects?${queryString}` : '/projects';
+      const url = queryString ? `/project?${queryString}` : '/project';
 
       const response = await apiRequest.get<Project[]>(url);
       return response.data;
@@ -94,7 +94,7 @@ export const projectsService = {
   // Get project by ID
   async getProjectById(id: string): Promise<Project> {
     try {
-      const response = await apiRequest.get<Project>(`/projects/${id}`);
+      const response = await apiRequest.get<Project>(`/project/${id}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching project:', error);
@@ -139,7 +139,7 @@ export const projectsService = {
         throw new Error('Стоимость проекта должна быть больше нуля');
       }
 
-      const response = await apiRequest.post<Project>('/projects', projectData);
+      const response = await apiRequest.post<Project>('/project/create', projectData);
       return response.data;
     } catch (error: any) {
       console.error('Error creating project:', error);
@@ -183,7 +183,7 @@ export const projectsService = {
         throw new Error('Для дополнительного соглашения необходимо выбрать основной проект');
       }
 
-      const response = await apiRequest.put<Project>(`/projects/${id}`, projectData);
+      const response = await apiRequest.patch<Project>(`/project/${id}`, projectData);
       return response.data;
     } catch (error: any) {
       console.error('Error updating project:', error);
@@ -207,7 +207,7 @@ export const projectsService = {
   // Delete project
   async deleteProject(id: string): Promise<void> {
     try {
-      await apiRequest.delete(`/projects/${id}`);
+      await apiRequest.delete(`/project/${id}`);
     } catch (error: any) {
       console.error('Error deleting project:', error);
       if (error.response?.status === 404) {
@@ -224,7 +224,7 @@ export const projectsService = {
   // Get project statistics
   async getProjectStats(): Promise<ProjectStatsResponse> {
     try {
-      const response = await apiRequest.get<ProjectStatsResponse>('/projects/stats');
+      const response = await apiRequest.get<ProjectStatsResponse>('/project/stats');
       return response.data;
     } catch (error: any) {
       console.error('Error fetching project stats:', error);
@@ -238,7 +238,7 @@ export const projectsService = {
   // Get customers for forms (companies with type 'Customer')
   async getCustomers(): Promise<Company[]> {
     try {
-      const response = await apiRequest.get<Company[]>('/companies?type=Customer');
+      const response = await apiRequest.get<Company[]>('/company?type=Customer');
       return response.data;
     } catch (error: any) {
       console.error('Error fetching customers:', error);
@@ -260,7 +260,7 @@ export const projectsService = {
   // Get main projects for additional projects
   async getMainProjects(): Promise<Project[]> {
     try {
-      const response = await apiRequest.get<Project[]>('/projects?type=main');
+      const response = await apiRequest.get<Project[]>('/project?type=main');
       return response.data;
     } catch (error: any) {
       console.error('Error fetching main projects:', error);

@@ -98,11 +98,6 @@ function ProjectDetail(): JSX.Element {
     return manager ? `${manager.firstName} ${manager.lastName}` : 'Неизвестен';
   };
 
-  const getMainProjectName = (mainProjectId?: string): string => {
-    if (!mainProjectId) return 'Не применимо';
-    // In a real app, you would need to fetch main projects or have them in state
-    return 'Основной проект';
-  };
 
 
   // Show error message
@@ -259,39 +254,6 @@ function ProjectDetail(): JSX.Element {
 
             {/* Main Content Grid */}
             <div className="project-content-grid">
-              {/* Project Details Card */}
-              <Card className="project-details-card">
-                <Card.Header>
-                  <Card.Title>Детали проекта</Card.Title>
-                </Card.Header>
-                <Card.Content>
-                  <div className="project-details-grid">
-                    <div className="project-detail-item">
-                      <div className="project-detail-item__label">ID проекта</div>
-                      <div className="project-detail-item__value project-detail-item__value--id">{currentProject.id}</div>
-                    </div>
-                    <div className="project-detail-item">
-                      <div className="project-detail-item__label">Тип проекта</div>
-                      <div className="project-detail-item__value">{getTypeLabel(currentProject.type)}</div>
-                    </div>
-                    {currentProject.type === 'additional' && currentProject.mainProjectId && (
-                      <div className="project-detail-item">
-                        <div className="project-detail-item__label">Основной проект</div>
-                        <div className="project-detail-item__value">{getMainProjectName(currentProject.mainProjectId)}</div>
-                      </div>
-                    )}
-                    <div className="project-detail-item">
-                      <div className="project-detail-item__label">Текущий статус</div>
-                      <div className="project-detail-item__value">
-                        <span className={`status-badge status-badge--${currentProject.status}`}>
-                          {getStatusLabel(currentProject.status)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Card.Content>
-              </Card>
-
               {/* Team Information Card */}
               <Card className="project-team-card">
                 <Card.Header>
