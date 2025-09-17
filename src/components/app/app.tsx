@@ -12,6 +12,7 @@ import type { AppDispatch } from '../../store';
 import Login from '../../pages/login/login';
 import Projects from '../../pages/projects/projects';
 import ProjectDetail from '../../pages/project_detail/project_detail';
+import Constructions from '../../pages/constructions/constructions';
 import Employees from '../../pages/employees/employees';
 import Companies from '../../pages/companies/companies';
 import Workload from '../../pages/workload/workload';
@@ -82,21 +83,37 @@ function App(): JSX.Element {
               </PrivateRoute>
             } 
           />
-          <Route 
-            path={AppRoute.ProjectDetail} 
+          <Route
+            path={AppRoute.ProjectDetail}
             element={
               <PrivateRoute>
                 <ProjectDetail />
               </PrivateRoute>
-            } 
+            }
           />
-          <Route 
-            path={AppRoute.Employees} 
+          <Route
+            path={AppRoute.ProjectConstructions}
+            element={
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
+                <Constructions />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path={AppRoute.Constructions}
+            element={
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
+                <Constructions />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path={AppRoute.Employees}
             element={
               <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
                 <Employees />
               </RoleBasedRoute>
-            } 
+            }
           />
           <Route 
             path={AppRoute.Companies} 

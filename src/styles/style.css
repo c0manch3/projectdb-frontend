@@ -1959,4 +1959,463 @@ a:hover {
   .table {
     font-size: 11px;
   }
+}.constructions-hero {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: var(--text-primary);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  margin: 0 calc(-1 * var(--spacing-xl)) var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.constructions-hero__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.constructions-hero__header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.constructions-hero__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 var(--spacing-md) 0;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.constructions-hero__project-name {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.constructions-hero__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.constructions-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.constructions-hero__description {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.constructions-hero__separator {
+  color: var(--border);
+  margin: 0 var(--spacing-xs);
+}
+
+.constructions-hero__back-link {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.constructions-hero__back-link:hover {
+  text-decoration: underline;
+  color: var(--primary-dark);
+}
+
+.constructions-hero__stats {
+  display: flex;
+  gap: var(--spacing-xl);
+  align-items: center;
+}
+
+.constructions-hero__stat {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.8);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.constructions-hero__stat-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.constructions-hero__stat-content {
+  text-align: left;
+}
+
+.constructions-hero__stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.constructions-hero__stat-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* Constructions Content Layout */
+.constructions-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.constructions-filters-card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.constructions-table-card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Constructions Tabs */
+.constructions-tabs {
+  margin-bottom: var(--spacing-xl);
+}
+
+.constructions-tabs__nav {
+  display: flex;
+  gap: var(--spacing-sm);
+  border-bottom: 2px solid var(--border);
+  margin-bottom: var(--spacing-lg);
+}
+
+.constructions-tabs__nav-item {
+  background: none;
+  border: none;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  cursor: pointer;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.constructions-tabs__nav-item:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.constructions-tabs__nav-item--active {
+  background: var(--background);
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.constructions-tabs__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.constructions-tabs__label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.constructions-tabs__count {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+.constructions-tabs__nav-item--active .constructions-tabs__count {
+  color: var(--primary);
+}
+
+/* Responsive Design for Constructions */
+@media (max-width: 900px) {
+  .constructions-hero {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    gap: var(--spacing-xl);
+  }
+
+  .constructions-hero__stats {
+    justify-content: center;
+    gap: var(--spacing-lg);
+  }
+
+  .constructions-hero__stat {
+    flex: 1;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 600px) {
+  .constructions-hero {
+    padding: var(--spacing-xl);
+    margin: 0 calc(-1 * var(--spacing-lg)) var(--spacing-lg);
+  }
+
+  .constructions-hero__title {
+    font-size: 2rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .constructions-hero__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .constructions-hero__separator {
+    display: none;
+  }
+
+  .constructions-hero__stats {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .constructions-hero__stat {
+    max-width: none;
+  }
+
+  .constructions-tabs__nav {
+    flex-direction: column;
+    gap: 0;
+    border-bottom: none;
+  }
+
+  .constructions-tabs__nav-item {
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .constructions-tabs__nav-item--active {
+    border-left: 3px solid var(--primary);
+    border-bottom-color: var(--border);
+  }
+}
+
+@media (max-width: 480px) {
+  .constructions-hero {
+    padding: var(--spacing-lg);
+  }
+
+  .constructions-hero__title {
+    font-size: 1.75rem;
+  }
+
+  .constructions-hero__stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* Fix modal padding globally */
+.modal__content {
+  padding: var(--spacing-xl) !important;
+}
+
+.modal__footer {
+  padding: var(--spacing-lg) var(--spacing-xl) !important;
+  margin-top: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Ensure buttons have proper spacing */
+.modal__actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+/* Fix button spacing from edges */
+.modal__footer .button {
+  margin: 0;
+}
+/* DEPRECATED: Old construction modal styles - replaced with unified pastel design */
+/*
+.construction-info-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-xl);
+  overflow: hidden;
+}
+
+.construction-info-header {
+  background-color: var(--primary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.construction-info-title {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.construction-info-content {
+  padding: var(--spacing-lg);
+}
+*/
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--spacing-sm) 0;
+  gap: var(--spacing-lg);
+}
+
+.info-row:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row .info-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.info-row .info-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: right;
+
+/* ================================== */
+/* Edit Construction Modal - Unified Pastel Design */
+/* ================================== */
+
+.edit-construction-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  min-height: 400px;
+}
+
+.edit-construction-hero {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid #d1d5db;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl) var(--spacing-xl);
+  margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) 0;
+}
+
+.edit-construction-hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.edit-construction-hero__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.edit-construction-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.edit-construction-hero__date {
+  font-weight: 500;
+}
+
+.edit-construction-hero__updated {
+  opacity: 0.8;
+}
+
+.edit-construction-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  flex: 1;
+}
+
+.edit-construction-form__content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  flex: 1;
+}
+
+.edit-construction-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-lg);
+}
+
+/* Responsive Design for Edit Construction Modal */
+@media (max-width: 640px) {
+  .edit-construction-hero {
+    margin: calc(-1 * var(--spacing-md)) calc(-1 * var(--spacing-md)) 0;
+    padding: var(--spacing-lg);
+  }
+
+  .edit-construction-hero__title {
+    font-size: 1.25rem;
+  }
+
+  .edit-construction-hero__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .edit-construction-form__content {
+    padding: var(--spacing-lg);
+  }
+
+  .edit-construction-form__actions {
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
+  }
 }

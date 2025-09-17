@@ -4,6 +4,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // Import slices
 import authSlice from './slices/auth_slice';
 import projectsSlice from './slices/projects_slice';
+import constructionsSlice from './slices/constructions_slice';
 import usersSlice from './slices/users_slice';
 import uiSlice from './slices/ui_slice';
 
@@ -15,6 +16,7 @@ export const store = configureStore({
   reducer: {
     auth: authSlice,
     projects: projectsSlice,
+    constructions: constructionsSlice,
     users: usersSlice,
     ui: uiSlice,
   },

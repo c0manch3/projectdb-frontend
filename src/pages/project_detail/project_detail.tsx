@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { PageTitle, AppRoute } from '../../const';
@@ -26,6 +26,7 @@ import { selectCurrentUser } from '../../store/slices/auth_slice';
 
 function ProjectDetail(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   // Redux state
@@ -96,6 +97,26 @@ function ProjectDetail(): JSX.Element {
     if (!managerId) return 'Не назначен';
     const manager = managers.find(m => m.id === managerId);
     return manager ? `${manager.firstName} ${manager.lastName}` : 'Неизвестен';
+  };
+
+  // Navigation handlers
+  const handleNavigateToConstructions = () => {
+    if (currentProject?.id) {
+      navigate(`/projects/${currentProject.id}/constructions`);
+    }
+  };
+
+  const handleNavigateToDocuments = () => {
+    if (currentProject?.id) {
+      navigate(`/projects/${currentProject.id}/constructions`);
+    }
+  };
+
+  const handleNavigateToReports = () => {
+    // Future implementation - for now navigate to constructions
+    if (currentProject?.id) {
+      navigate(`/projects/${currentProject.id}/constructions`);
+    }
   };
 
 
@@ -342,13 +363,25 @@ function ProjectDetail(): JSX.Element {
                           ✏️ Редактировать проект
                         </Button>
                       </Link>
-                      <Button variant="outline" className="project-action-button">
+                      <Button
+                        variant="outline"
+                        className="project-action-button"
+                        onClick={handleNavigateToDocuments}
+                      >
                         📄 Управление документами
                       </Button>
-                      <Button variant="outline" className="project-action-button">
-                        🏗️ Конструкции
+                      <Button
+                        variant="outline"
+                        className="project-action-button"
+                        onClick={handleNavigateToConstructions}
+                      >
+                        🏗️ Сооружения
                       </Button>
-                      <Button variant="outline" className="project-action-button">
+                      <Button
+                        variant="outline"
+                        className="project-action-button"
+                        onClick={handleNavigateToReports}
+                      >
                         📊 Отчеты
                       </Button>
                     </div>
@@ -367,8 +400,8 @@ function ProjectDetail(): JSX.Element {
                   <div className="future-feature">
                     <div className="future-feature__icon">🏗️</div>
                     <div className="future-feature__content">
-                      <div className="future-feature__title">Управление конструкциями</div>
-                      <div className="future-feature__description">Создание и отслеживание конструкций проекта</div>
+                      <div className="future-feature__title">Управление сооружениями</div>
+                      <div className="future-feature__description">Создание и отслеживание сооружений проекта</div>
                     </div>
                   </div>
                   <div className="future-feature">
