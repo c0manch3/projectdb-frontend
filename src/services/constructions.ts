@@ -22,7 +22,7 @@ export interface UploadDocumentDto {
   type: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
   context: 'initial_data' | 'project_doc';
   projectId: string;
-  constructionId?: string;
+  constructionId?: string | undefined;
 }
 
 export interface DocumentsFilters {
@@ -290,11 +290,18 @@ export const constructionsService = {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'image/dwg',
         'application/dwg',
-        'application/autocad'
+        'application/autocad',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/bmp',
+        'image/webp',
+        'image/svg+xml'
       ];
 
       if (!allowedTypes.includes(uploadData.file.type)) {
-        throw new Error('Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG');
+        throw new Error('Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG, JPG, PNG, GIF, BMP, WebP, SVG');
       }
 
       // Validate required fields
@@ -352,12 +359,27 @@ export const constructionsService = {
   },
 
   // Download document
-  async downloadDocument(documentId: string): Promise<Blob> {
+  async downloadDocument(documentId: string, originalName: string): Promise<void> {
     try {
-      const response = await apiRequest.get(`/document/${documentId}/download`, {
+      // First, get document info to get the download path
+      const docInfoResponse = await apiRequest.get(`/document/${documentId}`);
+      const documentInfo = docInfoResponse.data;
+
+      // Then download the file using the path
+      const fileResponse = await apiRequest.get(documentInfo.path, {
         responseType: 'blob',
       });
-      return response.data;
+
+      // Create download link
+      const blob = fileResponse.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = originalName || documentInfo.originalName;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error: any) {
       console.error('Error downloading document:', error);
       if (error.response?.status === 404) {

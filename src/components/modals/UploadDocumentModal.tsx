@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,6 @@ import LoadingState from '../common/loading_state/loading_state';
 import type { AppDispatch } from '../../store';
 import {
   uploadDocument,
-  selectDocumentsLoading,
   selectDocumentsError,
   selectUploadProgress,
   resetUploadProgress,
@@ -54,11 +53,18 @@ const uploadDocumentSchema = z.object({
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'image/dwg',
           'application/dwg',
-          'application/autocad'
+          'application/autocad',
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/bmp',
+          'image/webp',
+          'image/svg+xml'
         ];
         return allowedTypes.includes(file.type);
       },
-      'Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG'
+      'Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG, JPG, PNG, GIF, BMP, WebP, SVG'
     )
 });
 
@@ -67,7 +73,7 @@ type UploadDocumentFormData = z.infer<typeof uploadDocumentSchema>;
 interface UploadDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectId?: string; // If provided, pre-select and disable project selection
+  projectId?: string | undefined; // If provided, pre-select and disable project selection
   construction?: Construction | null; // If provided, pre-select construction
 }
 
@@ -80,7 +86,6 @@ function UploadDocumentModal({
   const dispatch = useDispatch<AppDispatch>();
 
   // Redux state
-  const documentsLoading = useSelector(selectDocumentsLoading);
   const documentsError = useSelector(selectDocumentsError);
   const uploadProgress = useSelector(selectUploadProgress);
   const projects = useSelector(selectProjectsList);
@@ -92,6 +97,9 @@ function UploadDocumentModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [constructions, setConstructions] = useState<Construction[]>([]);
   const [constructionsLoading, setConstructionsLoading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form setup
   const {
@@ -101,13 +109,10 @@ function UploadDocumentModal({
     reset,
     setValue,
     watch,
-    setError,
     clearErrors
   } = useForm<UploadDocumentFormData>({
     resolver: zodResolver(uploadDocumentSchema),
     defaultValues: {
-      type: undefined,
-      context: undefined,
       projectId: projectId || '',
       constructionId: construction?.id || ''
     }
@@ -115,7 +120,6 @@ function UploadDocumentModal({
 
   // Watch form values
   const selectedProjectId = watch('projectId');
-  const selectedConstructionId = watch('constructionId');
 
   // Load projects when modal opens
   useEffect(() => {
@@ -162,16 +166,96 @@ function UploadDocumentModal({
     }
   }, [selectedProjectId, construction, loadConstructions]);
 
+  // Validate file function
+  const validateFile = (file: File): string | null => {
+    // Check file size
+    if (file.size > 100 * 1024 * 1024) {
+      return 'Размер файла не должен превышать 100 МБ';
+    }
+
+    // Check file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/dwg',
+      'application/dwg',
+      'application/autocad',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/webp',
+      'image/svg+xml'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      return 'Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG, JPG, PNG, GIF, BMP, WebP, SVG';
+    }
+
+    return null;
+  };
+
   // Handle file selection
+  const handleFileSelection = (file: File) => {
+    const validationError = validateFile(file);
+    if (validationError) {
+      setFileValidationError(validationError);
+      setSelectedFile(null);
+      return;
+    }
+
+    setFileValidationError(null);
+    setSelectedFile(file);
+    setValue('file', file);
+    clearErrors('file');
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      setValue('file', file);
-      clearErrors('file');
+      handleFileSelection(file);
     } else {
       setSelectedFile(null);
+      setFileValidationError(null);
     }
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && files[0]) {
+      handleFileSelection(files[0]);
+    }
+  };
+
+  // Handle file input click
+  const handleFileInputClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Handle form submission
@@ -187,7 +271,7 @@ function UploadDocumentModal({
         type: data.type,
         context: data.context,
         projectId: data.projectId,
-        constructionId: data.constructionId || undefined
+        constructionId: data.constructionId
       })).unwrap();
 
       toast.success('Документ успешно загружен');
@@ -209,6 +293,8 @@ function UploadDocumentModal({
     onClose();
     reset();
     setSelectedFile(null);
+    setFileValidationError(null);
+    setIsDragOver(false);
     dispatch(resetUploadProgress());
   };
 
@@ -226,13 +312,18 @@ function UploadDocumentModal({
 
   if (!canUploadDocuments) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Доступ запрещен">
-        <div className="modal-access-denied">
-          <p>У вас нет прав для загрузки документов.</p>
-          <div className="modal-actions">
-            <Button onClick={handleClose}>Закрыть</Button>
+      <Modal isOpen={isOpen} onClose={handleClose}>
+        <Modal.Header onClose={handleClose}>
+          Доступ запрещен
+        </Modal.Header>
+        <Modal.Content>
+          <div className="modal-access-denied">
+            <p>У вас нет прав для загрузки документов.</p>
+            <div className="modal-actions">
+              <Button onClick={handleClose}>Закрыть</Button>
+            </div>
           </div>
-        </div>
+        </Modal.Content>
       </Modal>
     );
   }
@@ -241,57 +332,110 @@ function UploadDocumentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Загрузить документ"
-      size="medium"
+      className="modal--medium"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="modal-form">
+      <Modal.Header onClose={handleClose}>
+        Загрузить документ
+      </Modal.Header>
+      <Modal.Content>
         {projectsLoading && (
           <LoadingState message="Загрузка списка проектов..." />
         )}
 
         {!projectsLoading && (
-          <>
-            {/* File Upload */}
+          <form onSubmit={handleSubmit(onSubmit as any)} className="modal-form">
+            {/* File Upload with Drag & Drop */}
             <FormGroup>
               <label htmlFor="documentFile" className="form-label">
                 Файл документа <span className="required">*</span>
               </label>
               <div className="file-upload">
                 <input
+                  ref={fileInputRef}
                   id="documentFile"
                   type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.dwg"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.dwg,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg"
                   onChange={handleFileChange}
                   className="file-upload__input"
+                  style={{ display: 'none' }}
                 />
-                <div className="file-upload__display">
+                <div
+                  className={`file-upload__dropzone ${
+                    isDragOver ? 'file-upload__dropzone--drag-over' : ''
+                  } ${
+                    selectedFile ? 'file-upload__dropzone--has-file' : ''
+                  }`}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onClick={!selectedFile ? handleFileInputClick : undefined}
+                >
                   {selectedFile ? (
                     <div className="file-upload__selected">
                       <div className="file-info">
-                        <div className="file-info__name">{selectedFile.name}</div>
-                        <div className="file-info__size">{formatFileSize(selectedFile.size)}</div>
+                        <div className="file-info__icon">
+                          {selectedFile.type.startsWith('image/') ? '🖼️' :
+                           selectedFile.type.includes('pdf') ? '📄' :
+                           selectedFile.type.includes('word') ? '📝' :
+                           selectedFile.type.includes('excel') || selectedFile.type.includes('sheet') ? '📊' :
+                           selectedFile.type.includes('dwg') ? '📐' : '📎'}
+                        </div>
+                        <div className="file-info__details">
+                          <div className="file-info__name">{selectedFile.name}</div>
+                          <div className="file-info__size">{formatFileSize(selectedFile.size)}</div>
+                          <div className="file-info__type">{selectedFile.type}</div>
+                        </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="small"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setValue('file', null as any);
-                        }}
-                      >
-                        Удалить
-                      </Button>
+                      <div className="file-upload__actions">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFileInputClick();
+                          }}
+                        >
+                          Заменить
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                            setFileValidationError(null);
+                            setValue('file', null as any);
+                          }}
+                        >
+                          Удалить
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="file-upload__placeholder">
-                      Выберите файл для загрузки
+                      <div className="file-upload__icon">
+                        {isDragOver ? '⬇️' : '📁'}
+                      </div>
+                      <div className="file-upload__text">
+                        <div className="file-upload__primary">
+                          {isDragOver ? 'Отпустите файл для загрузки' : 'Перетащите файл сюда или нажмите для выбора'}
+                        </div>
+                        <div className="file-upload__secondary">
+                          Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG, JPG, PNG, GIF, BMP, WebP, SVG
+                        </div>
+                        <div className="file-upload__size-limit">
+                          Максимальный размер: 100 МБ
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-              {errors.file && (
-                <span className="form-error">{errors.file.message}</span>
+              {(errors.file || fileValidationError) && (
+                <span className="form-error">{errors.file?.message || fileValidationError}</span>
               )}
             </FormGroup>
 
@@ -302,18 +446,17 @@ function UploadDocumentModal({
               </label>
               <FormSelect
                 id="documentType"
-                error={errors.type?.message}
                 {...register('type')}
               >
                 <option value="">Выберите тип документа</option>
-                <option value="km">КМ</option>
-                <option value="kz">КЖ</option>
-                <option value="rpz">РПЗ</option>
-                <option value="tz">ТЗ</option>
-                <option value="gp">ГП</option>
-                <option value="igi">ИГИ</option>
-                <option value="spozu">СПОЗУ</option>
-                <option value="contract">Договор</option>
+                <option value="km">КМ - Конструкции металлические</option>
+                <option value="kz">КЖ - Конструкции железобетонные</option>
+                <option value="rpz">РПЗ - Расчетно-пояснительная записка</option>
+                <option value="tz">ТЗ - Техническое задание</option>
+                <option value="gp">ГП - Генеральный план</option>
+                <option value="igi">ИГИ - Инженерно-геологические изыскания</option>
+                <option value="spozu">СПОЗУ - Специальные противопожарные мероприятия</option>
+                <option value="contract">Договор - Договорная документация</option>
               </FormSelect>
               {errors.type && (
                 <span className="form-error">{errors.type.message}</span>
@@ -327,7 +470,6 @@ function UploadDocumentModal({
               </label>
               <FormSelect
                 id="documentContext"
-                error={errors.context?.message}
                 {...register('context')}
               >
                 <option value="">Выберите контекст</option>
@@ -346,7 +488,6 @@ function UploadDocumentModal({
               </label>
               <FormSelect
                 id="projectSelect"
-                error={errors.projectId?.message}
                 disabled={!!projectId || projects.length === 0}
                 {...register('projectId')}
               >
@@ -440,9 +581,9 @@ function UploadDocumentModal({
                 {isSubmitting ? 'Загрузка...' : 'Загрузить документ'}
               </Button>
             </div>
-          </>
+          </form>
         )}
-      </form>
+      </Modal.Content>
     </Modal>
   );
 }

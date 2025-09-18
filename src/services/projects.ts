@@ -1,5 +1,5 @@
 import { apiRequest } from './api';
-import { Project, User, Company } from '../store/types';
+import { Project, User, Company, Document } from '../store/types';
 
 // DTOs for project operations
 export interface CreateProjectDto {
@@ -50,6 +50,18 @@ export interface ProjectStatsResponse {
   overdue: number;
   totalCost: number;
   averageCost: number;
+}
+
+// Project document DTOs
+export interface UploadProjectDocumentDto {
+  file: File;
+  type: 'tz' | 'contract'; // Only TZ and Contract for projects
+  projectId: string;
+}
+
+export interface ProjectDocumentsFilters {
+  projectId: string;
+  type?: 'tz' | 'contract';
 }
 
 // Project service with all CRUD operations
@@ -266,5 +278,182 @@ export const projectsService = {
       console.error('Error fetching main projects:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке основных проектов');
     }
+  },
+
+  // Project Document Operations
+
+  // Get project documents (TZ and Contract)
+  async getProjectDocuments(filters: ProjectDocumentsFilters): Promise<Document[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('context', 'project_doc'); // Only project documents
+
+      if (filters.type) {
+        params.append('type', filters.type);
+      } else {
+        // Get both TZ and Contract documents
+        params.append('type', 'contract,tz');
+      }
+
+      const url = `/document/project/${filters.projectId}?${params.toString()}`;
+      const response = await apiRequest.get<Document[]>(url);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching project documents:', error);
+      if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для просмотра документов проекта');
+      }
+      throw new Error(error.response?.data?.message || 'Ошибка при загрузке документов проекта');
+    }
+  },
+
+  // Upload project document (TZ or Contract)
+  async uploadProjectDocument(uploadData: UploadProjectDocumentDto, onProgress?: (progress: number) => void): Promise<Document> {
+    try {
+      // Validate file
+      if (!uploadData.file) {
+        throw new Error('Файл обязателен для загрузки');
+      }
+
+      // Validate file size (max 100MB)
+      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+      if (uploadData.file.size > maxSize) {
+        throw new Error('Размер файла не должен превышать 100 МБ');
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/bmp',
+        'image/webp',
+        'image/svg+xml'
+      ];
+
+      if (!allowedTypes.includes(uploadData.file.type)) {
+        throw new Error('Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF, BMP, WebP, SVG');
+      }
+
+      // Validate required fields
+      if (!uploadData.type) {
+        throw new Error('Тип документа обязателен для заполнения');
+      }
+      if (!uploadData.projectId) {
+        throw new Error('ID проекта обязателен для заполнения');
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', uploadData.file);
+      formData.append('type', uploadData.type);
+      formData.append('context', 'project_doc'); // Project documents context
+      formData.append('version', '1'); // Add version field
+      formData.append('projectId', uploadData.projectId);
+
+      const response = await apiRequest.post<Document>('/document/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && onProgress) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(progress);
+          }
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error uploading project document:', error);
+      if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для загрузки документов проекта');
+      } else if (error.response?.status === 413) {
+        throw new Error('Файл слишком большой для загрузки');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера при загрузке файла');
+      }
+
+      // Return the validation error if it's a client error
+      if (error.message && !error.response) {
+        throw error;
+      }
+
+      throw new Error(error.response?.data?.message || 'Ошибка при загрузке документа проекта');
+    }
+  },
+
+  // Download project document
+  async downloadProjectDocument(documentId: string, originalName: string): Promise<void> {
+    try {
+      // First, get document info to get the download path
+      const docInfoResponse = await apiRequest.get(`/document/${documentId}`);
+      const documentInfo = docInfoResponse.data;
+
+      // Then download the file using the path
+      const fileResponse = await apiRequest.get(documentInfo.path, {
+        responseType: 'blob',
+      });
+
+      // Create download link
+      const blob = fileResponse.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = originalName || documentInfo.originalName;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Error downloading project document:', error);
+      if (error.response?.status === 404) {
+        throw new Error('Документ не найден');
+      } else if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для скачивания этого документа');
+      }
+      throw new Error('Ошибка при скачивании документа');
+    }
+  },
+
+  // Delete project document
+  async deleteProjectDocument(documentId: string): Promise<void> {
+    try {
+      await apiRequest.delete(`/document/${documentId}`);
+    } catch (error: any) {
+      console.error('Error deleting project document:', error);
+      if (error.response?.status === 404) {
+        throw new Error('Документ не найден');
+      } else if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для удаления этого документа');
+      }
+      throw new Error(error.response?.data?.message || 'Ошибка при удалении документа');
+    }
+  },
+
+  // Helper functions for project documents
+  getProjectDocumentTypeLabel: (type: 'tz' | 'contract'): string => {
+    switch (type) {
+      case 'tz':
+        return 'ТЗ - Техническое задание';
+      case 'contract':
+        return 'Договор - Договорная документация';
+      default:
+        return type;
+    }
+  },
+
+  formatFileSize: (bytes: number): string => {
+    if (bytes === 0) return '0 Б';
+    const k = 1024;
+    const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 };

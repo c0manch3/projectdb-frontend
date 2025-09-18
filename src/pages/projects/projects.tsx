@@ -65,7 +65,7 @@ function Projects(): JSX.Element {
 
   // Check user permissions
   const canCreateProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
   const canEditProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
   const canDeleteProjects = currentUser?.role === 'Admin';
   const canSeeCustomerFilter = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';

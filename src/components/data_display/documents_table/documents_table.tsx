@@ -58,7 +58,7 @@ function DocumentsTable({
       toast.success('Документ успешно загружен');
     } catch (error: any) {
       console.error('Error downloading document:', error);
-      toast.error(error || 'Ошибка при скачивании документа');
+      toast.error(error?.message || error?.toString() || 'Ошибка при скачивании документа');
     } finally {
       setDownloadingDocuments(prev => {
         const newSet = new Set(prev);
@@ -89,7 +89,7 @@ function DocumentsTable({
       }
     } catch (error: any) {
       console.error('Error deleting document:', error);
-      toast.error(error || 'Ошибка при удалении документа');
+      toast.error(error?.message || error?.toString() || 'Ошибка при удалении документа');
     }
   };
 

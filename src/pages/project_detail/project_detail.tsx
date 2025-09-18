@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -10,6 +10,7 @@ import Card from '../../components/common/card/card';
 import LoadingState from '../../components/common/loading_state/loading_state';
 import EmptyState from '../../components/common/empty_state/empty_state';
 import Button from '../../components/common/button/button';
+import UploadProjectDocumentModal from '../../components/modals/UploadProjectDocumentModal';
 
 import type { AppDispatch } from '../../store';
 import {
@@ -23,6 +24,8 @@ import {
   selectProjectManagers
 } from '../../store/slices/projects_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
+import { projectsService } from '../../services/projects';
+import type { Document } from '../../store/types';
 
 function ProjectDetail(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,8 +40,14 @@ function ProjectDetail(): JSX.Element {
   const managers = useSelector(selectProjectManagers);
   const currentUser = useSelector(selectCurrentUser);
 
+  // Local state for project documents
+  const [projectDocuments, setProjectDocuments] = useState<Document[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadDocumentType, setUploadDocumentType] = useState<'tz' | 'contract'>('tz');
+
   // Check user permissions
-  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
   const canEditProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
 
   // Load data on component mount
@@ -49,6 +58,64 @@ function ProjectDetail(): JSX.Element {
       dispatch(fetchManagers());
     }
   }, [dispatch, id, canViewProjects]);
+
+  // Load project documents
+  const loadProjectDocuments = async () => {
+    if (!id) return;
+
+    setDocumentsLoading(true);
+    try {
+      const documents = await projectsService.getProjectDocuments({ projectId: id });
+      setProjectDocuments(documents);
+    } catch (error: any) {
+      console.error('Error loading project documents:', error);
+      toast.error(error?.message || error?.toString() || 'Ошибка при загрузке документов проекта');
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  // Load documents when project loads
+  useEffect(() => {
+    if (id && canViewProjects && currentProject) {
+      loadProjectDocuments();
+    }
+  }, [id, canViewProjects, currentProject]);
+
+  // Document operations handlers
+  const handleUploadDocument = (type: 'tz' | 'contract') => {
+    setUploadDocumentType(type);
+    setUploadModalOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    loadProjectDocuments();
+    setUploadModalOpen(false);
+  };
+
+  const handleDownloadDocument = async (document: Document) => {
+    try {
+      await projectsService.downloadProjectDocument(document.id, document.originalName);
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      toast.error(error?.message || error?.toString() || 'Ошибка при скачивании документа');
+    }
+  };
+
+  const handleDeleteDocument = async (document: Document) => {
+    if (!window.confirm(`Вы уверены, что хотите удалить документ "${document.originalName}"?`)) {
+      return;
+    }
+
+    try {
+      await projectsService.deleteProjectDocument(document.id);
+      toast.success('Документ успешно удален');
+      loadProjectDocuments();
+    } catch (error: any) {
+      console.error('Error deleting document:', error);
+      toast.error(error?.message || error?.toString() || 'Ошибка при удалении документа');
+    }
+  };
 
   // Helper functions
   const formatCost = (cost: number): string => {
@@ -97,6 +164,15 @@ function ProjectDetail(): JSX.Element {
     if (!managerId) return 'Не назначен';
     const manager = managers.find(m => m.id === managerId);
     return manager ? `${manager.firstName} ${manager.lastName}` : 'Неизвестен';
+  };
+
+  // Document helper functions
+  const getDocumentsByType = (type: 'tz' | 'contract'): Document[] => {
+    return projectDocuments.filter(doc => doc.type === type);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    return projectsService.formatFileSize(bytes);
   };
 
   // Navigation handlers
@@ -390,6 +466,167 @@ function ProjectDetail(): JSX.Element {
               )}
             </div>
 
+            {/* Project Documents Section */}
+            <div className="project-documents-section">
+              <h2 className="section-title">Документы проекта</h2>
+
+              <div className="project-documents-grid">
+                {/* Technical Specification (TZ) */}
+                <Card className="project-document-card">
+                  <Card.Header>
+                    <div className="document-card-header">
+                      <Card.Title className="document-card-title">
+                        📋 Техническое задание (ТЗ)
+                      </Card.Title>
+                      {canEditProjects && (
+                        <Button
+                          variant="outline"
+                          size="small"
+                          onClick={() => handleUploadDocument('tz')}
+                        >
+                          Загрузить ТЗ
+                        </Button>
+                      )}
+                    </div>
+                  </Card.Header>
+                  <Card.Content>
+                    {documentsLoading ? (
+                      <LoadingState message="Загрузка документов..." />
+                    ) : (
+                      <div className="document-list">
+                        {getDocumentsByType('tz').length > 0 ? (
+                          getDocumentsByType('tz').map((document) => (
+                            <div key={document.id} className="document-item">
+                              <div className="document-info">
+                                <div className="document-icon">
+                                  {document.mimeType?.includes('pdf') ? '📄' :
+                                   document.mimeType?.includes('word') ? '📝' :
+                                   document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
+                                </div>
+                                <div className="document-details">
+                                  <div className="document-name">{document.originalName}</div>
+                                  <div className="document-meta">
+                                    <span className="document-size">{formatFileSize(document.fileSize)}</span>
+                                    <span className="document-separator">•</span>
+                                    <span className="document-date">{formatDate(document.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="document-actions">
+                                <Button
+                                  variant="outline"
+                                  size="small"
+                                  onClick={() => handleDownloadDocument(document)}
+                                >
+                                  Скачать
+                                </Button>
+                                {canEditProjects && (
+                                  <Button
+                                    variant="danger"
+                                    size="small"
+                                    onClick={() => handleDeleteDocument(document)}
+                                  >
+                                    Удалить
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="document-empty-state">
+                            <div className="document-empty-icon">📋</div>
+                            <div className="document-empty-text">
+                              <div className="document-empty-title">Техническое задание не загружено</div>
+                              <div className="document-empty-description">
+                                Загрузите техническое задание для проекта
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card.Content>
+                </Card>
+
+                {/* Contract */}
+                <Card className="project-document-card">
+                  <Card.Header>
+                    <div className="document-card-header">
+                      <Card.Title className="document-card-title">
+                        📄 Договор
+                      </Card.Title>
+                      {canEditProjects && (
+                        <Button
+                          variant="outline"
+                          size="small"
+                          onClick={() => handleUploadDocument('contract')}
+                        >
+                          Загрузить договор
+                        </Button>
+                      )}
+                    </div>
+                  </Card.Header>
+                  <Card.Content>
+                    {documentsLoading ? (
+                      <LoadingState message="Загрузка документов..." />
+                    ) : (
+                      <div className="document-list">
+                        {getDocumentsByType('contract').length > 0 ? (
+                          getDocumentsByType('contract').map((document) => (
+                            <div key={document.id} className="document-item">
+                              <div className="document-info">
+                                <div className="document-icon">
+                                  {document.mimeType?.includes('pdf') ? '📄' :
+                                   document.mimeType?.includes('word') ? '📝' :
+                                   document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
+                                </div>
+                                <div className="document-details">
+                                  <div className="document-name">{document.originalName}</div>
+                                  <div className="document-meta">
+                                    <span className="document-size">{formatFileSize(document.fileSize)}</span>
+                                    <span className="document-separator">•</span>
+                                    <span className="document-date">{formatDate(document.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="document-actions">
+                                <Button
+                                  variant="outline"
+                                  size="small"
+                                  onClick={() => handleDownloadDocument(document)}
+                                >
+                                  Скачать
+                                </Button>
+                                {canEditProjects && (
+                                  <Button
+                                    variant="danger"
+                                    size="small"
+                                    onClick={() => handleDeleteDocument(document)}
+                                  >
+                                    Удалить
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="document-empty-state">
+                            <div className="document-empty-icon">📄</div>
+                            <div className="document-empty-text">
+                              <div className="document-empty-title">Договор не загружен</div>
+                              <div className="document-empty-description">
+                                Загрузите договор для проекта
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card.Content>
+                </Card>
+              </div>
+            </div>
+
             {/* Future Features Card */}
             <Card className="project-future-features">
               <Card.Header>
@@ -429,6 +666,17 @@ function ProjectDetail(): JSX.Element {
               </Card.Content>
             </Card>
           </div>
+        )}
+
+        {/* Upload Project Document Modal */}
+        {currentProject && (
+          <UploadProjectDocumentModal
+            isOpen={uploadModalOpen}
+            onClose={() => setUploadModalOpen(false)}
+            projectId={currentProject.id}
+            documentType={uploadDocumentType}
+            onUploadSuccess={handleUploadSuccess}
+          />
         )}
       </main>
     </>

@@ -41,7 +41,7 @@ type CreateConstructionFormData = z.infer<typeof createConstructionSchema>;
 interface AddConstructionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectId?: string; // If provided, pre-select and disable project selection
+  projectId?: string | undefined; // If provided, pre-select and disable project selection
 }
 
 function AddConstructionModal({ isOpen, onClose, projectId }: AddConstructionModalProps): JSX.Element {

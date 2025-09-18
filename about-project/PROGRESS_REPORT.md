@@ -994,11 +994,58 @@ The LenconDB React frontend has achieved **exceptional success** with **MVP comp
 **Files Changed:** 16 files with 4,487 insertions and 15 deletions
 **Component Quality:** Professional-grade modals with consistent design language
 
+#### DBF-15: Document Management System Implementation (September 18, 2025)
+**Major Achievement: Complete Document Management & User Access Control**
+
+**Deliverables:**
+- ✅ **Fixed Document Display Issue:** Resolved problem where uploaded documents were not appearing on project pages
+  - **Root Cause Analysis:** Backend was not returning document `type` field, causing frontend filtering to fail
+  - **Solution Implementation:** Added proper API endpoint structure and document type handling
+  - **Document Types:** Full support for 'tz' (Technical Specification) and 'contract' document types
+
+- ✅ **Enhanced User Access Control:** Extended Employee role permissions for project viewing
+  - **Projects Access:** Employee users can now view projects and project details (previously restricted to Admin/Manager only)
+  - **Constructions Access:** Employee users can now view constructions and construction details
+  - **Permission Structure:** Maintained proper edit/delete restrictions while enabling read access
+
+- ✅ **Improved Error Handling:** Fixed React crash when handling document operations
+  - **Error Object Handling:** Fixed "Objects are not valid as a React child" error in toast notifications
+  - **Proper Error Extraction:** Added `error?.message || error?.toString()` pattern for safe error display
+  - **User Feedback:** Enhanced error messages for better user experience
+
+- ✅ **Document Download System Redesign:** Implemented proper file download according to backend requirements
+  - **Two-Step Download Process:**
+    1. Get document info via `GET /document/:fileId`
+    2. Download file using `path` field from response
+  - **Original Filename Preservation:** Maintains Cyrillic file names and proper file extensions
+  - **Authentication Integration:** Proper JWT token handling in download requests
+  - **Blob Handling:** Correct blob creation and download link generation
+
+- ✅ **Enhanced Document Operations:** Improved document management functionality
+  - **Upload Success Feedback:** Documents now properly refresh after upload
+  - **Delete Confirmation:** Proper confirmation dialogs with error handling
+  - **Download Progress:** Seamless file download experience
+  - **MIME Type Handling:** Safe handling of undefined MIME types with optional chaining
+
+**Technical Fixes:**
+- **API Endpoint Correction:** Fixed document fetching to use correct backend endpoints
+- **Type Safety:** Added optional chaining (`?.`) for safe property access
+- **Error Propagation:** Proper error message extraction and display
+- **State Synchronization:** Real-time document list updates after operations
+
+**Files Changed:** 4 files with enhanced error handling and download functionality
+- `src/pages/project_detail/project_detail.tsx` - Enhanced error handling and Employee access
+- `src/pages/projects/projects.tsx` - Extended Employee permissions
+- `src/pages/constructions/constructions.tsx` - Employee access for constructions
+- `src/services/projects.ts` - Redesigned download system
+- `src/services/constructions.ts` - Updated download implementation
+- `src/components/data_display/documents_table/documents_table.tsx` - Fixed error handling
+
 ### Final Status
 - **Original Estimate:** 8-12 weeks to MVP
 - **Actual Timeline:** MVP achieved ahead of schedule
 - **Current Progress:** 100% complete
-- **MVP Status:** ✅ **ACHIEVED** - Fully functional construction management system with complete constructions management
+- **MVP Status:** ✅ **ACHIEVED** - Fully functional construction management system with complete document management
 - **Risk Level:** None (MVP complete, remaining features are enhancements)
 
 ---

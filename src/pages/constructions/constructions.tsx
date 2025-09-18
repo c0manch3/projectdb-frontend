@@ -69,7 +69,7 @@ function Constructions(): JSX.Element {
 
   // Check user permissions
   const canCreateConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canViewConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  const canViewConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
   const canEditConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
   const canDeleteConstructions = currentUser?.role === 'Admin';
   const canUploadDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
@@ -518,7 +518,7 @@ function Constructions(): JSX.Element {
       <AddConstructionModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        projectId={projectId}
+        projectId={projectId || undefined}
       />
 
       <EditConstructionModal
@@ -536,7 +536,7 @@ function Constructions(): JSX.Element {
       <UploadDocumentModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        projectId={projectId}
+        projectId={projectId || undefined}
         construction={selectedConstruction}
       />
     </>

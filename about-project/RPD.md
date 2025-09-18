@@ -422,11 +422,20 @@ PATCH  /company/:uuid     - Обновить компанию (Admin тольк�
 
 #### Project (/project)
 ```
-GET    /project/:id       - Получить проект по ID
-GET    /project/         - Получить все проекты
-POST   /project/create   - Создать проект (Manager+)
-DELETE /project/:id      - Удалить проект (Admin только)
-PATCH  /project/:id      - Обновить проект (Admin только)
+GET    /project                    - Получить все проекты (с фильтрами)
+GET    /project/:id               - Получить проект по ID
+POST   /project/create           - Создать проект (Admin/Manager)
+PATCH  /project/:id              - Обновить проект (Admin/Manager)
+DELETE /project/:id              - Удалить проект (Admin/Manager)
+GET    /project/stats            - Получить статистику проектов
+GET    /project/by-manager/:managerId - Получить проекты менеджера
+
+# Фильтры для GET /project:
+# ?status=active|completed|overdue
+# &customerId=uuid
+# &managerId=uuid
+# &type=main|additional
+# &search=название
 ```
 
 #### Construction (/construction)
@@ -474,17 +483,32 @@ PATCH  /auth/change-password  - Изменить пароль (для себя)
 
 #### Projects
 ```
-GET    /project/:id/users     - Получить участников проекта
-POST   /project/:id/users     - Добавить участника в проект
-DELETE /project/:id/users/:userId - Удалить участника из проекта
-GET    /project/by-manager/:managerId - Проекты менеджера
+GET    /project                         - Получить все проекты (с фильтрами)
+GET    /project/:id                    - Получить проект по ID
+POST   /project/create                 - Создать проект (Admin/Manager)
+PATCH  /project/:id                    - Обновить проект (Admin/Manager)
+DELETE /project/:id                    - Удалить проект (Admin/Manager)
+GET    /project/stats                  - Получить статистику проектов
+GET    /project/by-manager/:managerId  - Получить проекты менеджера
+GET    /project/:id/users              - Получить участников проекта
+POST   /project/:id/users              - Добавить участника в проект
+DELETE /project/:id/users/:userId      - Удалить участника из проекта
+
+# Фильтры для GET /project:
+# ?status=active|completed|overdue&customerId=uuid&managerId=uuid&type=main|additional&search=название
 ```
 
 #### Documents
 ```
-DELETE /document/:id          - Удалить документ
-GET    /construction/:id/documents - Документы конструкции
-GET    /document/download/:id - Скачать файл документа
+GET    /document/:id                    - Получить информацию о документе (включая path для скачивания)
+DELETE /document/:id                    - Удалить документ
+GET    /document/project/:projectId     - Получить документы проекта (с фильтрами)
+GET    /construction/:id/documents      - Документы конструкции
+POST   /document/upload                 - Загрузить документ
+
+# Скачивание файлов (двухэтапный процесс):
+# 1. GET /document/:id -> получить информацию с полем path
+# 2. GET [path] -> скачать файл по пути из первого запроса
 ```
 
 #### Workload
@@ -1379,6 +1403,267 @@ const ProtectedRoute = ({ children, roles }) => {
 
 При следовании данному PRD и соблюдении технических требований, система будет успешно внедрена и обеспечит значительное повышение эффективности работы конструкторского бюро.
 
-**Версия документа**: 1.0
+---
+
+## Приложение Г: API для работы с документами
+
+### Общие требования
+- Все запросы требуют JWT токен в заголовке `Authorization: Bearer {token}`
+- Доступ контролируется ролями (Admin, Manager, Employee, Customer)
+- Поддержка кириллических имен файлов
+- Статические файлы с настройками `etag: true` для кэширования
+
+### Эндпоинты
+
+#### Получение информации о документе
+```
+GET /document/:fileId
+Authorization: Bearer {token}
+
+Response:
+{
+  id: string;
+  originalName: string;
+  hashName: string;
+  mimetype: string;
+  size: number;
+  path: string; // Полный URL для скачивания
+  type: string;
+  context: string;
+  version: number;
+  projectId?: string;
+  constructionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Получение документов проекта
+```
+GET /document/project/:projectId
+Authorization: Bearer {token}
+Query params: type?, context?, version?
+
+Response: Массив документов с теми же полями
+```
+
+#### Загрузка документа
+```
+POST /document/upload
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+FormData:
+- file: File
+- type: 'tz' | 'contract' | 'km' | 'kz' | 'rpz' | 'gp' | 'igi' | 'spozu'
+- context: 'initial_data' | 'project_doc'
+- version: number
+- projectId?: string
+- constructionId?: string
+
+Response: Document object
+```
+
+#### Удаление документа
+```
+DELETE /document/:id
+Authorization: Bearer {token}
+
+Response: 204 No Content
+```
+
+### Реализация скачивания на фронтенде
+
+#### Прямое скачивание через ссылку
+```typescript
+// Получить документ и использовать поле path
+const document = await fetch('/api/document/fileId', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const data = await document.json();
+
+// data.path содержит готовый URL для скачивания
+window.open(data.path, '_blank');
+```
+
+#### Скачивание с сохранением оригинального имени
+```typescript
+const downloadFile = async (fileId: string, token: string) => {
+  const response = await fetch(`/api/document/${fileId}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const fileInfo = await response.json();
+
+  // Скачивание файла
+  const fileResponse = await fetch(fileInfo.path, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  const blob = await fileResponse.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileInfo.originalName;
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+};
+```
+
+### Особенности
+1. **Поддержка кириллицы**: Сервер корректно обрабатывает русские имена файлов
+2. **Статические файлы**: Используется ServeStaticModule с настройками etag: true для кэширования
+3. **Безопасность**: Все операции защищены JWT авторизацией
+4. **Фильтрация**: Можно фильтровать документы по типу, контексту и версии
+
+---
+
+## Приложение Д: API для работы с проектами
+
+### Основные CRUD операции
+
+#### Получение всех проектов
+```
+GET /project
+Authorization: Bearer {token}
+Query parameters:
+- status?: 'active' | 'completed' | 'overdue'
+- customerId?: string (UUID)
+- managerId?: string (UUID)
+- type?: 'main' | 'additional'
+- search?: string (поиск по названию)
+
+Response: Project[]
+```
+
+#### Получение проекта по ID
+```
+GET /project/:id
+Authorization: Bearer {token}
+
+Response: Project
+{
+  id: string;
+  name: string;
+  customerId: string;
+  contractDate: string; // ISO date
+  expirationDate: string; // ISO date
+  cost: number;
+  type: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string; // для дополнительных соглашений
+  status: 'active' | 'completed' | 'overdue';
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Создание проекта
+```
+POST /project/create
+Authorization: Bearer {token}
+Content-Type: application/json
+Permissions: Admin, Manager
+
+Body: CreateProjectDto
+{
+  name: string;
+  customerId: string;
+  contractDate: string; // ISO date
+  expirationDate: string; // ISO date
+  cost: number;
+  type: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string; // обязательно для type: 'additional'
+}
+
+Response: Project
+```
+
+#### Обновление проекта
+```
+PATCH /project/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+Permissions: Admin, Manager
+
+Body: UpdateProjectDto (все поля опциональны)
+{
+  name?: string;
+  customerId?: string;
+  contractDate?: string;
+  expirationDate?: string;
+  cost?: number;
+  type?: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string;
+  status?: 'active' | 'completed' | 'overdue';
+}
+
+Response: Project
+```
+
+#### Удаление проекта
+```
+DELETE /project/:id
+Authorization: Bearer {token}
+Permissions: Admin, Manager
+
+Response: 204 No Content
+```
+
+#### Получение статистики проектов
+```
+GET /project/stats
+Authorization: Bearer {token}
+
+Response: ProjectStatsResponse
+{
+  total: number;
+  active: number;
+  completed: number;
+  overdue: number;
+  totalCost: number;
+  averageCost: number;
+}
+```
+
+### Связанные операции
+
+#### Получение проектов менеджера
+```
+GET /project/by-manager/:managerId
+Authorization: Bearer {token}
+
+Response: Project[]
+```
+
+#### Работа с участниками проекта
+```
+GET /project/:id/users
+Authorization: Bearer {token}
+Response: User[]
+
+POST /project/:id/users
+Authorization: Bearer {token}
+Body: { userId: string }
+Response: 201 Created
+
+DELETE /project/:id/users/:userId
+Authorization: Bearer {token}
+Response: 204 No Content
+```
+
+### Валидация и бизнес-правила
+
+1. **Валидация дат**: contractDate должна быть раньше expirationDate
+2. **Валидация стоимости**: cost должна быть больше 0
+3. **Дополнительные соглашения**: при type='additional' обязательно mainProjectId
+4. **Уникальность**: name должно быть уникальным
+5. **Статус проекта**: автоматически определяется на основе дат
+
+**Версия документа**: 1.2
 **Дата создания**: Январь 2025
+**Дата обновления**: Сентябрь 2025 (добавлена детальная документация по API документов и проектов)
 **Автор**: LenconDB Team
