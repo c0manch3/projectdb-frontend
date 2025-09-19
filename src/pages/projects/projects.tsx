@@ -214,42 +214,6 @@ function Projects(): JSX.Element {
         />
 
         <div className="container">
-          {/* Statistics Cards */}
-          {stats && !statsLoading && (
-            <div className="stats-grid">
-              <StatCard
-                label="Всего проектов"
-                value={stats.total.toString()}
-                color="primary"
-              />
-              <StatCard
-                label="Активные"
-                value={stats.active.toString()}
-                color="success"
-              />
-              <StatCard
-                label="Завершенные"
-                value={stats.completed.toString()}
-                color="primary"
-              />
-              <StatCard
-                label="Просроченные"
-                value={stats.overdue.toString()}
-                color="warning"
-              />
-              <StatCard
-                label="Общая стоимость"
-                value={formatCost(stats.totalCost)}
-                color="primary"
-              />
-              <StatCard
-                label="Средняя стоимость"
-                value={formatCost(stats.averageCost)}
-                color="secondary"
-              />
-            </div>
-          )}
-
           {/* Filters and Search */}
           <Card>
             <Filters>
@@ -318,6 +282,32 @@ function Projects(): JSX.Element {
               )}
             </Filters>
           </Card>
+
+          {/* Statistics Cards */}
+          {stats && !statsLoading && (
+            <StatCard.Grid>
+              <StatCard
+                label="Всего проектов"
+                value={stats.total.toString()}
+                color="primary"
+              />
+              <StatCard
+                label="Активные"
+                value={stats.active.toString()}
+                color="success"
+              />
+              <StatCard
+                label="Завершенные"
+                value={stats.completed.toString()}
+                color="primary"
+              />
+              <StatCard
+                label="Просроченные"
+                value={stats.overdue.toString()}
+                color="warning"
+              />
+            </StatCard.Grid>
+          )}
 
           {/* Projects Table */}
           <Table.Container>

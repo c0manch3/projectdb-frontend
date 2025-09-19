@@ -69,29 +69,32 @@ export const projectsService = {
   // Get all projects with optional filters
   async getProjects(filters?: ProjectsFilters): Promise<Project[]> {
     try {
-      const params = new URLSearchParams();
+      // For now, get all projects and filter on frontend
+      // TODO: Implement backend filtering when available
+      const response = await apiRequest.get<Project[]>('/project');
+      let projects = response.data;
 
-      if (filters?.status && filters.status !== 'all') {
-        params.append('status', filters.status);
-      }
-      if (filters?.customerId) {
-        params.append('customerId', filters.customerId);
-      }
-      if (filters?.managerId) {
-        params.append('managerId', filters.managerId);
-      }
-      if (filters?.type && filters.type !== 'all') {
-        params.append('type', filters.type);
-      }
-      if (filters?.search) {
-        params.append('search', filters.search);
+      // Apply frontend filtering
+      if (filters) {
+        if (filters.status && filters.status !== 'all') {
+          projects = projects.filter(p => p.status === filters.status);
+        }
+        if (filters.customerId) {
+          projects = projects.filter(p => p.customerId === filters.customerId);
+        }
+        if (filters.managerId) {
+          projects = projects.filter(p => p.managerId === filters.managerId);
+        }
+        if (filters.type && filters.type !== 'all') {
+          projects = projects.filter(p => p.type === filters.type);
+        }
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          projects = projects.filter(p => p.name.toLowerCase().includes(searchLower));
+        }
       }
 
-      const queryString = params.toString();
-      const url = queryString ? `/project?${queryString}` : '/project';
-
-      const response = await apiRequest.get<Project[]>(url);
-      return response.data;
+      return projects;
     } catch (error: any) {
       console.error('Error fetching projects:', error);
       if (error.response?.status === 403) {
@@ -236,22 +239,34 @@ export const projectsService = {
   // Get project statistics
   async getProjectStats(): Promise<ProjectStatsResponse> {
     try {
-      const response = await apiRequest.get<ProjectStatsResponse>('/project/stats');
-      return response.data;
+      // Calculate stats from all projects since backend might not have /stats endpoint
+      const projects = await this.getProjects();
+
+      const stats: ProjectStatsResponse = {
+        total: projects.length,
+        active: projects.filter(p => p.status === 'active').length,
+        completed: projects.filter(p => p.status === 'completed').length,
+        overdue: projects.filter(p => p.status === 'overdue').length,
+        totalCost: projects.reduce((sum, p) => sum + p.cost, 0),
+        averageCost: projects.length > 0 ? projects.reduce((sum, p) => sum + p.cost, 0) / projects.length : 0
+      };
+
+      return stats;
     } catch (error: any) {
-      console.error('Error fetching project stats:', error);
+      console.error('Error calculating project stats:', error);
       if (error.response?.status === 403) {
         throw new Error('У вас нет прав для просмотра статистики проектов');
       }
-      throw new Error(error.response?.data?.message || 'Ошибка при загрузке статистики проектов');
+      throw new Error('Ошибка при загрузке статистики проектов');
     }
   },
 
   // Get customers for forms (companies with type 'Customer')
   async getCustomers(): Promise<Company[]> {
     try {
-      const response = await apiRequest.get<Company[]>('/company?type=Customer');
-      return response.data;
+      const response = await apiRequest.get<Company[]>('/company');
+      // Filter only Customer type on frontend
+      return response.data.filter(company => company.type === 'Customer');
     } catch (error: any) {
       console.error('Error fetching customers:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке списка заказчиков');
@@ -261,8 +276,9 @@ export const projectsService = {
   // Get managers for forms (users with role 'Manager' or 'Admin')
   async getManagers(): Promise<User[]> {
     try {
-      const response = await apiRequest.get<User[]>('/auth?role=Manager,Admin');
-      return response.data;
+      const response = await apiRequest.get<User[]>('/auth');
+      // Filter only Manager and Admin roles on frontend
+      return response.data.filter(user => user.role === 'Manager' || user.role === 'Admin');
     } catch (error: any) {
       console.error('Error fetching managers:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке списка менеджеров');
