@@ -538,6 +538,7 @@ function Constructions(): JSX.Element {
         onClose={() => setShowUploadModal(false)}
         projectId={projectId || undefined}
         construction={selectedConstruction}
+        existingDocuments={selectedConstruction ? documents.filter(doc => doc.constructionId === selectedConstruction.id) : []}
       />
     </>
   );

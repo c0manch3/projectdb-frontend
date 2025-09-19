@@ -24,7 +24,8 @@ import {
   selectProjectsLoading
 } from '../../store/slices/projects_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
-import type { Construction } from '../../store/types';
+import type { Construction, Document, DocumentType } from '../../store/types';
+import { constructionsService } from '../../services/constructions';
 
 // Validation schema
 const uploadDocumentSchema = z.object({
@@ -75,13 +76,15 @@ interface UploadDocumentModalProps {
   onClose: () => void;
   projectId?: string | undefined; // If provided, pre-select and disable project selection
   construction?: Construction | null; // If provided, pre-select construction
+  existingDocuments?: Document[]; // Existing documents for selected construction
 }
 
 function UploadDocumentModal({
   isOpen,
   onClose,
   projectId,
-  construction
+  construction,
+  existingDocuments = []
 }: UploadDocumentModalProps): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -99,6 +102,7 @@ function UploadDocumentModal({
   const [constructionsLoading, setConstructionsLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileValidationError, setFileValidationError] = useState<string | null>(null);
+  const [constructionDocuments, setConstructionDocuments] = useState<Document[]>(existingDocuments);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form setup
@@ -120,6 +124,7 @@ function UploadDocumentModal({
 
   // Watch form values
   const selectedProjectId = watch('projectId');
+  const selectedConstructionId = watch('constructionId');
 
   // Load projects when modal opens
   useEffect(() => {
@@ -165,6 +170,27 @@ function UploadDocumentModal({
       loadConstructions(selectedProjectId);
     }
   }, [selectedProjectId, construction, loadConstructions]);
+
+  // Load documents for selected construction
+  const loadConstructionDocuments = useCallback(async (constructionId: string) => {
+    try {
+      const documents = await constructionsService.getDocumentsByConstruction(constructionId);
+      setConstructionDocuments(documents);
+    } catch (error) {
+      console.error('Error loading construction documents:', error);
+      setConstructionDocuments([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedConstructionId) {
+      loadConstructionDocuments(selectedConstructionId);
+    } else if (construction) {
+      setConstructionDocuments(existingDocuments);
+    } else {
+      setConstructionDocuments([]);
+    }
+  }, [selectedConstructionId, construction, existingDocuments, loadConstructionDocuments]);
 
   // Validate file function
   const validateFile = (file: File): string | null => {
@@ -280,7 +306,13 @@ function UploadDocumentModal({
       setSelectedFile(null);
     } catch (error: any) {
       console.error('Error uploading document:', error);
-      toast.error(error || 'Ошибка при загрузке документа');
+      if (error?.includes('already exists')) {
+        toast.error('Документ данного типа уже существует для этой конструкции');
+      } else if (error?.includes('cannot have type')) {
+        toast.error('Данный тип документа недоступен для конструкций');
+      } else {
+        toast.error(error || 'Ошибка при загрузке документа');
+      }
     } finally {
       setIsSubmitting(false);
       dispatch(resetUploadProgress());
@@ -295,7 +327,48 @@ function UploadDocumentModal({
     setSelectedFile(null);
     setFileValidationError(null);
     setIsDragOver(false);
+    setConstructionDocuments(existingDocuments);
     dispatch(resetUploadProgress());
+  };
+
+  // Get available document types based on construction selection and existing documents
+  const getAvailableDocumentTypes = (): Array<{value: string, label: string, disabled: boolean, reason?: string}> => {
+    const allTypes = [
+      { value: 'km', label: 'КМ - Конструкции металлические' },
+      { value: 'kz', label: 'КЖ - Конструкции железобетонные' },
+      { value: 'rpz', label: 'РПЗ - Расчетно-пояснительная записка' },
+      { value: 'tz', label: 'ТЗ - Техническое задание' },
+      { value: 'gp', label: 'ГП - Генеральный план' },
+      { value: 'igi', label: 'ИГИ - Инженерно-геологические изыскания' },
+      { value: 'spozu', label: 'СПОЗУ - Специальные противопожарные мероприятия' },
+      { value: 'contract', label: 'Договор - Договорная документация' }
+    ];
+
+    // If construction is selected, apply restrictions
+    if (selectedConstructionId || construction) {
+      const restrictedTypesForConstruction = ['contract', 'tz'];
+      const usedTypes = constructionDocuments.map(doc => doc.type);
+
+      return allTypes.map(type => {
+        if (restrictedTypesForConstruction.includes(type.value)) {
+          return {
+            ...type,
+            disabled: true,
+            reason: 'Недоступно для конструкций'
+          };
+        }
+        if (usedTypes.includes(type.value as DocumentType)) {
+          return {
+            ...type,
+            disabled: true,
+            reason: 'Уже добавлен'
+          };
+        }
+        return { ...type, disabled: false };
+      });
+    }
+
+    return allTypes.map(type => ({ ...type, disabled: false }));
   };
 
   // Format file size for display
@@ -449,17 +522,34 @@ function UploadDocumentModal({
                 {...register('type')}
               >
                 <option value="">Выберите тип документа</option>
-                <option value="km">КМ - Конструкции металлические</option>
-                <option value="kz">КЖ - Конструкции железобетонные</option>
-                <option value="rpz">РПЗ - Расчетно-пояснительная записка</option>
-                <option value="tz">ТЗ - Техническое задание</option>
-                <option value="gp">ГП - Генеральный план</option>
-                <option value="igi">ИГИ - Инженерно-геологические изыскания</option>
-                <option value="spozu">СПОЗУ - Специальные противопожарные мероприятия</option>
-                <option value="contract">Договор - Договорная документация</option>
+                {getAvailableDocumentTypes().map((type) => (
+                  <option
+                    key={type.value}
+                    value={type.value}
+                    disabled={type.disabled}
+                    title={type.reason}
+                  >
+                    {type.label} {type.disabled ? `(${type.reason})` : ''}
+                  </option>
+                ))}
               </FormSelect>
               {errors.type && (
                 <span className="form-error">{errors.type.message}</span>
+              )}
+              {(selectedConstructionId || construction) && (
+                <div className="form-help">
+                  <div className="document-type-info">
+                    <div className="document-type-info__title">Информация о типах документов:</div>
+                    <div className="document-type-info__restrictions">
+                      • Для конструкций недоступны: ТЗ, Договор
+                    </div>
+                    {constructionDocuments.length > 0 && (
+                      <div className="document-type-info__used">
+                        • Уже добавлены: {constructionDocuments.map(doc => constructionsService.getDocumentTypeLabel(doc.type)).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </FormGroup>
 
