@@ -503,7 +503,7 @@ DELETE /project/:id/users/:userId      - Удалить участника из 
 GET    /document/:id                    - Получить информацию о документе (включая path для скачивания)
 DELETE /document/:id                    - Удалить документ
 GET    /document/project/:projectId     - Получить документы проекта (с фильтрами)
-GET    /construction/:id/documents      - Документы конструкции
+GET    /document/construction/:constructionId - Получить документы конструкции
 POST   /document/upload                 - Загрузить документ
 
 # Скачивание файлов (двухэтапный процесс):
@@ -1445,6 +1445,20 @@ Authorization: Bearer {token}
 Query params: type?, context?, version?
 
 Response: Массив документов с теми же полями
+```
+
+#### Получение документов конструкции
+```
+GET /document/construction/:constructionId
+Authorization: Bearer {token}
+
+Path Parameters:
+- constructionId: string (UUID) - ID конструкции
+
+Response: Массив документов с теми же полями
+
+Пример:
+GET /document/construction/12345678-1234-1234-1234-123456789abc
 ```
 
 #### Загрузка документа

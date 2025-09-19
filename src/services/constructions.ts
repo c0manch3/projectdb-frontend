@@ -224,26 +224,21 @@ export const constructionsService = {
   // Get documents with optional filters
   async getDocuments(filters?: DocumentsFilters): Promise<Document[]> {
     try {
-      const params = new URLSearchParams();
-
-      if (filters?.projectId) {
-        params.append('projectId', filters.projectId);
-      }
+      // If constructionId is provided, use the new specific endpoint
       if (filters?.constructionId) {
-        params.append('constructionId', filters.constructionId);
-      }
-      if (filters?.type) {
-        params.append('type', filters.type);
-      }
-      if (filters?.context) {
-        params.append('context', filters.context);
+        const response = await apiRequest.get<Document[]>(`/document/construction/${filters.constructionId}`);
+        return response.data;
       }
 
-      const queryString = params.toString();
-      const url = queryString ? `/document?${queryString}` : '/document';
+      // For construction service, we only support constructionId filter
+      // Project documents should be fetched via projectsService
+      if (filters?.projectId) {
+        throw new Error('Project documents should be fetched via projectsService.getProjectDocuments()');
+      }
 
-      const response = await apiRequest.get<Document[]>(url);
-      return response.data;
+      // For generic document listing (no filters), return empty array
+      // Individual construction documents are loaded separately
+      return [];
     } catch (error: any) {
       console.error('Error fetching documents:', error);
       if (error.response?.status === 403) {

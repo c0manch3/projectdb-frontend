@@ -81,13 +81,13 @@ function Constructions(): JSX.Element {
         // Load specific project and its constructions
         dispatch(fetchProjectById(projectId));
         dispatch(fetchConstructionsByProject(projectId));
-        dispatch(fetchDocuments({ projectId }));
+        // Note: Documents for each construction are loaded individually when construction is selected
         // Set project filter
         dispatch(updateFilters({ projectId }));
       } else {
-        // Load all constructions and documents
+        // Load all constructions
         dispatch(fetchConstructions());
-        dispatch(fetchDocuments());
+        // Note: Documents are loaded individually when construction is selected
       }
     }
   }, [dispatch, projectId, canViewConstructions]);
