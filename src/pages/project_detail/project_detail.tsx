@@ -509,7 +509,7 @@ function ProjectDetail(): JSX.Element {
                                 <div className="document-details">
                                   <div className="document-name">{document.originalName}</div>
                                   <div className="document-meta">
-                                    <span className="document-date">{formatDate(document.uploadedAt)}</span>
+                                    <span className="document-date">Дата загрузки: {formatDate(document.uploadedAt)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -584,7 +584,7 @@ function ProjectDetail(): JSX.Element {
                                 <div className="document-details">
                                   <div className="document-name">{document.originalName}</div>
                                   <div className="document-meta">
-                                    <span className="document-date">{formatDate(document.uploadedAt)}</span>
+                                    <span className="document-date">Дата загрузки: {formatDate(document.uploadedAt)}</span>
                                   </div>
                                 </div>
                               </div>
