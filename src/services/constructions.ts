@@ -251,7 +251,7 @@ export const constructionsService = {
   // Get documents by construction ID
   async getDocumentsByConstruction(constructionId: string): Promise<Document[]> {
     try {
-      const response = await apiRequest.get<Document[]>(`/document?constructionId=${constructionId}`);
+      const response = await apiRequest.get<Document[]>(`/document/construction/${constructionId}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching documents by construction:', error);
