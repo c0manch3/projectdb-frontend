@@ -569,13 +569,14 @@ const constructionsSlice = createSlice({
         const { constructionId, documents } = action.payload;
         state.documentsByConstruction[constructionId] = documents;
 
-        // Update main documents list
+        // Update main documents list with constructionId field
         documents.forEach(document => {
+          const documentWithConstructionId = { ...document, constructionId };
           const existingIndex = state.documents.findIndex(d => d.id === document.id);
           if (existingIndex !== -1) {
-            state.documents[existingIndex] = document;
+            state.documents[existingIndex] = documentWithConstructionId;
           } else {
-            state.documents.push(document);
+            state.documents.push(documentWithConstructionId);
           }
         });
       })

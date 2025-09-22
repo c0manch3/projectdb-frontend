@@ -66,6 +66,7 @@ function Constructions(): JSX.Element {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedConstruction, setSelectedConstruction] = useState<Construction | null>(null);
   const [activeTab, setActiveTab] = useState<'constructions' | 'documents'>('constructions');
+  const [documentsLoaded, setDocumentsLoaded] = useState(false);
 
   // Check user permissions
   const canCreateConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
@@ -81,23 +82,26 @@ function Constructions(): JSX.Element {
         // Load specific project and its constructions
         dispatch(fetchProjectById(projectId));
         dispatch(fetchConstructionsByProject(projectId));
+        // Note: Documents for each construction are loaded individually when construction is selected
         // Set project filter
         dispatch(updateFilters({ projectId }));
       } else {
         // Load all constructions
         dispatch(fetchConstructions());
+        // Note: Documents are loaded individually when construction is selected
       }
     }
   }, [dispatch, projectId, canViewConstructions]);
 
-  // Load documents for all constructions after constructions are loaded
+  // Load documents for constructions after they are loaded (only once)
   useEffect(() => {
-    if (canViewConstructions && filteredConstructions.length > 0) {
+    if (canViewConstructions && !constructionsLoading && filteredConstructions.length > 0 && !documentsLoaded) {
+      setDocumentsLoaded(true); // Устанавливаем флаг СРАЗУ, чтобы избежать повторных вызовов
       filteredConstructions.forEach(construction => {
         dispatch(fetchDocumentsByConstruction(construction.id));
       });
     }
-  }, [dispatch, canViewConstructions, filteredConstructions]);
+  }, [dispatch, canViewConstructions, constructionsLoading, filteredConstructions, documentsLoaded]);
 
   // Handle search changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,8 +148,10 @@ function Constructions(): JSX.Element {
     return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
   };
 
-  const getDocumentCount = (constructionId: string): number => {
-    return documents.filter(doc => doc.constructionId === constructionId).length;
+  const getDocumentCount = (constructionId: string): string => {
+    const filteredDocs = documents.filter(doc => doc.constructionId === constructionId);
+    const count = filteredDocs.length;
+    return count > 0 ? `${count} документов` : '—';
   };
 
   const getTotalDocumentsCount = (): number => {
@@ -395,7 +401,7 @@ function Constructions(): JSX.Element {
                           )}
                           <Table.Cell>
                             <span className="documents-count">
-                              {getDocumentCount(construction.id)} документов
+                              {getDocumentCount(construction.id)}
                             </span>
                           </Table.Cell>
                           <Table.Cell>{formatDate(construction.createdAt)}</Table.Cell>
