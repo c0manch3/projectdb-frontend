@@ -302,7 +302,7 @@ M src/components/modals/AddProjectModal.tsx    # NEW: Create projects with valid
 M src/components/modals/EditProjectModal.tsx   # NEW: Edit projects with form pre-population
 M src/components/modals/ProjectDetailsModal.tsx # NEW: View detailed project information
 M src/components/modals/ConfirmDeleteProjectModal.tsx # NEW: Safe project deletion
-M public/style.css                             # Extensive styling additions for modern design
+M src/styles/style.css                             # Extensive styling additions for modern design
 ```
 
 **Deliverables:**

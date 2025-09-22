@@ -190,18 +190,7 @@ export const downloadDocument = createAsyncThunk(
   'constructions/downloadDocument',
   async ({ documentId, fileName }: { documentId: string; fileName: string }, { rejectWithValue }) => {
     try {
-      const blob = await constructionsService.downloadDocument(documentId);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      await constructionsService.downloadDocument(documentId, fileName);
       return { documentId, success: true };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Ошибка при скачивании документа');

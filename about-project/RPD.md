@@ -447,12 +447,6 @@ DELETE /construction/:id     - Удалить конструкцию (Manager+)
 PATCH  /construction/:id     - Обновить конструкцию (Manager+)
 ```
 
-#### Document (/document)
-```
-POST   /document/upload      - Загрузить документ (Manager+)
-GET    /document/:fileId     - Получить документ по ID
-GET    /document/:projectId  - Получить документы по ID проекта
-```
 
 #### Workload Plan (/workload-plan)
 ```
@@ -875,7 +869,7 @@ function NotFound(): JSX.Element {
 }
 ```
 
-### 11.4 Стили для страницы 404 (в public/style.css)
+### 11.4 Стили для страницы 404 (в src/styles/style.css)
 
 ```css
 /* Страница 404 - Not Found */
@@ -1451,6 +1445,7 @@ Response: Массив документов с теми же полями
 ```
 GET /document/construction/:constructionId
 Authorization: Bearer {token}
+Query params: type?, context?, version?
 
 Path Parameters:
 - constructionId: string (UUID) - ID конструкции
@@ -1627,21 +1622,6 @@ Permissions: Admin, Manager
 Response: 204 No Content
 ```
 
-#### Получение статистики проектов
-```
-GET /project/stats
-Authorization: Bearer {token}
-
-Response: ProjectStatsResponse
-{
-  total: number;
-  active: number;
-  completed: number;
-  overdue: number;
-  totalCost: number;
-  averageCost: number;
-}
-```
 
 ### Связанные операции
 

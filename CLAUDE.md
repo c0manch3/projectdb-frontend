@@ -80,7 +80,7 @@ export default ProjectList;
 
 ## Styling Approach
 
-- All styles should be in `public/style.css`
+- All styles should be in `src/styles/style.css`
 - Use **BEM methodology** for CSS class naming
 - **No inline styles** allowed
 - Use CSS custom properties (variables) for colors and dimensions

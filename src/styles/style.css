@@ -1,5 +1,401 @@
 /* LenconDB - Construction Project Management System */
 /* CSS Variables - Design System */
+
+/* Test CSS Load */
+body {
+  position: relative !important;
+}
+
+/* High specificity construction cards */
+.constructions-table-card .construction-cards-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--spacing-lg) !important;
+}
+
+.constructions-table-card .construction-card {
+  background: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden !important;
+  transition: var(--transition) !important;
+}
+
+.constructions-table-card .construction-card:hover {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--primary) !important;
+}
+
+.constructions-table-card .construction-card--expanded {
+  border-color: var(--primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.constructions-table-card .construction-card__header {
+  padding: var(--spacing-xl) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: var(--transition) !important;
+  background: var(--background) !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+.constructions-table-card .construction-card__header:hover {
+  background: var(--surface) !important;
+}
+
+.constructions-table-card .construction-card--expanded .construction-card__header {
+  border-bottom-color: var(--border) !important;
+  background: var(--surface) !important;
+}
+
+.constructions-table-card .construction-card__header-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--spacing-lg) !important;
+}
+
+.constructions-table-card .construction-card__main-info {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.constructions-table-card .construction-card__controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-md) !important;
+  flex-shrink: 0 !important;
+}
+
+.constructions-table-card .construction-card__name {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  margin: 0 0 var(--spacing-sm) 0 !important;
+  line-height: 1.3 !important;
+  word-break: break-word !important;
+}
+
+.constructions-table-card .construction-card__meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-lg) !important;
+  flex-wrap: wrap !important;
+}
+
+.constructions-table-card .construction-card__meta-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-xs) !important;
+  font-size: 0.875rem !important;
+  color: var(--text-secondary) !important;
+}
+
+.constructions-table-card .construction-card__meta-icon {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+.constructions-table-card .construction-card__meta-label {
+  font-weight: 500 !important;
+}
+
+.constructions-table-card .construction-card__meta-value {
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.constructions-table-card .construction-card__documents-badge {
+  background: var(--primary) !important;
+  color: white !important;
+  padding: var(--spacing-xs) var(--spacing-md) !important;
+  border-radius: 20px !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+.constructions-table-card .construction-card__documents-badge--empty {
+  background: var(--text-secondary) !important;
+  opacity: 0.7 !important;
+}
+
+.constructions-table-card .construction-card__quick-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+}
+
+.constructions-table-card .construction-card__action-button {
+  background: none !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
+  border-radius: var(--border-radius) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  white-space: nowrap !important;
+}
+
+.constructions-table-card .construction-card__action-button:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: var(--surface) !important;
+}
+
+.constructions-table-card .construction-card__action-button--danger:hover {
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  background: #fef2f2 !important;
+}
+
+.constructions-table-card .construction-card__action-button--secondary:hover {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+  background: #f0fdf4 !important;
+}
+
+.constructions-table-card .construction-card__expand-toggle {
+  background: none !important;
+  border: none !important;
+  padding: var(--spacing-sm) !important;
+  cursor: pointer !important;
+  border-radius: var(--border-radius) !important;
+  transition: var(--transition) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-secondary) !important;
+}
+
+.constructions-table-card .construction-card__expand-toggle:hover {
+  background: var(--surface) !important;
+  color: var(--primary) !important;
+}
+
+.constructions-table-card .construction-card__expand-icon {
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+.constructions-table-card .construction-card--expanded .construction-card__expand-icon {
+  transform: rotate(180deg) !important;
+}
+
+.constructions-table-card .construction-card__content {
+  max-height: 0 !important;
+  overflow: hidden !important;
+  transition: max-height 0.3s ease-in-out !important;
+}
+
+.constructions-table-card .construction-card--expanded .construction-card__content {
+  max-height: 2000px !important;
+}
+
+.constructions-table-card .construction-card__content-inner {
+  padding: 0 var(--spacing-xl) var(--spacing-xl) !important;
+}
+
+.constructions-table-card .construction-card__documents-section {
+  margin-top: var(--spacing-lg) !important;
+}
+
+.constructions-table-card .construction-card__documents-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--spacing-lg) !important;
+  margin-bottom: var(--spacing-lg) !important;
+  padding-bottom: var(--spacing-sm) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.constructions-table-card .construction-card__documents-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+}
+
+.constructions-table-card .construction-card__documents-count {
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
+  font-size: 0.875rem !important;
+}
+
+.constructions-table-card .construction-card__upload-button {
+  background: var(--primary) !important;
+  color: white !important;
+  border: none !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  border-radius: var(--border-radius) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  white-space: nowrap !important;
+}
+
+.constructions-table-card .construction-card__upload-button:hover {
+  background: var(--primary-dark) !important;
+}
+
+.constructions-table-card .construction-card__documents-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--spacing-md) !important;
+}
+
+.constructions-table-card .construction-document-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--spacing-lg) !important;
+  padding: var(--spacing-lg) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--border-radius) !important;
+  transition: var(--transition) !important;
+}
+
+.constructions-table-card .construction-document-item:hover {
+  background: var(--background) !important;
+  border-color: var(--primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.constructions-table-card .construction-document-item__info {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-md) !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.constructions-table-card .construction-document-item__icon {
+  font-size: 1.5rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  color: var(--primary) !important;
+}
+
+.constructions-table-card .construction-document-item__details {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.constructions-table-card .construction-document-item__name {
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: var(--spacing-xs) !important;
+  word-break: break-word !important;
+  line-height: 1.4 !important;
+}
+
+.constructions-table-card .construction-document-item__meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+  font-size: 0.875rem !important;
+  color: var(--text-secondary) !important;
+  flex-wrap: wrap !important;
+}
+
+.constructions-table-card .construction-document-item__type-badge {
+  background: var(--primary) !important;
+  color: white !important;
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
+  border-radius: var(--border-radius) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.025em !important;
+}
+
+.constructions-table-card .construction-document-item__size,
+.constructions-table-card .construction-document-item__date {
+  font-weight: 400 !important;
+}
+
+.constructions-table-card .construction-document-item__actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+  flex-shrink: 0 !important;
+}
+
+.constructions-table-card .construction-document-item__action {
+  background: none !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
+  border-radius: var(--border-radius) !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-xs) !important;
+}
+
+.constructions-table-card .construction-document-item__action:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: var(--surface) !important;
+}
+
+.constructions-table-card .construction-document-item__action--danger:hover {
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  background: #fef2f2 !important;
+}
+
+.constructions-table-card .construction-document-item__action-icon {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+.constructions-table-card .construction-card__documents-empty {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: var(--spacing-3xl) var(--spacing-xl) !important;
+  text-align: center !important;
+  background: var(--surface) !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.constructions-table-card .construction-card__documents-empty-icon {
+  font-size: 2.5rem !important;
+  line-height: 1 !important;
+  margin-bottom: var(--spacing-lg) !important;
+  opacity: 0.5 !important;
+  color: var(--text-secondary) !important;
+}
+
+.constructions-table-card .construction-card__documents-empty-title {
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: var(--spacing-sm) !important;
+}
+
+.constructions-table-card .construction-card__documents-empty-description {
+  font-size: 0.875rem !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.5 !important;
+  max-width: 280px !important;
+}
 :root {
   /* Colors */
   --primary: #2563EB;           /* Основной синий */
@@ -2455,5 +2851,597 @@ a:hover {
 option:disabled {
   color: var(--text-tertiary);
   font-style: italic;
+}
+
+/* ========================================
+   CONSTRUCTION CARDS LAYOUT
+   ======================================== */
+
+
+/* Construction Cards Container */
+.construction-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Individual Construction Card */
+.construction-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.construction-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.construction-card--expanded {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Construction Card Header (Always Visible) */
+.construction-card__header {
+  padding: var(--spacing-xl);
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+  background: var(--background);
+  border-bottom: 1px solid transparent;
+}
+
+.construction-card__header:hover {
+  background: var(--surface);
+}
+
+.construction-card--expanded .construction-card__header {
+  border-bottom-color: var(--border);
+  background: var(--surface);
+}
+
+.construction-card__header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.construction-card__main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.construction-card__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+/* Construction Name and Info */
+.construction-card__name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.construction-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.construction-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.construction-card__meta-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.construction-card__meta-label {
+  font-weight: 500;
+}
+
+.construction-card__meta-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Document Count Badge */
+.construction-card__documents-badge {
+  background: var(--primary);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.construction-card__documents-badge--empty {
+  background: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Expand/Collapse Toggle */
+.construction-card__expand-toggle {
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.construction-card__expand-toggle:hover {
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.construction-card__expand-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.3s ease-in-out;
+}
+
+.construction-card--expanded .construction-card__expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Action Buttons in Header */
+.construction-card__quick-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.construction-card__action-button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.construction-card__action-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+}
+
+.construction-card__action-button--danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: #fef2f2;
+}
+
+.construction-card__action-button--secondary:hover {
+  border-color: var(--success);
+  color: var(--success);
+  background: #f0fdf4;
+}
+
+/* Expandable Content Area */
+.construction-card__content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.construction-card--expanded .construction-card__content {
+  max-height: 2000px; /* Large enough for most content */
+}
+
+.construction-card__content-inner {
+  padding: 0 var(--spacing-xl) var(--spacing-xl);
+}
+
+/* Documents Section within Expanded Card */
+.construction-card__documents-section {
+  margin-top: var(--spacing-lg);
+}
+
+.construction-card__documents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+.construction-card__documents-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.construction-card__documents-count {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 0.875rem;
+}
+
+.construction-card__upload-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.construction-card__upload-button:hover {
+  background: var(--primary-dark);
+}
+
+/* Document List within Expanded Card */
+.construction-card__documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.construction-document-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.construction-document-item:hover {
+  background: var(--background);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.construction-document-item__info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.construction-document-item__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.construction-document-item__details {
+  flex: 1;
+  min-width: 0;
+}
+
+.construction-document-item__name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.construction-document-item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.construction-document-item__type-badge {
+  background: var(--primary);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.construction-document-item__size,
+.construction-document-item__date {
+  font-weight: 400;
+}
+
+.construction-document-item__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.construction-document-item__action {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.construction-document-item__action:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+}
+
+.construction-document-item__action--danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: #fef2f2;
+}
+
+.construction-document-item__action-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Empty State for Documents */
+.construction-card__documents-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--border-radius);
+}
+
+.construction-card__documents-empty-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+  color: var(--text-secondary);
+}
+
+.construction-card__documents-empty-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.construction-card__documents-empty-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* Loading State for Construction Cards */
+.construction-cards-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.construction-card-skeleton {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.construction-card-skeleton__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.construction-card-skeleton__title {
+  height: 24px;
+  background: var(--surface);
+  border-radius: var(--border-radius);
+  flex: 1;
+  max-width: 300px;
+}
+
+.construction-card-skeleton__badge {
+  height: 20px;
+  width: 100px;
+  background: var(--surface);
+  border-radius: 20px;
+}
+
+.construction-card-skeleton__meta {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.construction-card-skeleton__meta-item {
+  height: 16px;
+  background: var(--surface);
+  border-radius: var(--border-radius);
+  width: 80px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Responsive Design for Construction Cards */
+@media (max-width: 900px) {
+  .construction-card__header {
+    padding: var(--spacing-lg);
+  }
+
+  .construction-card__content-inner {
+    padding: 0 var(--spacing-lg) var(--spacing-lg);
+  }
+
+  .construction-card__header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .construction-card__controls {
+    justify-content: space-between;
+  }
+
+  .construction-card__quick-actions {
+    gap: var(--spacing-xs);
+  }
+
+  .construction-card__action-button {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .construction-card__header {
+    padding: var(--spacing-md);
+  }
+
+  .construction-card__content-inner {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+
+  .construction-card__name {
+    font-size: 1.125rem;
+  }
+
+  .construction-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .construction-card__quick-actions {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    width: 100%;
+  }
+
+  .construction-card__action-button {
+    padding: var(--spacing-sm);
+  }
+
+  .construction-document-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .construction-document-item__info {
+    align-items: flex-start;
+  }
+
+  .construction-document-item__actions {
+    justify-content: center;
+    gap: var(--spacing-md);
+  }
+
+  .construction-document-item__meta {
+    justify-content: center;
+  }
+
+  .construction-card__documents-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .construction-card__upload-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .construction-cards-container {
+    gap: var(--spacing-md);
+  }
+
+  .construction-card__header {
+    padding: var(--spacing-sm);
+  }
+
+  .construction-card__content-inner {
+    padding: 0 var(--spacing-sm) var(--spacing-sm);
+  }
+
+  .construction-card__name {
+    font-size: 1rem;
+  }
+
+  .construction-card__documents-empty {
+    padding: var(--spacing-xl);
+  }
+
+  .construction-card__documents-empty-icon {
+    font-size: 2rem;
+  }
+
+  .construction-document-item__actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .construction-document-item__action {
+    width: 100%;
+    justify-content: center;
+  }
 }
 

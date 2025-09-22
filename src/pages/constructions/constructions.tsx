@@ -11,21 +11,20 @@ import Button from '../../components/common/button/button';
 import SearchInput from '../../components/common/search_input/search_input';
 import Filters from '../../components/common/filters/filters';
 import FormSelect from '../../components/forms/form_select/form_select';
-import Table from '../../components/data_display/table/table';
-import LoadingState from '../../components/common/loading_state/loading_state';
-import EmptyState from '../../components/common/empty_state/empty_state';
 import AddConstructionModal from '../../components/modals/AddConstructionModal';
 import EditConstructionModal from '../../components/modals/EditConstructionModal';
 import ConfirmDeleteConstructionModal from '../../components/modals/ConfirmDeleteConstructionModal';
 import DocumentsTable from '../../components/data_display/documents_table/documents_table';
+import ConstructionCardsList from '../../components/data_display/construction_cards_list/construction_cards_list';
 import UploadDocumentModal from '../../components/modals/UploadDocumentModal';
 
 import type { AppDispatch } from '../../store';
 import {
   fetchConstructions,
   fetchConstructionsByProject,
-  fetchDocuments,
   fetchDocumentsByConstruction,
+  downloadDocument,
+  deleteDocument,
   updateSearchQuery,
   updateFilters,
   selectFilteredConstructions,
@@ -40,7 +39,7 @@ import {
 } from '../../store/slices/constructions_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import { fetchProjectById, selectCurrentProject } from '../../store/slices/projects_slice';
-import type { Construction } from '../../store/types';
+import type { Construction, Document } from '../../store/types';
 
 function Constructions(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -120,11 +119,6 @@ function Constructions(): JSX.Element {
   };
 
   // Handle construction actions
-  const handleView = (construction: Construction) => {
-    setSelectedConstruction(construction);
-    // Load documents for this construction
-    dispatch(fetchDocumentsByConstruction(construction.id));
-  };
 
   const handleEdit = (construction: Construction) => {
     setSelectedConstruction(construction);
@@ -141,18 +135,26 @@ function Constructions(): JSX.Element {
     setShowUploadModal(true);
   };
 
-  // Helper functions
-  const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return '—';
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
+  const handleDownloadDocument = async (document: Document) => {
+    try {
+      await dispatch(downloadDocument({ documentId: document.id, fileName: document.originalName }));
+    } catch (error) {
+      toast.error('Ошибка при скачивании документа');
+    }
   };
 
-  const getDocumentCount = (constructionId: string): string => {
-    const filteredDocs = documents.filter(doc => doc.constructionId === constructionId);
-    const count = filteredDocs.length;
-    return count > 0 ? `${count} документов` : '—';
+  const handleDeleteDocument = async (document: Document) => {
+    if (window.confirm(`Вы уверены, что хотите удалить документ "${document.originalName}"?`)) {
+      try {
+        await dispatch(deleteDocument(document.id));
+        toast.success('Документ успешно удален');
+      } catch (error) {
+        toast.error('Ошибка при удалении документа');
+      }
+    }
   };
+
+  // Helper functions
 
   const getTotalDocumentsCount = (): number => {
     if (projectId) {
@@ -351,105 +353,26 @@ function Constructions(): JSX.Element {
                 </Card.Content>
               </Card>
 
-              {/* Constructions Table */}
+              {/* Construction Cards */}
               <Card className="constructions-table-card">
                 <Card.Content>
-                  <Table.Container>
-                {constructionsLoading ? (
-                  <LoadingState message="Загрузка сооружений..." />
-                ) : filteredConstructions.length === 0 ? (
-                  <EmptyState
-                    message="Сооружения не найдены"
-                    actionButton={
-                      canCreateConstructions ? (
-                        <Button onClick={() => setShowCreateModal(true)}>
-                          Создать первое сооружение
-                        </Button>
-                      ) : undefined
-                    }
+                  <ConstructionCardsList
+                    constructions={filteredConstructions}
+                    documents={documents}
+                    loading={constructionsLoading}
+                    canEdit={canEditConstructions}
+                    canDelete={canDeleteConstructions}
+                    canUploadDocuments={canUploadDocuments}
+                    canDeleteDocuments={canDeleteConstructions}
+                    canCreateConstructions={canCreateConstructions}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onUploadDocument={handleUploadDocument}
+                    onDownloadDocument={handleDownloadDocument}
+                    onDeleteDocument={handleDeleteDocument}
+                    onCreateConstruction={() => setShowCreateModal(true)}
+                    projectId={projectId || ''}
                   />
-                ) : (
-                  <Table>
-                    <Table.Head>
-                      <tr>
-                        <Table.Header>Название сооружения</Table.Header>
-                        {!projectId && <Table.Header>Проект</Table.Header>}
-                        <Table.Header>Документы</Table.Header>
-                        <Table.Header>Создано</Table.Header>
-                        <Table.Header>Обновлено</Table.Header>
-                        <Table.Header>Действия</Table.Header>
-                      </tr>
-                    </Table.Head>
-                    <Table.Body>
-                      {filteredConstructions.map((construction) => (
-                        <tr key={construction.id}>
-                          <Table.Cell>
-                            <div className="construction-name">
-                              {construction.name}
-                            </div>
-                          </Table.Cell>
-                          {!projectId && (
-                            <Table.Cell>
-                              <Link
-                                to={`/projects/${construction.projectId}`}
-                                className="project-link"
-                              >
-                                {/* We'd need to get project name from the store */}
-                                Проект #{construction.projectId.slice(0, 8)}
-                              </Link>
-                            </Table.Cell>
-                          )}
-                          <Table.Cell>
-                            <span className="documents-count">
-                              {getDocumentCount(construction.id)}
-                            </span>
-                          </Table.Cell>
-                          <Table.Cell>{formatDate(construction.createdAt)}</Table.Cell>
-                          <Table.Cell>{formatDate(construction.updatedAt)}</Table.Cell>
-                          <Table.Cell>
-                            <div className="table-actions">
-                              <Button
-                                variant="outline"
-                                size="small"
-                                onClick={() => handleView(construction)}
-                              >
-                                Просмотр
-                              </Button>
-                              {canEditConstructions && (
-                                <Button
-                                  variant="outline"
-                                  size="small"
-                                  onClick={() => handleEdit(construction)}
-                                >
-                                  Изменить
-                                </Button>
-                              )}
-                              {canUploadDocuments && (
-                                <Button
-                                  variant="secondary"
-                                  size="small"
-                                  onClick={() => handleUploadDocument(construction)}
-                                >
-                                  Загрузить документ
-                                </Button>
-                              )}
-                              {canDeleteConstructions && (
-                                <Button
-                                  variant="danger"
-                                  size="small"
-                                  onClick={() => handleDelete(construction)}
-                                >
-                                  Удалить
-                                </Button>
-                              )}
-                            </div>
-                          </Table.Cell>
-                        </tr>
-                      ))}
-                    </Table.Body>
-                  </Table>
-                )}
-                  </Table.Container>
                 </Card.Content>
               </Card>
             </div>
