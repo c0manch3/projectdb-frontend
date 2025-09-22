@@ -81,16 +81,23 @@ function Constructions(): JSX.Element {
         // Load specific project and its constructions
         dispatch(fetchProjectById(projectId));
         dispatch(fetchConstructionsByProject(projectId));
-        // Note: Documents for each construction are loaded individually when construction is selected
         // Set project filter
         dispatch(updateFilters({ projectId }));
       } else {
         // Load all constructions
         dispatch(fetchConstructions());
-        // Note: Documents are loaded individually when construction is selected
       }
     }
   }, [dispatch, projectId, canViewConstructions]);
+
+  // Load documents for all constructions after constructions are loaded
+  useEffect(() => {
+    if (canViewConstructions && filteredConstructions.length > 0) {
+      filteredConstructions.forEach(construction => {
+        dispatch(fetchDocumentsByConstruction(construction.id));
+      });
+    }
+  }, [dispatch, canViewConstructions, filteredConstructions]);
 
   // Handle search changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,8 +138,10 @@ function Constructions(): JSX.Element {
   };
 
   // Helper functions
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
   };
 
   const getDocumentCount = (constructionId: string): number => {
