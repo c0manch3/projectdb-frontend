@@ -127,8 +127,10 @@ function ProjectDetail(): JSX.Element {
     }).format(cost);
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
   };
 
   const getStatusLabel = (status: string): string => {
@@ -171,7 +173,8 @@ function ProjectDetail(): JSX.Element {
     return projectDocuments.filter(doc => doc.type === type);
   };
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (typeof bytes !== 'number' || isNaN(bytes)) return '—';
     return projectsService.formatFileSize(bytes);
   };
 

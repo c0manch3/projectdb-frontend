@@ -94,11 +94,14 @@ function DocumentsTable({
   };
 
   // Helper functions
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
   };
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (typeof bytes !== 'number' || isNaN(bytes)) return '—';
     return constructionsService.formatFileSize(bytes);
   };
 
@@ -183,7 +186,7 @@ function DocumentsTable({
                 </Table.Cell>
                 <Table.Cell>
                   <span className="document-version">
-                    v{document.version}
+                    v{document.version || '1'}
                   </span>
                 </Table.Cell>
                 <Table.Cell>

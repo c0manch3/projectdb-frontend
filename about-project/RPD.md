@@ -795,7 +795,7 @@ function ProjectList(): JSX.Element {
 ```
 
 ### 11.2 Стилизация
-- Все стили в `public/style.css`
+- Все стили в `src/styles/style.css`
 - БЭМ методология для именования классов
 - Никаких inline стилей
 - CSS переменные для цветов и размеров
