@@ -509,9 +509,7 @@ function ProjectDetail(): JSX.Element {
                                 <div className="document-details">
                                   <div className="document-name">{document.originalName}</div>
                                   <div className="document-meta">
-                                    <span className="document-size">{formatFileSize(document.fileSize)}</span>
-                                    <span className="document-separator">•</span>
-                                    <span className="document-date">{formatDate(document.createdAt)}</span>
+                                    <span className="document-date">{formatDate(document.uploadedAt)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -586,9 +584,7 @@ function ProjectDetail(): JSX.Element {
                                 <div className="document-details">
                                   <div className="document-name">{document.originalName}</div>
                                   <div className="document-meta">
-                                    <span className="document-size">{formatFileSize(document.fileSize)}</span>
-                                    <span className="document-separator">•</span>
-                                    <span className="document-date">{formatDate(document.createdAt)}</span>
+                                    <span className="document-date">{formatDate(document.uploadedAt)}</span>
                                   </div>
                                 </div>
                               </div>

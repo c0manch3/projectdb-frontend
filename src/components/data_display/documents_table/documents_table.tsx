@@ -142,12 +142,7 @@ function DocumentsTable({
           <Table.Head>
             <tr>
               <Table.Header>Название документа</Table.Header>
-              <Table.Header>Тип</Table.Header>
-              <Table.Header>Контекст</Table.Header>
-              <Table.Header>Сооружение</Table.Header>
-              <Table.Header>Размер</Table.Header>
-              <Table.Header>Версия</Table.Header>
-              <Table.Header>Загружен</Table.Header>
+              <Table.Header>Дата загрузки</Table.Header>
               <Table.Header>Действия</Table.Header>
             </tr>
           </Table.Head>
@@ -159,39 +154,11 @@ function DocumentsTable({
                     <div className="document-name__original">
                       {document.originalName}
                     </div>
-                    <div className="document-name__mime">
-                      {document.mimeType}
-                    </div>
                   </div>
                 </Table.Cell>
                 <Table.Cell>
-                  <span className={`document-type-badge document-type-badge--${document.type}`}>
-                    {getDocumentTypeLabel(document.type)}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
-                  <span className={`document-context-badge document-context-badge--${document.context}`}>
-                    {getDocumentContextLabel(document.context)}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
-                  <span className="construction-name">
-                    {getConstructionName(document.constructionId)}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
-                  <span className="file-size">
-                    {formatFileSize(document.fileSize)}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
-                  <span className="document-version">
-                    v{document.version || '1'}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
                   <span className="upload-date">
-                    {formatDate(document.createdAt)}
+                    {formatDate(document.uploadedAt)}
                   </span>
                 </Table.Cell>
                 <Table.Cell>

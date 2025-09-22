@@ -73,6 +73,7 @@ export interface Document {
   version: number;
   projectId: string;
   constructionId?: string;
+  uploadedAt: string;
   createdAt: string;
   updatedAt: string;
 }
