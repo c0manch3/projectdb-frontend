@@ -20,7 +20,6 @@ export interface ConstructionsFilters {
 export interface UploadDocumentDto {
   file: File;
   type: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
-  context: 'initial_data' | 'project_doc';
   projectId: string;
   constructionId?: string | undefined;
 }
@@ -29,7 +28,6 @@ export interface DocumentsFilters {
   projectId?: string;
   constructionId?: string;
   type?: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
-  context?: 'initial_data' | 'project_doc';
 }
 
 // API response types
@@ -303,9 +301,6 @@ export const constructionsService = {
       if (!uploadData.type) {
         throw new Error('Тип документа обязателен для заполнения');
       }
-      if (!uploadData.context) {
-        throw new Error('Контекст документа обязателен для заполнения');
-      }
       if (!uploadData.projectId) {
         throw new Error('ID проекта обязателен для заполнения');
       }
@@ -314,7 +309,6 @@ export const constructionsService = {
       const formData = new FormData();
       formData.append('file', uploadData.file);
       formData.append('type', uploadData.type);
-      formData.append('context', uploadData.context);
       formData.append('projectId', uploadData.projectId);
 
       if (uploadData.constructionId) {
@@ -450,15 +444,4 @@ export const constructionsService = {
     }
   },
 
-  // Helper function to get document context label
-  getDocumentContextLabel: (context: string): string => {
-    switch (context) {
-      case 'initial_data':
-        return 'Исходные данные';
-      case 'project_doc':
-        return 'Проектная документация';
-      default:
-        return context;
-    }
-  }
 };

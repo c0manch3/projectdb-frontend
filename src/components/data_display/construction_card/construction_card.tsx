@@ -66,8 +66,8 @@ function ConstructionCard({
     return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -112,11 +112,6 @@ function ConstructionCard({
                 <span className="construction-card__meta-icon">📅</span>
                 <span className="construction-card__meta-label">Создано:</span>
                 <span className="construction-card__meta-value">{formatDate(construction.createdAt)}</span>
-              </div>
-              <div className="construction-card__meta-item">
-                <span className="construction-card__meta-icon">🔄</span>
-                <span className="construction-card__meta-label">Обновлено:</span>
-                <span className="construction-card__meta-value">{formatDate(construction.updatedAt)}</span>
               </div>
             </div>
           </div>
@@ -200,12 +195,9 @@ function ConstructionCard({
                           <span className="construction-document-item__type-badge">
                             {getDocumentTypeLabel(document.type)}
                           </span>
-                          <span className="construction-document-item__size">
-                            {formatFileSize(document.fileSize)}
-                          </span>
                           <span className="document-separator">•</span>
                           <span className="construction-document-item__date">
-                            {formatDate(document.uploadedAt)}
+                            Дата загрузки: {formatDate(document.uploadedAt)}
                           </span>
                         </div>
                       </div>

@@ -253,23 +253,6 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
             </FormSelect>
           </FormGroup>
 
-          <FormGroup>
-            <FormGroup.Label htmlFor="managerId">
-              Менеджер проекта
-            </FormGroup.Label>
-            <FormSelect
-              {...register('managerId')}
-              id="managerId"
-              error={errors.managerId?.message}
-            >
-              <option value="">Назначить позже</option>
-              {managers.map((manager) => (
-                <option key={manager.id} value={manager.id}>
-                  {manager.firstName} {manager.lastName}
-                </option>
-              ))}
-            </FormSelect>
-          </FormGroup>
 
           <FormGroup>
             <FormGroup.Label htmlFor="contractDate" required>

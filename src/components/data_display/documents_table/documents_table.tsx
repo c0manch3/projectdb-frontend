@@ -109,9 +109,6 @@ function DocumentsTable({
     return constructionsService.getDocumentTypeLabel(type);
   };
 
-  const getDocumentContextLabel = (context: string): string => {
-    return constructionsService.getDocumentContextLabel(context);
-  };
 
   const getConstructionName = (constructionId?: string): string => {
     if (!constructionId) return '—';

@@ -10,11 +10,10 @@ import Card from '../../components/common/card/card';
 import Button from '../../components/common/button/button';
 import SearchInput from '../../components/common/search_input/search_input';
 import Filters from '../../components/common/filters/filters';
-import FormSelect from '../../components/forms/form_select/form_select';
 import AddConstructionModal from '../../components/modals/AddConstructionModal';
 import EditConstructionModal from '../../components/modals/EditConstructionModal';
 import ConfirmDeleteConstructionModal from '../../components/modals/ConfirmDeleteConstructionModal';
-import DocumentsTable from '../../components/data_display/documents_table/documents_table';
+import ConfirmDeleteDocumentModal from '../../components/modals/ConfirmDeleteDocumentModal';
 import ConstructionCardsList from '../../components/data_display/construction_cards_list/construction_cards_list';
 import UploadDocumentModal from '../../components/modals/UploadDocumentModal';
 
@@ -63,8 +62,9 @@ function Constructions(): JSX.Element {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDeleteDocumentModal, setShowDeleteDocumentModal] = useState(false);
   const [selectedConstruction, setSelectedConstruction] = useState<Construction | null>(null);
-  const [activeTab, setActiveTab] = useState<'constructions' | 'documents'>('constructions');
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [documentsLoaded, setDocumentsLoaded] = useState(false);
 
   // Check user permissions
@@ -108,15 +108,6 @@ function Constructions(): JSX.Element {
   };
 
   // Handle filter changes
-  const handleDocumentTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const documentType = e.target.value as 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract' | null;
-    dispatch(updateFilters({ documentType: documentType || null }));
-  };
-
-  const handleDocumentContextFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const documentContext = e.target.value as 'initial_data' | 'project_doc' | null;
-    dispatch(updateFilters({ documentContext: documentContext || null }));
-  };
 
   // Handle construction actions
 
@@ -143,31 +134,32 @@ function Constructions(): JSX.Element {
     }
   };
 
-  const handleDeleteDocument = async (document: Document) => {
-    if (window.confirm(`Вы уверены, что хотите удалить документ "${document.originalName}"?`)) {
-      try {
-        await dispatch(deleteDocument(document.id));
-        toast.success('Документ успешно удален');
-      } catch (error) {
-        toast.error('Ошибка при удалении документа');
-      }
+  const handleDeleteDocument = (document: Document) => {
+    setSelectedDocument(document);
+    setShowDeleteDocumentModal(true);
+  };
+
+  const handleConfirmDeleteDocument = async () => {
+    if (!selectedDocument) return;
+
+    try {
+      await dispatch(deleteDocument(selectedDocument.id));
+      toast.success('Документ успешно удален');
+      setShowDeleteDocumentModal(false);
+      setSelectedDocument(null);
+    } catch (error) {
+      toast.error('Ошибка при удалении документа');
     }
   };
 
   // Helper functions
 
-  const getTotalDocumentsCount = (): number => {
-    if (projectId) {
-      return documents.filter(doc => doc.projectId === projectId).length;
-    }
-    return documents.length;
-  };
 
   const getTotalConstructionsCount = (): number => {
-    if (projectId && constructionsByProject[projectId]) {
-      return constructionsByProject[projectId].length;
+    if (projectId) {
+      return filteredConstructions.length;
     }
-    return filteredConstructions.length;
+    return constructions.length;
   };
 
   // Show error messages
@@ -291,13 +283,6 @@ function Constructions(): JSX.Element {
                   <div className="constructions-hero__stat-label">Сооружений</div>
                 </div>
               </div>
-              <div className="constructions-hero__stat">
-                <div className="constructions-hero__stat-icon">📄</div>
-                <div className="constructions-hero__stat-content">
-                  <div className="constructions-hero__stat-value">{getTotalDocumentsCount()}</div>
-                  <div className="constructions-hero__stat-label">Документов</div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -305,8 +290,7 @@ function Constructions(): JSX.Element {
           <div className="constructions-tabs">
             <div className="constructions-tabs__nav">
               <button
-                className={`constructions-tabs__nav-item ${activeTab === 'constructions' ? 'constructions-tabs__nav-item--active' : ''}`}
-                onClick={() => setActiveTab('constructions')}
+                className="constructions-tabs__nav-item constructions-tabs__nav-item--active"
               >
                 <span className="constructions-tabs__icon">🏗️</span>
                 <span className="constructions-tabs__label">
@@ -314,22 +298,11 @@ function Constructions(): JSX.Element {
                   <span className="constructions-tabs__count">({getTotalConstructionsCount()})</span>
                 </span>
               </button>
-              <button
-                className={`constructions-tabs__nav-item ${activeTab === 'documents' ? 'constructions-tabs__nav-item--active' : ''}`}
-                onClick={() => setActiveTab('documents')}
-              >
-                <span className="constructions-tabs__icon">📄</span>
-                <span className="constructions-tabs__label">
-                  Документы
-                  <span className="constructions-tabs__count">({getTotalDocumentsCount()})</span>
-                </span>
-              </button>
             </div>
           </div>
 
-          {/* Constructions Tab */}
-          {activeTab === 'constructions' && (
-            <div className="constructions-content">
+          {/* Constructions Content */}
+          <div className="constructions-content">
               {/* Filters and Search */}
               <Card className="constructions-filters-card">
                 <Card.Content>
@@ -375,80 +348,8 @@ function Constructions(): JSX.Element {
                   />
                 </Card.Content>
               </Card>
-            </div>
-          )}
+          </div>
 
-          {/* Documents Tab */}
-          {activeTab === 'documents' && (
-            <div className="constructions-content">
-              {/* Document Filters */}
-              <Card className="constructions-filters-card">
-                <Card.Content>
-                  <Filters>
-                    <Filters.Group>
-                      <Filters.Label htmlFor="documentTypeFilter">Тип документа:</Filters.Label>
-                      <FormSelect
-                        id="documentTypeFilter"
-                        className="filters__select"
-                        value={filters.documentType || ''}
-                        onChange={handleDocumentTypeFilterChange}
-                      >
-                        <option value="">Все</option>
-                        <option value="km">КМ</option>
-                        <option value="kz">КЖ</option>
-                        <option value="rpz">РПЗ</option>
-                        <option value="tz">ТЗ</option>
-                        <option value="gp">ГП</option>
-                        <option value="igi">ИГИ</option>
-                        <option value="spozu">СПОЗУ</option>
-                        <option value="contract">Договор</option>
-                      </FormSelect>
-                    </Filters.Group>
-
-                    <Filters.Group>
-                      <Filters.Label htmlFor="documentContextFilter">Контекст:</Filters.Label>
-                      <FormSelect
-                        id="documentContextFilter"
-                        className="filters__select"
-                        value={filters.documentContext || ''}
-                        onChange={handleDocumentContextFilterChange}
-                      >
-                        <option value="">Все</option>
-                        <option value="initial_data">Исходные данные</option>
-                        <option value="project_doc">Проектная документация</option>
-                      </FormSelect>
-                    </Filters.Group>
-
-                    {canUploadDocuments && (
-                      <Button
-                        id="uploadDocumentButton"
-                        onClick={() => handleUploadDocument()}
-                      >
-                        + Загрузить документ
-                      </Button>
-                    )}
-                  </Filters>
-                </Card.Content>
-              </Card>
-
-              {/* Documents Table */}
-              <Card className="constructions-table-card">
-                <Card.Content>
-                  <DocumentsTable
-                    documents={documents.filter(doc => {
-                      if (projectId && doc.projectId !== projectId) return false;
-                      if (filters.documentType && doc.type !== filters.documentType) return false;
-                      if (filters.documentContext && doc.context !== filters.documentContext) return false;
-                      return true;
-                    })}
-                    loading={documentsLoading}
-                    canDelete={canDeleteConstructions}
-                    constructions={filteredConstructions}
-                  />
-                </Card.Content>
-              </Card>
-            </div>
-          )}
         </div>
       </main>
 
@@ -477,6 +378,16 @@ function Constructions(): JSX.Element {
         projectId={projectId || undefined}
         construction={selectedConstruction}
         existingDocuments={selectedConstruction ? documents.filter(doc => doc.constructionId === selectedConstruction.id) : []}
+      />
+
+      <ConfirmDeleteDocumentModal
+        isOpen={showDeleteDocumentModal}
+        onClose={() => {
+          setShowDeleteDocumentModal(false);
+          setSelectedDocument(null);
+        }}
+        onConfirm={handleConfirmDeleteDocument}
+        document={selectedDocument}
       />
     </>
   );

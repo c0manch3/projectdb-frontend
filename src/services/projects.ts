@@ -302,7 +302,6 @@ export const projectsService = {
   async getProjectDocuments(filters: ProjectDocumentsFilters): Promise<Document[]> {
     try {
       const params = new URLSearchParams();
-      params.append('context', 'project_doc'); // Only project documents
 
       if (filters.type) {
         params.append('type', filters.type);
@@ -369,7 +368,6 @@ export const projectsService = {
       const formData = new FormData();
       formData.append('file', uploadData.file);
       formData.append('type', uploadData.type);
-      formData.append('context', 'project_doc'); // Project documents context
       formData.append('version', '1'); // Add version field
       formData.append('projectId', uploadData.projectId);
 

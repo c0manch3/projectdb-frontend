@@ -32,9 +32,6 @@ const uploadDocumentSchema = z.object({
   type: z.enum(['km', 'kz', 'rpz', 'tz', 'gp', 'igi', 'spozu', 'contract'], {
     required_error: 'Выберите тип документа'
   }),
-  context: z.enum(['initial_data', 'project_doc'], {
-    required_error: 'Выберите контекст документа'
-  }),
   projectId: z.string().min(1, 'Выберите проект'),
   constructionId: z.string().optional(),
   file: z
@@ -295,7 +292,6 @@ function UploadDocumentModal({
       await dispatch(uploadDocument({
         file: selectedFile,
         type: data.type,
-        context: data.context,
         projectId: data.projectId,
         constructionId: data.constructionId
       })).unwrap();
@@ -553,23 +549,6 @@ function UploadDocumentModal({
               )}
             </FormGroup>
 
-            {/* Document Context */}
-            <FormGroup>
-              <label htmlFor="documentContext" className="form-label">
-                Контекст документа <span className="required">*</span>
-              </label>
-              <FormSelect
-                id="documentContext"
-                {...register('context')}
-              >
-                <option value="">Выберите контекст</option>
-                <option value="initial_data">Исходные данные</option>
-                <option value="project_doc">Проектная документация</option>
-              </FormSelect>
-              {errors.context && (
-                <span className="form-error">{errors.context.message}</span>
-              )}
-            </FormGroup>
 
             {/* Project Selection */}
             <FormGroup>

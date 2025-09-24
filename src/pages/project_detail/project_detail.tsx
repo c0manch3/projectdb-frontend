@@ -11,6 +11,7 @@ import LoadingState from '../../components/common/loading_state/loading_state';
 import EmptyState from '../../components/common/empty_state/empty_state';
 import Button from '../../components/common/button/button';
 import UploadProjectDocumentModal from '../../components/modals/UploadProjectDocumentModal';
+import ConfirmDeleteDocumentModal from '../../components/modals/ConfirmDeleteDocumentModal';
 
 import type { AppDispatch } from '../../store';
 import {
@@ -45,6 +46,9 @@ function ProjectDetail(): JSX.Element {
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] = useState<'tz' | 'contract'>('tz');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Check user permissions
   const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
@@ -102,18 +106,33 @@ function ProjectDetail(): JSX.Element {
     }
   };
 
-  const handleDeleteDocument = async (document: Document) => {
-    if (!window.confirm(`Вы уверены, что хотите удалить документ "${document.originalName}"?`)) {
-      return;
-    }
+  const handleDeleteDocument = (document: Document) => {
+    setDocumentToDelete(document);
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDeleteDocument = async () => {
+    if (!documentToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await projectsService.deleteProjectDocument(document.id);
+      await projectsService.deleteProjectDocument(documentToDelete.id);
       toast.success('Документ успешно удален');
       loadProjectDocuments();
+      setDeleteModalOpen(false);
+      setDocumentToDelete(null);
     } catch (error: any) {
       console.error('Error deleting document:', error);
       toast.error(error?.message || error?.toString() || 'Ошибка при удалении документа');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) {
+      setDeleteModalOpen(false);
+      setDocumentToDelete(null);
     }
   };
 
@@ -677,6 +696,15 @@ function ProjectDetail(): JSX.Element {
             onUploadSuccess={handleUploadSuccess}
           />
         )}
+
+        {/* Confirm Delete Document Modal */}
+        <ConfirmDeleteDocumentModal
+          isOpen={deleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleConfirmDeleteDocument}
+          document={documentToDelete}
+          isLoading={isDeleting}
+        />
       </main>
     </>
   );

@@ -69,7 +69,6 @@ export interface Document {
   fileSize: number;
   mimeType: string;
   type: DocumentType;
-  context: DocumentContext;
   version: number;
   projectId: string;
   constructionId?: string;
@@ -79,7 +78,6 @@ export interface Document {
 }
 
 export type DocumentType = 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
-export type DocumentContext = 'initial_data' | 'project_doc';
 
 export interface WorkloadPlan {
   id: string;
@@ -150,7 +148,6 @@ export interface DocumentsState {
   uploadProgress: number;
   filters: {
     type: DocumentType | null;
-    context: DocumentContext | null;
   };
   loading: boolean;
   error: string | null;

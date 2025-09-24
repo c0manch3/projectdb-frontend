@@ -23,7 +23,6 @@ interface ExtendedConstructionsState extends ConstructionsState {
   filters: {
     projectId: string | null;
     documentType: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract' | null;
-    documentContext: 'initial_data' | 'project_doc' | null;
   };
 }
 
@@ -45,7 +44,6 @@ const initialState: ExtendedConstructionsState = {
   filters: {
     projectId: null,
     documentType: null,
-    documentContext: null,
   },
 };
 
@@ -718,8 +716,6 @@ export const selectFilteredDocuments = (state: { constructions: ExtendedConstruc
     // Apply document type filter
     if (filters.documentType && document.type !== filters.documentType) return false;
 
-    // Apply document context filter
-    if (filters.documentContext && document.context !== filters.documentContext) return false;
 
     return true;
   });
