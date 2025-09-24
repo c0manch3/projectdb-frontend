@@ -72,6 +72,7 @@ function Constructions(): JSX.Element {
   const canViewConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
   const canEditConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
   const canDeleteConstructions = currentUser?.role === 'Admin';
+  const canDeleteDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
   const canUploadDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
 
   // Load data on component mount
@@ -336,7 +337,7 @@ function Constructions(): JSX.Element {
                     canEdit={canEditConstructions}
                     canDelete={canDeleteConstructions}
                     canUploadDocuments={canUploadDocuments}
-                    canDeleteDocuments={canDeleteConstructions}
+                    canDeleteDocuments={canDeleteDocuments}
                     canCreateConstructions={canCreateConstructions}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
