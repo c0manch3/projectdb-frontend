@@ -371,33 +371,34 @@ function Projects(): JSX.Element {
                         </span>
                       </Table.Cell>
                       <Table.Cell>
-                        <div className="table-actions">
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          onClick={() => handleView(project)}
+                          style={{ marginRight: '0.25rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          Просмотр
+                        </Button>
+                        {canEditProjects && (
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="small"
-                            onClick={() => handleView(project)}
+                            onClick={() => handleEdit(project)}
+                            style={{ marginRight: '0.25rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
                           >
-                            Просмотр
+                            Изменить
                           </Button>
-                          {canEditProjects && (
-                            <Button
-                              variant="outline"
-                              size="small"
-                              onClick={() => handleEdit(project)}
-                            >
-                              Изменить
-                            </Button>
-                          )}
-                          {canDeleteProjects && (
-                            <Button
-                              variant="danger"
-                              size="small"
-                              onClick={() => handleDelete(project)}
-                            >
-                              Удалить
-                            </Button>
-                          )}
-                        </div>
+                        )}
+                        {canDeleteProjects && (
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            onClick={() => handleDelete(project)}
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                          >
+                            Удалить
+                          </Button>
+                        )}
                       </Table.Cell>
                     </tr>
                   ))}
