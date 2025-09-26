@@ -449,43 +449,45 @@ function ProjectDetail(): JSX.Element {
               </Card>
 
               {/* Actions Card */}
-              {canEditProjects && (
-                <Card className="project-actions-card">
-                  <Card.Header>
-                    <Card.Title>Действия</Card.Title>
-                  </Card.Header>
-                  <Card.Content>
-                    <div className="project-actions">
-                      <Link to={`/projects/${currentProject.id}/edit`}>
-                        <Button variant="primary" className="project-action-button">
-                          ✏️ Редактировать проект
+              <Card className="project-actions-card">
+                <Card.Header>
+                  <Card.Title>Действия</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                  <div className="project-actions">
+                    {canEditProjects && (
+                      <>
+                        <Link to={`/projects/${currentProject.id}/edit`}>
+                          <Button variant="primary" className="project-action-button">
+                            ✏️ Редактировать проект
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          className="project-action-button"
+                          onClick={handleNavigateToDocuments}
+                        >
+                          📄 Управление документами
                         </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        className="project-action-button"
-                        onClick={handleNavigateToDocuments}
-                      >
-                        📄 Управление документами
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="project-action-button"
-                        onClick={handleNavigateToConstructions}
-                      >
-                        🏗️ Сооружения
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="project-action-button"
-                        onClick={handleNavigateToReports}
-                      >
-                        📊 Отчеты
-                      </Button>
-                    </div>
-                  </Card.Content>
-                </Card>
-              )}
+                      </>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="project-action-button"
+                      onClick={handleNavigateToConstructions}
+                    >
+                      🏗️ Сооружения
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="project-action-button"
+                      onClick={handleNavigateToReports}
+                    >
+                      📊 Отчеты
+                    </Button>
+                  </div>
+                </Card.Content>
+              </Card>
             </div>
 
             {/* Project Documents Section */}
