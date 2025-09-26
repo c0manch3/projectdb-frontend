@@ -496,7 +496,7 @@ function ProjectDetail(): JSX.Element {
 
               <div className="project-documents-grid">
                 {/* Technical Specification (TZ) */}
-                <Card className="project-document-card">
+                <Card className="project-document-card constructions-table-card">
                   <Card.Header>
                     <div className="document-card-header">
                       <Card.Title className="document-card-title">
@@ -517,39 +517,47 @@ function ProjectDetail(): JSX.Element {
                     {documentsLoading ? (
                       <LoadingState message="Загрузка документов..." />
                     ) : (
-                      <div className="document-list">
+                      <div className="construction-card__documents-list">
                         {getDocumentsByType('tz').length > 0 ? (
                           getDocumentsByType('tz').map((document) => (
-                            <div key={document.id} className="document-item">
-                              <div className="document-info">
-                                <div className="document-icon">
+                            <div key={document.id} className="construction-document-item">
+                              <div className="construction-document-item__info">
+                                <div className="construction-document-item__icon">
                                   {document.mimeType?.includes('pdf') ? '📄' :
                                    document.mimeType?.includes('word') ? '📝' :
                                    document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
                                 </div>
-                                <div className="document-details">
-                                  <div className="document-name">{document.originalName}</div>
-                                  <div className="document-meta">
-                                    <span className="document-date">Дата загрузки: {formatDate(document.uploadedAt)}</span>
+                                <div className="construction-document-item__details">
+                                  <div className="construction-document-item__name">{document.originalName}</div>
+                                  <div className="construction-document-item__meta">
+                                    <span className="construction-document-item__type-badge">
+                                      ТЗ
+                                    </span>
+                                    <span className="document-separator">•</span>
+                                    <span className="construction-document-item__date">
+                                      Дата загрузки: {formatDate(document.uploadedAt)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
-                              <div className="document-actions">
-                                <Button
-                                  variant="outline"
-                                  size="small"
+                              <div className="construction-document-item__actions">
+                                <button
+                                  className="construction-document-item__action"
                                   onClick={() => handleDownloadDocument(document)}
+                                  title="Скачать документ"
                                 >
+                                  <span className="construction-document-item__action-icon">⬇️</span>
                                   Скачать
-                                </Button>
+                                </button>
                                 {canEditProjects && (
-                                  <Button
-                                    variant="danger"
-                                    size="small"
+                                  <button
+                                    className="construction-document-item__action construction-document-item__action--danger"
                                     onClick={() => handleDeleteDocument(document)}
+                                    title="Удалить документ"
                                   >
+                                    <span className="construction-document-item__action-icon">🗑️</span>
                                     Удалить
-                                  </Button>
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -571,7 +579,7 @@ function ProjectDetail(): JSX.Element {
                 </Card>
 
                 {/* Contract */}
-                <Card className="project-document-card">
+                <Card className="project-document-card constructions-table-card">
                   <Card.Header>
                     <div className="document-card-header">
                       <Card.Title className="document-card-title">
@@ -592,39 +600,47 @@ function ProjectDetail(): JSX.Element {
                     {documentsLoading ? (
                       <LoadingState message="Загрузка документов..." />
                     ) : (
-                      <div className="document-list">
+                      <div className="construction-card__documents-list">
                         {getDocumentsByType('contract').length > 0 ? (
                           getDocumentsByType('contract').map((document) => (
-                            <div key={document.id} className="document-item">
-                              <div className="document-info">
-                                <div className="document-icon">
+                            <div key={document.id} className="construction-document-item">
+                              <div className="construction-document-item__info">
+                                <div className="construction-document-item__icon">
                                   {document.mimeType?.includes('pdf') ? '📄' :
                                    document.mimeType?.includes('word') ? '📝' :
                                    document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
                                 </div>
-                                <div className="document-details">
-                                  <div className="document-name">{document.originalName}</div>
-                                  <div className="document-meta">
-                                    <span className="document-date">Дата загрузки: {formatDate(document.uploadedAt)}</span>
+                                <div className="construction-document-item__details">
+                                  <div className="construction-document-item__name">{document.originalName}</div>
+                                  <div className="construction-document-item__meta">
+                                    <span className="construction-document-item__type-badge">
+                                      Договор
+                                    </span>
+                                    <span className="document-separator">•</span>
+                                    <span className="construction-document-item__date">
+                                      Дата загрузки: {formatDate(document.uploadedAt)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
-                              <div className="document-actions">
-                                <Button
-                                  variant="outline"
-                                  size="small"
+                              <div className="construction-document-item__actions">
+                                <button
+                                  className="construction-document-item__action"
                                   onClick={() => handleDownloadDocument(document)}
+                                  title="Скачать документ"
                                 >
+                                  <span className="construction-document-item__action-icon">⬇️</span>
                                   Скачать
-                                </Button>
+                                </button>
                                 {canEditProjects && (
-                                  <Button
-                                    variant="danger"
-                                    size="small"
+                                  <button
+                                    className="construction-document-item__action construction-document-item__action--danger"
                                     onClick={() => handleDeleteDocument(document)}
+                                    title="Удалить документ"
                                   >
+                                    <span className="construction-document-item__action-icon">🗑️</span>
                                     Удалить
-                                  </Button>
+                                  </button>
                                 )}
                               </div>
                             </div>
