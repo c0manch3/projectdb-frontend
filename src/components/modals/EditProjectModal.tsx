@@ -59,7 +59,7 @@ const updateProjectSchema = z.object({
     .min(1, 'Стоимость должна быть больше нуля')
     .max(999999999999, 'Стоимость слишком большая'),
 
-  status: z.enum(['active', 'completed', 'overdue'] as const, {
+  status: z.enum(['Active', 'Completed'] as const, {
     required_error: 'Статус проекта обязателен для выбора'
   })
 }).refine((data) => {
@@ -203,7 +203,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
-      <Modal.Header>Редактировать проект</Modal.Header>
+      <Modal.Header onClose={handleClose}>Редактировать проект</Modal.Header>
       <Modal.Content>
         <form onSubmit={handleSubmit(onSubmit)} className="form">
           <FormGroup>
@@ -337,9 +337,8 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
               id="edit-status"
               error={errors.status?.message}
             >
-              <option value="active">Активный</option>
-              <option value="completed">Завершенный</option>
-              <option value="overdue">Просроченный</option>
+              <option value="Active">Активный</option>
+              <option value="Completed">Завершенный</option>
             </FormSelect>
           </FormGroup>
         </form>

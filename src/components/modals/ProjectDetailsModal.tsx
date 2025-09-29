@@ -53,12 +53,10 @@ function ProjectDetailsModal({ isOpen, onClose, project, onEdit, onDelete }: Pro
 
   const getStatusLabel = (status: string): string => {
     switch (status) {
-      case 'active':
+      case 'Active':
         return 'Активный';
-      case 'completed':
+      case 'Completed':
         return 'Завершенный';
-      case 'overdue':
-        return 'Просроченный';
       default:
         return status;
     }
@@ -97,7 +95,7 @@ function ProjectDetailsModal({ isOpen, onClose, project, onEdit, onDelete }: Pro
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="large">
-      <Modal.Header>
+      <Modal.Header onClose={onClose}>
         Детали проекта
       </Modal.Header>
       <Modal.Content>

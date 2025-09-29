@@ -82,7 +82,7 @@ function Projects(): JSX.Element {
 
   // Handle filter changes
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const status = e.target.value as 'all' | 'active' | 'completed' | 'overdue';
+    const status = e.target.value as 'all' | 'Active' | 'Completed';
     dispatch(updateFilters({ status }));
   };
 
@@ -144,12 +144,10 @@ function Projects(): JSX.Element {
 
   const getStatusLabel = (status: string): string => {
     switch (status) {
-      case 'active':
+      case 'Active':
         return 'Активный';
-      case 'completed':
+      case 'Completed':
         return 'Завершенный';
-      case 'overdue':
-        return 'Просроченный';
       default:
         return status;
     }
@@ -226,9 +224,8 @@ function Projects(): JSX.Element {
                   onChange={handleStatusFilterChange}
                 >
                   <option value="all">Все</option>
-                  <option value="active">Активные</option>
-                  <option value="completed">Завершенные</option>
-                  <option value="overdue">Просроченные</option>
+                  <option value="Active">Активные</option>
+                  <option value="Completed">Завершенные</option>
                 </FormSelect>
               </Filters.Group>
 
@@ -300,11 +297,6 @@ function Projects(): JSX.Element {
                 label="Завершенные"
                 value={stats.completed.toString()}
                 color="primary"
-              />
-              <StatCard
-                label="Просроченные"
-                value={stats.overdue.toString()}
-                color="warning"
               />
             </StatCard.Grid>
           )}

@@ -462,13 +462,6 @@ function ProjectDetail(): JSX.Element {
                             ✏️ Редактировать проект
                           </Button>
                         </Link>
-                        <Button
-                          variant="outline"
-                          className="project-action-button"
-                          onClick={handleNavigateToDocuments}
-                        >
-                          📄 Управление документами
-                        </Button>
                       </>
                     )}
                     <Button

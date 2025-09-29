@@ -22,11 +22,11 @@ export interface UpdateProjectDto {
   type?: 'main' | 'additional';
   managerId?: string;
   mainProjectId?: string;
-  status?: 'active' | 'completed' | 'overdue';
+  status?: 'Active' | 'Completed';
 }
 
 export interface ProjectsFilters {
-  status?: 'all' | 'active' | 'completed' | 'overdue';
+  status?: 'all' | 'Active' | 'Completed';
   customerId?: string;
   managerId?: string;
   type?: 'all' | 'main' | 'additional';
@@ -47,7 +47,6 @@ export interface ProjectStatsResponse {
   total: number;
   active: number;
   completed: number;
-  overdue: number;
   totalCost: number;
   averageCost: number;
 }
@@ -69,16 +68,19 @@ export const projectsService = {
   // Get all projects with optional filters
   async getProjects(filters?: ProjectsFilters): Promise<Project[]> {
     try {
-      // For now, get all projects and filter on frontend
-      // TODO: Implement backend filtering when available
-      const response = await apiRequest.get<Project[]>('/project');
+      // Build query parameters for backend filtering
+      const params = new URLSearchParams();
+
+      if (filters?.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+
+      const url = params.toString() ? `/project?${params.toString()}` : '/project';
+      const response = await apiRequest.get<Project[]>(url);
       let projects = response.data;
 
-      // Apply frontend filtering
+      // Apply remaining frontend filtering (for filters not supported by backend yet)
       if (filters) {
-        if (filters.status && filters.status !== 'all') {
-          projects = projects.filter(p => p.status === filters.status);
-        }
         if (filters.customerId) {
           projects = projects.filter(p => p.customerId === filters.customerId);
         }
@@ -244,9 +246,8 @@ export const projectsService = {
 
       const stats: ProjectStatsResponse = {
         total: projects.length,
-        active: projects.filter(p => p.status === 'active').length,
-        completed: projects.filter(p => p.status === 'completed').length,
-        overdue: projects.filter(p => p.status === 'overdue').length,
+        active: projects.filter(p => p.status === 'Active').length,
+        completed: projects.filter(p => p.status === 'Completed').length,
         totalCost: projects.reduce((sum, p) => sum + p.cost, 0),
         averageCost: projects.length > 0 ? projects.reduce((sum, p) => sum + p.cost, 0) / projects.length : 0
       };

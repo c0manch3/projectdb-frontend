@@ -26,7 +26,7 @@ export interface Project {
   type: 'main' | 'additional';
   managerId?: string;
   mainProjectId?: string;
-  status: 'active' | 'completed' | 'overdue';
+  status: 'Active' | 'Completed';
   createdAt: string;
   updatedAt: string;
 }

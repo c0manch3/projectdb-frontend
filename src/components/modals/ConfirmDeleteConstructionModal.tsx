@@ -90,11 +90,13 @@ function ConfirmDeleteConstructionModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
-      title="Подтверждение удаления"
-      size="small"
+      onClose={!isDeleting ? handleClose : undefined}
     >
-      <div className="modal-content">
+      <Modal.Header onClose={!isDeleting ? handleClose : undefined}>
+        Удаление сооружения
+      </Modal.Header>
+
+      <Modal.Content>
         <div className="delete-confirmation">
           <div className="delete-confirmation__icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -109,34 +111,40 @@ function ConfirmDeleteConstructionModal({
           </div>
 
           <div className="delete-confirmation__content">
-            <h3>Удалить сооружение?</h3>
-            <p>
-              Вы действительно хотите удалить сооружение{' '}
-              <strong>"{construction.name}"</strong>?
-            </p>
+            <h3>Вы действительно хотите удалить это сооружение?</h3>
+
+            {/* Construction Information Card */}
+            <div className="document-details">
+              <div className="detail-item">
+                <span className="detail-label">
+                  🏗️ Сооружение:
+                </span>
+                <span className="detail-value">
+                  {construction.name}
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">ID:</span>
+                <span className="detail-value">{construction.id}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Создано:</span>
+                <span className="detail-value">
+                  {new Date(construction.createdAt).toLocaleDateString('ru-RU')}
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Последнее изменение:</span>
+                <span className="detail-value">
+                  {new Date(construction.updatedAt).toLocaleDateString('ru-RU')}
+                </span>
+              </div>
+            </div>
+
             <p className="delete-warning">
               <strong>Внимание:</strong> Это действие нельзя будет отменить.
               Все связанные с сооружением документы также будут удалены.
             </p>
-          </div>
-
-          <div className="construction-details">
-            <div className="detail-item">
-              <span className="detail-label">ID:</span>
-              <span className="detail-value">{construction.id}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Создано:</span>
-              <span className="detail-value">
-                {new Date(construction.createdAt).toLocaleDateString('ru-RU')}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Последнее изменение:</span>
-              <span className="detail-value">
-                {new Date(construction.updatedAt).toLocaleDateString('ru-RU')}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -145,7 +153,9 @@ function ConfirmDeleteConstructionModal({
             <p>{error}</p>
           </div>
         )}
+      </Modal.Content>
 
+      <Modal.Footer>
         <div className="modal-actions">
           <Button
             type="button"
@@ -153,6 +163,9 @@ function ConfirmDeleteConstructionModal({
             onClick={handleClose}
             disabled={isDeleting}
           >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '8px' }}>
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
             Отмена
           </Button>
           <Button
@@ -161,10 +174,48 @@ function ConfirmDeleteConstructionModal({
             onClick={handleConfirmDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? 'Удаление...' : 'Удалить сооружение'}
+            {isDeleting ? (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{
+                    marginRight: '8px',
+                    animation: 'spin 1s linear infinite'
+                  }}
+                >
+                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+                Удаление...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '8px' }}>
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+                Удалить сооружение
+              </>
+            )}
           </Button>
         </div>
-      </div>
+      </Modal.Footer>
+
+      {/* Add keyframe animation for spinner */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </Modal>
   );
 }

@@ -80,12 +80,10 @@ function ConfirmDeleteProjectModal({ isOpen, onClose, project }: ConfirmDeletePr
   // Get status label
   const getStatusLabel = (status: string): string => {
     switch (status) {
-      case 'active':
+      case 'Active':
         return 'Активный';
-      case 'completed':
+      case 'Completed':
         return 'Завершенный';
-      case 'overdue':
-        return 'Просроченный';
       default:
         return status;
     }
@@ -105,7 +103,7 @@ function ConfirmDeleteProjectModal({ isOpen, onClose, project }: ConfirmDeletePr
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <Modal.Header>
+      <Modal.Header onClose={!isDeleting ? onClose : undefined}>
         Удалить проект
       </Modal.Header>
       <Modal.Content>

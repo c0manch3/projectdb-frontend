@@ -23,7 +23,7 @@ const initialState: ExtendedProjectsState = {
   list: [],
   current: null,
   filters: {
-    status: 'all',
+    status: 'Active',
     customerId: null,
     managerId: null,
     type: 'all',
@@ -447,7 +447,7 @@ export const selectProjectById = (state: { projects: ExtendedProjectsState }, pr
 };
 
 // Helper selectors for project status
-export const selectProjectsByStatus = (state: { projects: ExtendedProjectsState }, status: 'active' | 'completed' | 'overdue') => {
+export const selectProjectsByStatus = (state: { projects: ExtendedProjectsState }, status: 'Active' | 'Completed') => {
   return state.projects.list.filter(project => project.status === status);
 };
 
