@@ -79,26 +79,47 @@ export interface Document {
 
 export type DocumentType = 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
 
+// Workload Plan - планирование рабочей нагрузки
 export interface WorkloadPlan {
   id: string;
-  userId: string;
-  projectId: string;
-  managerId: string;
-  date: string;
-  hoursPlanned: number;
-  createdAt: string;
-  updatedAt: string;
+  userId: string;        // UUID сотрудника
+  projectId: string;     // UUID проекта
+  managerId: string;     // UUID менеджера, который создал план
+  date: string;          // Дата, на которую планируется работа (ISO date)
+  createdAt: string;     // Дата создания записи
+  updatedAt: string;     // Дата последнего обновления
 }
 
+// Workload Actual - учет фактически отработанного времени
 export interface WorkloadActual {
   id: string;
-  userId: string;
-  projectId: string;
-  hoursWorked: number;
-  userText: string;
-  date: string;
-  createdAt: string;
-  updatedAt: string;
+  userId: string;        // UUID сотрудника
+  projectId: string;     // UUID проекта
+  date: string;          // Дата, за которую отчитывается работа (ISO date)
+  hoursWorked: number;   // Количество отработанных часов
+  userText: string;      // Описание выполненной работы
+  createdAt: string;     // Дата создания записи
+  updatedAt: string;     // Дата последнего обновления
+}
+
+// Unified Workload - объединенные данные о плане и факте для одной даты
+export interface UnifiedWorkload {
+  date: string;          // Дата работы (ISO date)
+  userId: string;        // UUID сотрудника
+  projectId: string;     // UUID проекта
+
+  // Данные плана (если есть)
+  planId?: string;
+  managerId?: string;
+  planCreatedAt?: string;
+  planUpdatedAt?: string;
+
+  // Данные факта (если есть)
+  actualId?: string;
+  hoursWorked?: number;
+  userText?: string;
+  actualCreatedAt?: string;
+  actualUpdatedAt?: string;
 }
 
 // State interfaces
@@ -162,18 +183,45 @@ export interface ConstructionsState {
 }
 
 export interface WorkloadState {
+  // Separate arrays for plans and actuals
   plans: WorkloadPlan[];
   actuals: WorkloadActual[];
+
+  // Unified workload data (combined plan and actual for display)
+  unified: UnifiedWorkload[];
+
+  // Current workload record being viewed/edited
+  current: UnifiedWorkload | null;
+
+  // Filters for data fetching
   filters: {
-    userId: string | null;
-    projectId: string | null;
-    dateFrom: string | null;
-    dateTo: string | null;
+    userId?: string | undefined;
+    projectId?: string | undefined;
+    type?: 'plan' | 'actual' | undefined;
+    startDate?: string | undefined;  // YYYY-MM-DD format
+    endDate?: string | undefined;    // YYYY-MM-DD format
   };
+
+  // UI state
   view: 'week' | 'month';
-  selectedUser: string | null;
+  activeTab: 'planned' | 'actual' | 'comparison';
+  selectedDate: string; // Current selected date for calendar view
+
+  // Loading and error states
   loading: boolean;
+  planLoading: boolean;
+  actualLoading: boolean;
+  unifiedLoading: boolean;
   error: string | null;
+
+  // Statistics
+  stats: {
+    totalPlanned: number;
+    totalActual: number;
+    utilizationRate: number;
+    activeEmployees: number;
+  } | null;
+  statsLoading: boolean;
 }
 
 export interface CompaniesState {
