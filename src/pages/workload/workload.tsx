@@ -242,10 +242,22 @@ function Workload(): JSX.Element {
 
   // Handle create workload from unified calendar
   const handleCreateWorkloadFromCalendar = (date: string) => {
-    setModalState({
-      type: 'add-actual',
-      data: { date }
-    });
+    // Check if we have a selected employee filter (single-employee mode)
+    const selectedEmployeeId = filters.userId;
+
+    if (selectedEmployeeId) {
+      // In single-employee mode, show plan creation modal by default
+      setModalState({
+        type: 'add-plan',
+        data: { date }
+      });
+    } else {
+      // In all-employees mode, show workload details modal for creation
+      setModalState({
+        type: 'workload-details',
+        data: { date, workloads: [] }
+      });
+    }
   };
 
   // Export functionality (placeholder)
@@ -276,6 +288,23 @@ function Workload(): JSX.Element {
           {/* Filters and Controls */}
           <Card>
             <Filters>
+              <Filters.Group>
+                <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
+                <FormSelect
+                  id="employeeFilter"
+                  value={filters.userId || ''}
+                  onChange={(e) => handleFilterChange('userId', e.target.value)}
+                  className="filters__select"
+                >
+                  <option value="">Все сотрудники</option>
+                  {employees.filter(emp => emp.role === 'Employee').map(employee => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </option>
+                  ))}
+                </FormSelect>
+              </Filters.Group>
+
               <Filters.Group>
                 <Filters.Label htmlFor="projectFilter">Проект:</Filters.Label>
                 <FormSelect
@@ -398,9 +427,13 @@ function Workload(): JSX.Element {
                     Календарь рабочей нагрузки
                   </h3>
                   <div style={{display: 'flex', gap: '0.5rem'}}>
-                    {filters.userId && (
-                      <Button variant="primary" onClick={() => handleWorkloadCellClick(selectedDate, [])}>
-                        + Добавить время
+                    {filters.userId ? (
+                      <Button variant="primary" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
+                        + Добавить план
+                      </Button>
+                    ) : (
+                      <Button variant="outline" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
+                        + Добавить данные
                       </Button>
                     )}
                     <Button

@@ -521,12 +521,9 @@ function WorkloadDetailsModal({
                 onClick={() => {
                   if (mode === 'edit') {
                     setMode('view');
-                  } else if (mode === 'create-plan' && workloads.length === 0) {
-                    onClose(); // Закрываем модал если нет workloads
-                  } else if (mode === 'create-plan') {
-                    setMode('view'); // Возвращаемся к просмотру если есть workloads
                   } else {
-                    onClose(); // Режим create - закрываем модал
+                    // Всегда закрываем модал при отмене в режимах create и create-plan
+                    onClose();
                   }
                 }}
               >
