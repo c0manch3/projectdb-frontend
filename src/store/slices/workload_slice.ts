@@ -264,7 +264,7 @@ const workloadSlice = createSlice({
 
     // Update filters
     updateFilters: (state, action: PayloadAction<Partial<WorkloadFilters>>) => {
-      state.filters = { ...state.filters, ...action.payload };
+      state.filters = action.payload;
     },
 
     // Reset filters

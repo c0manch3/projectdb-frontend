@@ -121,6 +121,7 @@ function Workload(): JSX.Element {
       newFilters[field as keyof typeof filters] = value as any;
     }
 
+    console.log('Filter change:', field, value, 'New filters:', newFilters);
     dispatch(updateFilters(newFilters));
   };
 
@@ -284,11 +285,11 @@ function Workload(): JSX.Element {
                 <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
                 <FormSelect
                   id="employeeFilter"
-                  value={filters.userId || ''}
+                  value={filters.userId || 'all'}
                   onChange={(e) => handleFilterChange('userId', e.target.value)}
                   className="filters__select"
                 >
-                  <option value="">Все сотрудники</option>
+                  <option value="all">Все сотрудники</option>
                   {employees.filter(emp => emp.role === 'Employee').map(employee => (
                     <option key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
@@ -301,11 +302,11 @@ function Workload(): JSX.Element {
                 <Filters.Label htmlFor="projectFilter">Проект:</Filters.Label>
                 <FormSelect
                   id="projectFilter"
-                  value={filters.projectId || ''}
+                  value={filters.projectId || 'all'}
                   onChange={(e) => handleFilterChange('projectId', e.target.value)}
                   className="filters__select"
                 >
-                  <option value="">Все проекты</option>
+                  <option value="all">Все проекты</option>
                   {projects.map(project => (
                     <option key={project.id} value={project.id}>
                       {project.name}
