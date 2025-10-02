@@ -20,9 +20,13 @@ import {
 import type { UnifiedWorkload } from '../../../store/types';
 import { workloadService } from '../../../services/workload';
 
+type CalendarDisplayMode = 'all-employees' | 'single-employee';
+
 interface UnifiedWorkloadCalendarProps {
   onCellClick?: (date: string, workloads: UnifiedWorkload[]) => void;
   onCreateWorkload?: (date: string) => void;
+  displayMode?: CalendarDisplayMode;
+  onDisplayModeChange?: (mode: CalendarDisplayMode) => void;
 }
 
 interface CalendarDay {
@@ -46,7 +50,9 @@ interface WorkloadSummary {
 
 function UnifiedWorkloadCalendar({
   onCellClick,
-  onCreateWorkload
+  onCreateWorkload,
+  displayMode = 'all-employees',
+  onDisplayModeChange
 }: UnifiedWorkloadCalendarProps): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -62,6 +68,7 @@ function UnifiedWorkloadCalendar({
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [localDisplayMode, setLocalDisplayMode] = useState<CalendarDisplayMode>(displayMode);
 
   // Get selected employee for filtering
   const selectedEmployee = useMemo(() => {
@@ -74,10 +81,27 @@ function UnifiedWorkloadCalendar({
     const newFilters = { ...filters };
     if (employeeId === '' || employeeId === 'all') {
       delete newFilters.userId;
+      // Switch to all-employees mode when selecting "all"
+      handleDisplayModeChange('all-employees');
     } else {
       newFilters.userId = employeeId;
+      // Switch to single-employee mode when selecting specific employee
+      handleDisplayModeChange('single-employee');
     }
     dispatch(updateFilters(newFilters));
+  };
+
+  // Handle display mode change
+  const handleDisplayModeChange = (mode: CalendarDisplayMode) => {
+    setLocalDisplayMode(mode);
+    onDisplayModeChange?.(mode);
+
+    // Update filters based on mode
+    if (mode === 'all-employees') {
+      const newFilters = { ...filters };
+      delete newFilters.userId;
+      dispatch(updateFilters(newFilters));
+    }
   };
 
   // Generate calendar days based on current view
@@ -211,14 +235,36 @@ function UnifiedWorkloadCalendar({
   // Handle day click
   const handleDayClick = (day: CalendarDay) => {
     dispatch(updateSelectedDate(day.date));
-    onCellClick?.(day.date, day.workloads);
+
+    // Different behavior based on display mode
+    if (localDisplayMode === 'all-employees') {
+      // In all-employees mode, always show details if there are workloads
+      if (day.workloads.length > 0) {
+        onCellClick?.(day.date, day.workloads);
+      } else {
+        // If no workloads, show empty state modal for creating new workload
+        onCellClick?.(day.date, []);
+      }
+    } else {
+      // In single-employee mode, filter workloads for selected employee
+      const employeeWorkloads = selectedEmployee
+        ? day.workloads.filter(w => w.userId === selectedEmployee.id)
+        : [];
+      onCellClick?.(day.date, employeeWorkloads);
+    }
   };
 
   // Handle day double-click for creating workload
   const handleDayDoubleClick = (day: CalendarDay) => {
-    // Only allow creation on future dates and current date, and only if employee is selected
-    if (!day.isPast && selectedEmployee && onCreateWorkload) {
-      onCreateWorkload(day.date);
+    // Only allow creation on future dates and current date
+    if (!day.isPast && onCreateWorkload) {
+      if (localDisplayMode === 'single-employee' && selectedEmployee) {
+        // In single-employee mode, create for selected employee
+        onCreateWorkload(day.date);
+      } else if (localDisplayMode === 'all-employees') {
+        // In all-employees mode, show creation modal (user can select employee)
+        onCreateWorkload(day.date);
+      }
     }
   };
 
@@ -254,12 +300,22 @@ function UnifiedWorkloadCalendar({
     }
   };
 
-  // Render workload cell
+  // Render workload cell based on display mode
   const renderWorkloadCell = (day: CalendarDay) => {
     const summary = getWorkloadSummary(day.workloads);
     const hasWorkload = day.workloads.length > 0;
     const isHovered = hoveredDate === day.date;
 
+    // Render different views based on display mode
+    if (localDisplayMode === 'single-employee') {
+      return renderSingleEmployeeCell(day, summary, hasWorkload, isHovered);
+    } else {
+      return renderAllEmployeesCell(day, summary, hasWorkload, isHovered);
+    }
+  };
+
+  // Render cell for all-employees mode
+  const renderAllEmployeesCell = (day: CalendarDay, summary: WorkloadSummary, hasWorkload: boolean, isHovered: boolean) => {
     // Determine cell status class
     let statusClass = '';
     if (hasWorkload) {
@@ -277,7 +333,7 @@ function UnifiedWorkloadCalendar({
     return (
       <motion.div
         key={day.date}
-        className={`unified-workload-calendar__cell ${statusClass} ${
+        className={`unified-workload-calendar__cell unified-workload-calendar__cell--all-employees ${statusClass} ${
           day.isCurrentMonth ? '' : 'unified-workload-calendar__cell--other-month'
         } ${
           day.isToday ? 'unified-workload-calendar__cell--today' : ''
@@ -302,9 +358,14 @@ function UnifiedWorkloadCalendar({
           {new Date(day.date).getDate()}
         </div>
 
-        {/* Workload Indicators */}
+        {/* All Employees Mode: Show aggregated data */}
         {hasWorkload && (
           <div className="unified-workload-calendar__workload-indicators">
+            {/* Employee count indicator */}
+            <div className="unified-workload-calendar__employee-count">
+              {day.workloads.length} сотр.
+            </div>
+
             {/* Status indicators */}
             <div className="unified-workload-calendar__status-indicators">
               {summary.completedCount > 0 && (
@@ -329,7 +390,7 @@ function UnifiedWorkloadCalendar({
               )}
             </div>
 
-            {/* Hours worked */}
+            {/* Total hours worked */}
             {summary.totalHours > 0 && (
               <div className="unified-workload-calendar__hours">
                 {workloadService.formatHours(summary.totalHours)}
@@ -338,8 +399,8 @@ function UnifiedWorkloadCalendar({
           </div>
         )}
 
-        {/* Hover tooltip */}
-        {isHovered && hasWorkload && (
+        {/* Hover tooltip for all employees mode */}
+        {isHovered && (
           <div className="unified-workload-calendar__tooltip">
             <div className="unified-workload-calendar__tooltip-content">
               <div className="unified-workload-calendar__tooltip-header">
@@ -350,32 +411,294 @@ function UnifiedWorkloadCalendar({
                 })}
               </div>
               <div className="unified-workload-calendar__tooltip-body">
-                {day.workloads.map((workload, index) => (
-                  <div key={index} className="unified-workload-calendar__tooltip-item">
+                {hasWorkload ? (
+                  <>
+                    <div className="unified-workload-calendar__tooltip-summary">
+                      Всего сотрудников: {day.workloads.length}
+                    </div>
+                    <div className="unified-workload-calendar__tooltip-stats">
+                      <div className="unified-workload-calendar__tooltip-stat">
+                        <span className="unified-workload-calendar__tooltip-stat-label">Завершено:</span>
+                        <span className="unified-workload-calendar__tooltip-stat-value unified-workload-calendar__tooltip-stat-value--success">
+                          {summary.completedCount}
+                        </span>
+                      </div>
+                      <div className="unified-workload-calendar__tooltip-stat">
+                        <span className="unified-workload-calendar__tooltip-stat-label">Планы:</span>
+                        <span className="unified-workload-calendar__tooltip-stat-value unified-workload-calendar__tooltip-stat-value--primary">
+                          {summary.plannedCount}
+                        </span>
+                      </div>
+                      {summary.missingCount > 0 && (
+                        <div className="unified-workload-calendar__tooltip-stat">
+                          <span className="unified-workload-calendar__tooltip-stat-label">Не отчитались:</span>
+                          <span className="unified-workload-calendar__tooltip-stat-value unified-workload-calendar__tooltip-stat-value--warning">
+                            {summary.missingCount}
+                          </span>
+                        </div>
+                      )}
+                      {summary.overtimeCount > 0 && (
+                        <div className="unified-workload-calendar__tooltip-stat">
+                          <span className="unified-workload-calendar__tooltip-stat-label">Сверхурочно:</span>
+                          <span className="unified-workload-calendar__tooltip-stat-value unified-workload-calendar__tooltip-stat-value--info">
+                            {summary.overtimeCount}
+                          </span>
+                        </div>
+                      )}
+                      {summary.totalHours > 0 && (
+                        <div className="unified-workload-calendar__tooltip-stat">
+                          <span className="unified-workload-calendar__tooltip-stat-label">Всего часов:</span>
+                          <span className="unified-workload-calendar__tooltip-stat-value">
+                            {workloadService.formatHours(summary.totalHours)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="unified-workload-calendar__tooltip-divider"></div>
+                    <div className="unified-workload-calendar__tooltip-employees">
+                      {day.workloads.slice(0, 3).map((workload, index) => (
+                        <div key={index} className="unified-workload-calendar__tooltip-item">
+                          <div className="unified-workload-calendar__tooltip-employee">
+                            {getEmployeeName(workload.userId)}
+                          </div>
+                          <div className="unified-workload-calendar__tooltip-project">
+                            {getProjectName(workload.projectId)}
+                          </div>
+                          <div className={`unified-workload-calendar__tooltip-status unified-workload-calendar__tooltip-status--${workloadService.getWorkloadStatus(workload)}`}>
+                            {workloadService.getWorkloadStatusLabel(workloadService.getWorkloadStatus(workload))}
+                            {workload.hoursWorked && ` - ${workloadService.formatHours(workload.hoursWorked)}`}
+                          </div>
+                        </div>
+                      ))}
+                      {day.workloads.length > 3 && (
+                        <div className="unified-workload-calendar__tooltip-more">
+                          И еще {day.workloads.length - 3} сотрудник(ов)...
+                        </div>
+                      )}
+                    </div>
+                    <div className="unified-workload-calendar__tooltip-action">
+                      Нажмите для просмотра подробностей
+                    </div>
+                  </>
+                ) : (
+                  <div className="unified-workload-calendar__tooltip-empty">
+                    <div className="unified-workload-calendar__tooltip-empty-message">
+                      Нет запланированной работы
+                    </div>
+                    {!day.isPast && (
+                      <div className="unified-workload-calendar__tooltip-action">
+                        Нажмите для создания плана
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  // Render cell for single-employee mode with plan/fact split
+  const renderSingleEmployeeCell = (day: CalendarDay, summary: WorkloadSummary, hasWorkload: boolean, isHovered: boolean) => {
+    // Get workload for selected employee on this day
+    const employeeWorkload = day.workloads.find(w => w.userId === selectedEmployee?.id);
+    const hasPlan = employeeWorkload?.planId;
+    const hasActual = employeeWorkload?.actualId;
+
+    // Determine cell status class
+    let statusClass = '';
+    if (employeeWorkload) {
+      const status = workloadService.getWorkloadStatus(employeeWorkload);
+      statusClass = `unified-workload-calendar__cell--${status}`;
+    }
+
+    return (
+      <motion.div
+        key={day.date}
+        className={`unified-workload-calendar__cell unified-workload-calendar__cell--single-employee ${statusClass} ${
+          day.isCurrentMonth ? '' : 'unified-workload-calendar__cell--other-month'
+        } ${
+          day.isToday ? 'unified-workload-calendar__cell--today' : ''
+        } ${
+          day.isSelected ? 'unified-workload-calendar__cell--selected' : ''
+        } ${
+          day.isPast ? 'unified-workload-calendar__cell--past' : ''
+        } ${
+          day.isWeekend ? 'unified-workload-calendar__cell--weekend' : ''
+        }`}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+        onClick={() => handleDayClick(day)}
+        onDoubleClick={() => handleDayDoubleClick(day)}
+        onMouseEnter={() => setHoveredDate(day.date)}
+        onMouseLeave={() => setHoveredDate(null)}
+      >
+        {/* Day Number */}
+        <div className="unified-workload-calendar__day-number">
+          {new Date(day.date).getDate()}
+        </div>
+
+        {/* Single Employee Mode: Split plan/fact */}
+        <div className="unified-workload-calendar__split-content">
+          {/* Plan Section (Top Half) */}
+          <div className={`unified-workload-calendar__plan-section ${
+            hasPlan ? 'unified-workload-calendar__plan-section--has-plan' : 'unified-workload-calendar__plan-section--empty'
+          }`}>
+            <div className="unified-workload-calendar__section-label">План</div>
+            {hasPlan && employeeWorkload && (
+              <div className="unified-workload-calendar__plan-info">
+                <div className="unified-workload-calendar__project-name">
+                  {getProjectName(employeeWorkload.projectId)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Fact Section (Bottom Half) */}
+          <div className={`unified-workload-calendar__fact-section ${
+            hasActual ? 'unified-workload-calendar__fact-section--has-fact' : 'unified-workload-calendar__fact-section--empty'
+          }`}>
+            <div className="unified-workload-calendar__section-label">Факт</div>
+            {hasActual && employeeWorkload && (
+              <div className="unified-workload-calendar__fact-info">
+                <div className="unified-workload-calendar__project-name">
+                  {getProjectName(employeeWorkload.projectId)}
+                </div>
+                {employeeWorkload.userText && (
+                  <div className="unified-workload-calendar__work-description">
+                    {employeeWorkload.userText.length > 20
+                      ? `${employeeWorkload.userText.substring(0, 20)}...`
+                      : employeeWorkload.userText
+                    }
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Empty state - when no plan and employee is selected */}
+        {!hasWorkload && selectedEmployee && day.isCurrentMonth && (
+          <div className="unified-workload-calendar__empty-state">
+            <div className="unified-workload-calendar__empty-message">
+              Нет плана
+            </div>
+          </div>
+        )}
+
+        {/* Hover tooltip for single employee mode */}
+        {isHovered && (
+          <div className="unified-workload-calendar__tooltip">
+            <div className="unified-workload-calendar__tooltip-content">
+              <div className="unified-workload-calendar__tooltip-header">
+                {new Date(day.date).toLocaleDateString('ru-RU', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long'
+                })}
+              </div>
+              <div className="unified-workload-calendar__tooltip-body">
+                {employeeWorkload ? (
+                  <>
                     <div className="unified-workload-calendar__tooltip-employee">
-                      {!selectedEmployee && getEmployeeName(workload.userId)}
+                      {getEmployeeName(employeeWorkload.userId)}
                     </div>
                     <div className="unified-workload-calendar__tooltip-project">
-                      {getProjectName(workload.projectId)}
+                      Проект: {getProjectName(employeeWorkload.projectId)}
                     </div>
-                    <div className="unified-workload-calendar__tooltip-status">
-                      {workloadService.getWorkloadStatusLabel(workloadService.getWorkloadStatus(workload))}
-                      {workload.hoursWorked && ` - ${workloadService.formatHours(workload.hoursWorked)}`}
+
+                    <div className="unified-workload-calendar__tooltip-sections">
+                      <div className="unified-workload-calendar__tooltip-section">
+                        <div className="unified-workload-calendar__tooltip-section-header">
+                          <span className="unified-workload-calendar__tooltip-section-title">План</span>
+                          <span className={`unified-workload-calendar__tooltip-section-status ${hasPlan ? 'unified-workload-calendar__tooltip-section-status--active' : 'unified-workload-calendar__tooltip-section-status--empty'}`}>
+                            {hasPlan ? 'Есть' : 'Нет'}
+                          </span>
+                        </div>
+                        {hasPlan && (
+                          <div className="unified-workload-calendar__tooltip-section-content">
+                            Запланирована работа на проекте
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="unified-workload-calendar__tooltip-section">
+                        <div className="unified-workload-calendar__tooltip-section-header">
+                          <span className="unified-workload-calendar__tooltip-section-title">Факт</span>
+                          <span className={`unified-workload-calendar__tooltip-section-status ${hasActual ? 'unified-workload-calendar__tooltip-section-status--active' : 'unified-workload-calendar__tooltip-section-status--empty'}`}>
+                            {hasActual ? workloadService.formatHours(employeeWorkload.hoursWorked || 0) : 'Нет'}
+                          </span>
+                        </div>
+                        {hasActual && employeeWorkload.userText && (
+                          <div className="unified-workload-calendar__tooltip-section-content">
+                            {employeeWorkload.userText.length > 50
+                              ? `${employeeWorkload.userText.substring(0, 50)}...`
+                              : employeeWorkload.userText
+                            }
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    <div className="unified-workload-calendar__tooltip-divider"></div>
+                    <div className={`unified-workload-calendar__tooltip-status unified-workload-calendar__tooltip-status--${workloadService.getWorkloadStatus(employeeWorkload)}`}>
+                      Статус: {workloadService.getWorkloadStatusLabel(workloadService.getWorkloadStatus(employeeWorkload))}
+                    </div>
+                    <div className="unified-workload-calendar__tooltip-action">
+                      Нажмите для подробностей
+                    </div>
+                  </>
+                ) : (
+                  <div className="unified-workload-calendar__tooltip-empty">
+                    {selectedEmployee ? (
+                      <>
+                        <div className="unified-workload-calendar__tooltip-employee">
+                          {selectedEmployee.firstName} {selectedEmployee.lastName}
+                        </div>
+                        <div className="unified-workload-calendar__tooltip-empty-message">
+                          Нет запланированной работы
+                        </div>
+                        {!day.isPast && (
+                          <div className="unified-workload-calendar__tooltip-action">
+                            Двойной клик для создания плана
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="unified-workload-calendar__tooltip-empty-message">
+                        Выберите сотрудника для просмотра
+                      </div>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Add button for editable days when employee is selected */}
-        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && (
+        {/* Add button for editable days when employee is selected and no workload */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && !employeeWorkload && (
           <div className="unified-workload-calendar__add-button" onClick={(e) => {
             e.stopPropagation();
             onCreateWorkload?.(day.date);
           }}>
-            +
+            <span className="unified-workload-calendar__add-button-icon">+</span>
+            <span className="unified-workload-calendar__add-button-text">Добавить план</span>
+          </div>
+        )}
+
+        {/* Edit button for editable days when employee has a plan */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && employeeWorkload && hasPlan && (
+          <div className="unified-workload-calendar__edit-button" onClick={(e) => {
+            e.stopPropagation();
+            onCellClick?.(day.date, [employeeWorkload]);
+          }}>
+            <span className="unified-workload-calendar__edit-button-icon">✏️</span>
+            <span className="unified-workload-calendar__edit-button-text">Редактировать план</span>
           </div>
         )}
       </motion.div>
@@ -387,37 +710,64 @@ function UnifiedWorkloadCalendar({
 
   return (
     <div className="unified-workload-calendar">
-      {/* Employee Selection Header */}
-      <div className="unified-workload-calendar__header">
-        <div className="unified-workload-calendar__employee-section">
-          <label className="unified-workload-calendar__employee-label" htmlFor="employee-select">
-            Сотрудник:
-          </label>
-          <select
-            id="employee-select"
-            className="unified-workload-calendar__employee-select"
-            value={filters.userId || ''}
-            onChange={(e) => handleEmployeeChange(e.target.value)}
+      {/* Display Mode Toggle */}
+      <div className="unified-workload-calendar__mode-toggle">
+        <div className="unified-workload-calendar__mode-tabs">
+          <button
+            className={`unified-workload-calendar__mode-tab ${
+              localDisplayMode === 'all-employees' ? 'unified-workload-calendar__mode-tab--active' : ''
+            }`}
+            onClick={() => handleDisplayModeChange('all-employees')}
             disabled={loading}
           >
-            <option value="">Все сотрудники</option>
-            {employees.filter(employee => employee.role === 'Employee').map(employee => (
-              <option key={employee.id} value={employee.id}>
-                {employee.firstName} {employee.lastName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="unified-workload-calendar__current-selection">
-          <span className="unified-workload-calendar__selection-text">
-            {selectedEmployee
-              ? `${selectedEmployee.firstName} ${selectedEmployee.lastName}`
-              : 'Все сотрудники'
-            }
-          </span>
+            <span className="unified-workload-calendar__mode-icon">👥</span>
+            <span className="unified-workload-calendar__mode-label">Все сотрудники</span>
+          </button>
+          <button
+            className={`unified-workload-calendar__mode-tab ${
+              localDisplayMode === 'single-employee' ? 'unified-workload-calendar__mode-tab--active' : ''
+            }`}
+            onClick={() => handleDisplayModeChange('single-employee')}
+            disabled={loading}
+          >
+            <span className="unified-workload-calendar__mode-icon">👤</span>
+            <span className="unified-workload-calendar__mode-label">Конкретный сотрудник</span>
+          </button>
         </div>
       </div>
+
+      {/* Employee Selection Header - Only visible in single-employee mode */}
+      {localDisplayMode === 'single-employee' && (
+        <div className="unified-workload-calendar__header">
+          <div className="unified-workload-calendar__employee-section">
+            <label className="unified-workload-calendar__employee-label" htmlFor="employee-select">
+              Выберите сотрудника:
+            </label>
+            <select
+              id="employee-select"
+              className="unified-workload-calendar__employee-select"
+              value={filters.userId || ''}
+              onChange={(e) => handleEmployeeChange(e.target.value)}
+              disabled={loading}
+            >
+              <option value="">Выберите сотрудника</option>
+              {employees.filter(employee => employee.role === 'Employee').map(employee => (
+                <option key={employee.id} value={employee.id}>
+                  {employee.firstName} {employee.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedEmployee && (
+            <div className="unified-workload-calendar__current-selection">
+              <span className="unified-workload-calendar__selection-text">
+                {selectedEmployee.firstName} {selectedEmployee.lastName}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Calendar Navigation */}
       <div className="unified-workload-calendar__navigation">
@@ -510,14 +860,19 @@ function UnifiedWorkloadCalendar({
       {!loading && unified.length === 0 && (
         <EmptyState
           icon="📅"
-          title="Нет данных о рабочей нагрузке"
+          title={localDisplayMode === 'single-employee'
+            ? "Нет данных о рабочей нагрузке"
+            : "Нет данных о рабочей нагрузке"
+          }
           description={
-            selectedEmployee
-              ? `Нет данных для сотрудника ${selectedEmployee.firstName} ${selectedEmployee.lastName}`
-              : "Выберите сотрудника для просмотра рабочей нагрузки"
+            localDisplayMode === 'single-employee'
+              ? selectedEmployee
+                ? `Нет данных для сотрудника ${selectedEmployee.firstName} ${selectedEmployee.lastName}`
+                : "Выберите сотрудника для просмотра рабочей нагрузки"
+              : "Нет данных о рабочей нагрузке для всех сотрудников"
           }
           action={
-            selectedEmployee && onCreateWorkload && (
+            localDisplayMode === 'single-employee' && selectedEmployee && onCreateWorkload && (
               <Button
                 variant="primary"
                 onClick={() => onCreateWorkload(selectedDate)}
@@ -533,3 +888,4 @@ function UnifiedWorkloadCalendar({
 }
 
 export default UnifiedWorkloadCalendar;
+export type { CalendarDisplayMode };

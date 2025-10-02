@@ -28,6 +28,7 @@ interface WorkloadDetailsModalProps {
   onSuccess: () => void;
   date: string;
   workloads: UnifiedWorkload[];
+  selectedEmployeeId?: string;
 }
 
 interface WorkloadFormData {
@@ -43,7 +44,8 @@ function WorkloadDetailsModal({
   onClose,
   onSuccess,
   date,
-  workloads
+  workloads,
+  selectedEmployeeId
 }: WorkloadDetailsModalProps): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -57,13 +59,16 @@ function WorkloadDetailsModal({
   const [loading, setLoading] = useState(false);
   const [selectedWorkload, setSelectedWorkload] = useState<UnifiedWorkload | null>(null);
   const [formData, setFormData] = useState<WorkloadFormData>({
-    userId: currentUser?.id || '',
+    userId: selectedEmployeeId || currentUser?.id || '',
     projectId: '',
     date: date,
     hoursWorked: 8,
     userText: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Determine if we're in single-employee mode
+  const isSingleEmployeeMode = !!selectedEmployeeId;
 
   // Date object for display and validation
   const dateObj = new Date(date);
@@ -96,7 +101,7 @@ function WorkloadDetailsModal({
       setMode(workloads.length === 0 ? 'create-plan' : 'view');
       setSelectedWorkload(null);
       setFormData({
-        userId: currentUser?.id || '',
+        userId: selectedEmployeeId || currentUser?.id || '',
         projectId: '',
         date: date,
         hoursWorked: 8,
@@ -104,7 +109,7 @@ function WorkloadDetailsModal({
       });
       setErrors({});
     }
-  }, [isOpen, date, currentUser?.id, workloads.length]);
+  }, [isOpen, date, currentUser?.id, workloads.length, selectedEmployeeId]);
 
   // Get employee name
   const getEmployeeName = (userId: string): string => {
@@ -209,7 +214,7 @@ function WorkloadDetailsModal({
 
       toast.success('План успешно создан');
       onSuccess();
-      setMode('view');
+      onClose();
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при создании плана');
     } finally {
@@ -318,12 +323,6 @@ function WorkloadDetailsModal({
                     >
                       Создать план
                     </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setMode('create')}
-                    >
-                      Добавить рабочее время
-                    </Button>
                   </div>
                 )}
               </div>
@@ -397,13 +396,7 @@ function WorkloadDetailsModal({
                       variant="primary"
                       onClick={() => setMode('create-plan')}
                     >
-                      Создать план
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setMode('create')}
-                    >
-                      Добавить рабочее время
+                      Редактировать план
                     </Button>
                   </div>
                 )}
@@ -414,28 +407,30 @@ function WorkloadDetailsModal({
 
         {!loading && (mode === 'create' || mode === 'edit' || mode === 'create-plan') && (
           <form className="form">
-            <FormGroup>
-              <FormGroup.Label htmlFor="workloadEmployee" required>
-                Сотрудник
-              </FormGroup.Label>
-              <FormSelect
-                id="workloadEmployee"
-                value={formData.userId}
-                onChange={(e) => handleInputChange('userId', e.target.value)}
-                disabled={mode === 'edit' || (mode === 'create' && !canEditOtherUsers)}
-                required
-              >
-                <option value="">Выберите сотрудника</option>
-                {(canEditOtherUsers || mode === 'create-plan' ? employees.filter(emp => emp.role === 'Employee') : employees.filter(emp => emp.id === currentUserId && emp.role === 'Employee')).map(employee => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.firstName} {employee.lastName}
-                  </option>
-                ))}
-              </FormSelect>
-              {errors.userId && (
-                <FormGroup.Error>{errors.userId}</FormGroup.Error>
-              )}
-            </FormGroup>
+            {!isSingleEmployeeMode && (
+              <FormGroup>
+                <FormGroup.Label htmlFor="workloadEmployee" required>
+                  Сотрудник
+                </FormGroup.Label>
+                <FormSelect
+                  id="workloadEmployee"
+                  value={formData.userId}
+                  onChange={(e) => handleInputChange('userId', e.target.value)}
+                  disabled={mode === 'edit' || (mode === 'create' && !canEditOtherUsers)}
+                  required
+                >
+                  <option value="">Выберите сотрудника</option>
+                  {(canEditOtherUsers || mode === 'create-plan' ? employees.filter(emp => emp.role === 'Employee') : employees.filter(emp => emp.id === currentUserId && emp.role === 'Employee')).map(employee => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </option>
+                  ))}
+                </FormSelect>
+                {errors.userId && (
+                  <FormGroup.Error>{errors.userId}</FormGroup.Error>
+                )}
+              </FormGroup>
+            )}
 
             <FormGroup>
               <FormGroup.Label htmlFor="workloadProject" required>

@@ -234,30 +234,22 @@ function Workload(): JSX.Element {
 
   // Handle workload cell click in unified calendar
   const handleWorkloadCellClick = (date: string, workloads: UnifiedWorkload[]) => {
-    setModalState({
-      type: 'workload-details',
-      data: { date, workloads }
-    });
+    // Only open modal if there are workloads to show
+    if (workloads.length > 0) {
+      setModalState({
+        type: 'workload-details',
+        data: { date, workloads }
+      });
+    }
   };
 
   // Handle create workload from unified calendar
   const handleCreateWorkloadFromCalendar = (date: string) => {
-    // Check if we have a selected employee filter (single-employee mode)
-    const selectedEmployeeId = filters.userId;
-
-    if (selectedEmployeeId) {
-      // In single-employee mode, show plan creation modal by default
-      setModalState({
-        type: 'add-plan',
-        data: { date }
-      });
-    } else {
-      // In all-employees mode, show workload details modal for creation
-      setModalState({
-        type: 'workload-details',
-        data: { date, workloads: [] }
-      });
-    }
+    // Always show workload details modal for creation
+    setModalState({
+      type: 'workload-details',
+      data: { date, workloads: [] }
+    });
   };
 
   // Export functionality (placeholder)
@@ -503,6 +495,7 @@ function Workload(): JSX.Element {
         onSuccess={handleSuccess}
         date={modalState.data?.date || ''}
         workloads={modalState.data?.workloads || []}
+        selectedEmployeeId={filters.userId}
       />
     </>
   );
