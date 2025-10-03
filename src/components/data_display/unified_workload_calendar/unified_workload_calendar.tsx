@@ -20,7 +20,7 @@ import {
 import type { UnifiedWorkload } from '../../../store/types';
 import { workloadService } from '../../../services/workload';
 
-type CalendarDisplayMode = 'all-employees' | 'single-employee';
+type CalendarDisplayMode = 'by-project' | 'single-employee';
 
 interface UnifiedWorkloadCalendarProps {
   onCellClick?: (date: string, workloads: UnifiedWorkload[]) => void;
@@ -51,7 +51,7 @@ interface WorkloadSummary {
 function UnifiedWorkloadCalendar({
   onCellClick,
   onCreateWorkload,
-  displayMode = 'all-employees',
+  displayMode = 'by-project',
   onDisplayModeChange
 }: UnifiedWorkloadCalendarProps): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -76,17 +76,30 @@ function UnifiedWorkloadCalendar({
     return employees.find(emp => emp.id === filters.userId);
   }, [filters.userId, employees]);
 
+  // Get selected project for filtering
+  const selectedProject = useMemo(() => {
+    if (!filters.projectId) return null;
+    return projects.find(proj => proj.id === filters.projectId);
+  }, [filters.projectId, projects]);
+
   // Handle employee selection change
   const handleEmployeeChange = (employeeId: string) => {
     const newFilters = { ...filters };
     if (employeeId === '' || employeeId === 'all') {
       delete newFilters.userId;
-      // Switch to all-employees mode when selecting "all"
-      handleDisplayModeChange('all-employees');
     } else {
       newFilters.userId = employeeId;
-      // Switch to single-employee mode when selecting specific employee
-      handleDisplayModeChange('single-employee');
+    }
+    dispatch(updateFilters(newFilters));
+  };
+
+  // Handle project selection change
+  const handleProjectChange = (projectId: string) => {
+    const newFilters = { ...filters };
+    if (projectId === '' || projectId === 'all') {
+      delete newFilters.projectId;
+    } else {
+      newFilters.projectId = projectId;
     }
     dispatch(updateFilters(newFilters));
   };
@@ -95,13 +108,6 @@ function UnifiedWorkloadCalendar({
   const handleDisplayModeChange = (mode: CalendarDisplayMode) => {
     setLocalDisplayMode(mode);
     onDisplayModeChange?.(mode);
-
-    // Update filters based on mode
-    if (mode === 'all-employees') {
-      const newFilters = { ...filters };
-      delete newFilters.userId;
-      dispatch(updateFilters(newFilters));
-    }
   };
 
   // Generate calendar days based on current view
@@ -237,14 +243,12 @@ function UnifiedWorkloadCalendar({
     dispatch(updateSelectedDate(day.date));
 
     // Different behavior based on display mode
-    if (localDisplayMode === 'all-employees') {
-      // In all-employees mode, always show details if there are workloads
-      if (day.workloads.length > 0) {
-        onCellClick?.(day.date, day.workloads);
-      } else {
-        // If no workloads, show empty state modal for creating new workload
-        onCellClick?.(day.date, []);
-      }
+    if (localDisplayMode === 'by-project') {
+      // In by-project mode, filter workloads for selected project
+      const projectWorkloads = selectedProject
+        ? day.workloads.filter(w => w.projectId === selectedProject.id)
+        : [];
+      onCellClick?.(day.date, projectWorkloads);
     } else {
       // In single-employee mode, filter workloads for selected employee
       const employeeWorkloads = selectedEmployee
@@ -261,8 +265,8 @@ function UnifiedWorkloadCalendar({
       if (localDisplayMode === 'single-employee' && selectedEmployee) {
         // In single-employee mode, create for selected employee
         onCreateWorkload(day.date);
-      } else if (localDisplayMode === 'all-employees') {
-        // In all-employees mode, show creation modal (user can select employee)
+      } else if (localDisplayMode === 'by-project' && selectedProject) {
+        // In by-project mode, show creation modal for project
         onCreateWorkload(day.date);
       }
     }
@@ -310,12 +314,25 @@ function UnifiedWorkloadCalendar({
     if (localDisplayMode === 'single-employee') {
       return renderSingleEmployeeCell(day, summary, hasWorkload, isHovered);
     } else {
-      return renderAllEmployeesCell(day, summary, hasWorkload, isHovered);
+      return renderByProjectCell(day, summary, hasWorkload, isHovered);
     }
   };
 
-  // Render cell for all-employees mode
-  const renderAllEmployeesCell = (day: CalendarDay, summary: WorkloadSummary, hasWorkload: boolean, isHovered: boolean) => {
+  // Render cell for by-project mode
+  const renderByProjectCell = (day: CalendarDay, summary: WorkloadSummary, hasWorkload: boolean, isHovered: boolean) => {
+    // Filter workloads for selected project on this day
+    const projectWorkloads = selectedProject
+      ? day.workloads.filter(w => w.projectId === selectedProject.id)
+      : [];
+    const hasProjectWorkload = projectWorkloads.length > 0;
+
+    // Get unique employees working on this project on this day
+    const employeesOnProject = Array.from(
+      new Set(projectWorkloads.map(w => w.userId))
+    ).map(userId => {
+      const employee = employees.find(emp => emp.id === userId);
+      return employee ? `${employee.firstName} ${employee.lastName}` : 'Unknown';
+    });
     // Determine cell status class
     let statusClass = '';
     if (hasWorkload) {
@@ -333,7 +350,7 @@ function UnifiedWorkloadCalendar({
     return (
       <motion.div
         key={day.date}
-        className={`unified-workload-calendar__cell unified-workload-calendar__cell--all-employees ${statusClass} ${
+        className={`unified-workload-calendar__cell unified-workload-calendar__cell--by-project ${statusClass} ${
           day.isCurrentMonth ? '' : 'unified-workload-calendar__cell--other-month'
         } ${
           day.isToday ? 'unified-workload-calendar__cell--today' : ''
@@ -358,12 +375,12 @@ function UnifiedWorkloadCalendar({
           {new Date(day.date).getDate()}
         </div>
 
-        {/* All Employees Mode: Show aggregated data */}
-        {hasWorkload && (
+        {/* By Project Mode: Show employees working on project */}
+        {hasProjectWorkload && selectedProject && (
           <div className="unified-workload-calendar__workload-indicators">
             {/* Employee count indicator */}
             <div className="unified-workload-calendar__employee-count">
-              {day.workloads.length} сотр.
+              {employeesOnProject.length} сотр.
             </div>
 
             {/* Status indicators */}
@@ -399,8 +416,8 @@ function UnifiedWorkloadCalendar({
           </div>
         )}
 
-        {/* Hover tooltip for all employees mode */}
-        {isHovered && (
+        {/* Hover tooltip for by-project mode */}
+        {isHovered && selectedProject && (
           <div className="unified-workload-calendar__tooltip">
             <div className="unified-workload-calendar__tooltip-content">
               <div className="unified-workload-calendar__tooltip-header">
@@ -411,10 +428,13 @@ function UnifiedWorkloadCalendar({
                 })}
               </div>
               <div className="unified-workload-calendar__tooltip-body">
-                {hasWorkload ? (
+                {hasProjectWorkload ? (
                   <>
                     <div className="unified-workload-calendar__tooltip-summary">
-                      Всего сотрудников: {day.workloads.length}
+                      Проект: {selectedProject.name}
+                    </div>
+                    <div className="unified-workload-calendar__tooltip-summary">
+                      Сотрудников на проекте: {employeesOnProject.length}
                     </div>
                     <div className="unified-workload-calendar__tooltip-stats">
                       <div className="unified-workload-calendar__tooltip-stat">
@@ -456,13 +476,10 @@ function UnifiedWorkloadCalendar({
                     </div>
                     <div className="unified-workload-calendar__tooltip-divider"></div>
                     <div className="unified-workload-calendar__tooltip-employees">
-                      {day.workloads.slice(0, 3).map((workload, index) => (
+                      {projectWorkloads.slice(0, 5).map((workload, index) => (
                         <div key={index} className="unified-workload-calendar__tooltip-item">
                           <div className="unified-workload-calendar__tooltip-employee">
                             {getEmployeeName(workload.userId)}
-                          </div>
-                          <div className="unified-workload-calendar__tooltip-project">
-                            {getProjectName(workload.projectId)}
                           </div>
                           <div className={`unified-workload-calendar__tooltip-status unified-workload-calendar__tooltip-status--${workloadService.getWorkloadStatus(workload)}`}>
                             {workloadService.getWorkloadStatusLabel(workloadService.getWorkloadStatus(workload))}
@@ -470,9 +487,9 @@ function UnifiedWorkloadCalendar({
                           </div>
                         </div>
                       ))}
-                      {day.workloads.length > 3 && (
+                      {projectWorkloads.length > 5 && (
                         <div className="unified-workload-calendar__tooltip-more">
-                          И еще {day.workloads.length - 3} сотрудник(ов)...
+                          И еще {projectWorkloads.length - 5} сотрудник(ов)...
                         </div>
                       )}
                     </div>
@@ -483,11 +500,11 @@ function UnifiedWorkloadCalendar({
                 ) : (
                   <div className="unified-workload-calendar__tooltip-empty">
                     <div className="unified-workload-calendar__tooltip-empty-message">
-                      Нет запланированной работы
+                      Нет сотрудников на проекте в этот день
                     </div>
                     {!day.isPast && (
                       <div className="unified-workload-calendar__tooltip-action">
-                        Нажмите для создания плана
+                        Нажмите для назначения сотрудника
                       </div>
                     )}
                   </div>
@@ -496,16 +513,47 @@ function UnifiedWorkloadCalendar({
             </div>
           </div>
         )}
+
+        {/* Add button for editable days when project is selected and no workload */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedProject && !hasProjectWorkload && (
+          <div className="unified-workload-calendar__add-button" onClick={(e) => {
+            e.stopPropagation();
+            onCreateWorkload?.(day.date);
+          }}>
+            <span className="unified-workload-calendar__add-button-icon">+</span>
+            <span className="unified-workload-calendar__add-button-text">Добавить сотрудника</span>
+          </div>
+        )}
+
+        {/* Edit button for editable days when project has employees assigned */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedProject && hasProjectWorkload && (
+          <div className="unified-workload-calendar__edit-button" onClick={(e) => {
+            e.stopPropagation();
+            onCellClick?.(day.date, projectWorkloads);
+          }}>
+            <span className="unified-workload-calendar__edit-button-icon">👁️</span>
+            <span className="unified-workload-calendar__edit-button-text">Просмотреть план</span>
+          </div>
+        )}
       </motion.div>
     );
   };
 
   // Render cell for single-employee mode with plan/fact split
   const renderSingleEmployeeCell = (day: CalendarDay, summary: WorkloadSummary, hasWorkload: boolean, isHovered: boolean) => {
-    // Get workload for selected employee on this day
-    const employeeWorkload = day.workloads.find(w => w.userId === selectedEmployee?.id);
-    const hasPlan = employeeWorkload?.planId;
-    const hasActual = employeeWorkload?.actualId;
+    // Get all workloads for selected employee on this day
+    const employeeWorkloads = day.workloads.filter(w => w.userId === selectedEmployee?.id);
+
+    // Find workload with plan (for displaying in ПЛАН section)
+    const workloadWithPlan = employeeWorkloads.find(w => w.planId);
+    // Find workload with actual (for displaying in ФАКТ section)
+    const workloadWithActual = employeeWorkloads.find(w => w.actualId);
+
+    // Use combined data - prefer workload that has both, otherwise use separate
+    const employeeWorkload = employeeWorkloads.find(w => w.planId && w.actualId) || workloadWithPlan || workloadWithActual;
+
+    const hasPlan = !!workloadWithPlan?.planId;
+    const hasActual = !!workloadWithActual?.actualId;
 
     // Determine cell status class
     let statusClass = '';
@@ -549,10 +597,10 @@ function UnifiedWorkloadCalendar({
             hasPlan ? 'unified-workload-calendar__plan-section--has-plan' : 'unified-workload-calendar__plan-section--empty'
           }`}>
             <div className="unified-workload-calendar__section-label">План</div>
-            {hasPlan && employeeWorkload && (
+            {hasPlan && workloadWithPlan && (
               <div className="unified-workload-calendar__plan-info">
                 <div className="unified-workload-calendar__project-name">
-                  {getProjectName(employeeWorkload.projectId)}
+                  {getProjectName(workloadWithPlan.projectId)}
                 </div>
               </div>
             )}
@@ -563,16 +611,16 @@ function UnifiedWorkloadCalendar({
             hasActual ? 'unified-workload-calendar__fact-section--has-fact' : 'unified-workload-calendar__fact-section--empty'
           }`}>
             <div className="unified-workload-calendar__section-label">Факт</div>
-            {hasActual && employeeWorkload && (
+            {hasActual && workloadWithActual && (
               <div className="unified-workload-calendar__fact-info">
                 <div className="unified-workload-calendar__project-name">
-                  {getProjectName(employeeWorkload.projectId)}
+                  {getProjectName(workloadWithActual.projectId)}
                 </div>
-                {employeeWorkload.userText && (
+                {workloadWithActual.userText && (
                   <div className="unified-workload-calendar__work-description">
-                    {employeeWorkload.userText.length > 20
-                      ? `${employeeWorkload.userText.substring(0, 20)}...`
-                      : employeeWorkload.userText
+                    {workloadWithActual.userText.length > 20
+                      ? `${workloadWithActual.userText.substring(0, 20)}...`
+                      : workloadWithActual.userText
                     }
                   </div>
                 )}
@@ -715,13 +763,13 @@ function UnifiedWorkloadCalendar({
         <div className="unified-workload-calendar__mode-tabs">
           <button
             className={`unified-workload-calendar__mode-tab ${
-              localDisplayMode === 'all-employees' ? 'unified-workload-calendar__mode-tab--active' : ''
+              localDisplayMode === 'by-project' ? 'unified-workload-calendar__mode-tab--active' : ''
             }`}
-            onClick={() => handleDisplayModeChange('all-employees')}
+            onClick={() => handleDisplayModeChange('by-project')}
             disabled={loading}
           >
-            <span className="unified-workload-calendar__mode-icon">👥</span>
-            <span className="unified-workload-calendar__mode-label">Все сотрудники</span>
+            <span className="unified-workload-calendar__mode-icon">📁</span>
+            <span className="unified-workload-calendar__mode-label">Проект</span>
           </button>
           <button
             className={`unified-workload-calendar__mode-tab ${
@@ -731,43 +779,10 @@ function UnifiedWorkloadCalendar({
             disabled={loading}
           >
             <span className="unified-workload-calendar__mode-icon">👤</span>
-            <span className="unified-workload-calendar__mode-label">Конкретный сотрудник</span>
+            <span className="unified-workload-calendar__mode-label">Сотрудник</span>
           </button>
         </div>
       </div>
-
-      {/* Employee Selection Header - Only visible in single-employee mode */}
-      {localDisplayMode === 'single-employee' && (
-        <div className="unified-workload-calendar__header">
-          <div className="unified-workload-calendar__employee-section">
-            <label className="unified-workload-calendar__employee-label" htmlFor="employee-select">
-              Выберите сотрудника:
-            </label>
-            <select
-              id="employee-select"
-              className="unified-workload-calendar__employee-select"
-              value={filters.userId || ''}
-              onChange={(e) => handleEmployeeChange(e.target.value)}
-              disabled={loading}
-            >
-              <option value="">Выберите сотрудника</option>
-              {employees.filter(employee => employee.role === 'Employee').map(employee => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.firstName} {employee.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {selectedEmployee && (
-            <div className="unified-workload-calendar__current-selection">
-              <span className="unified-workload-calendar__selection-text">
-                {selectedEmployee.firstName} {selectedEmployee.lastName}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Calendar Navigation */}
       <div className="unified-workload-calendar__navigation">
@@ -786,6 +801,11 @@ function UnifiedWorkloadCalendar({
             {selectedEmployee && (
               <span className="unified-workload-calendar__employee-name">
                 - {selectedEmployee.firstName} {selectedEmployee.lastName}
+              </span>
+            )}
+            {selectedProject && localDisplayMode === 'by-project' && (
+              <span className="unified-workload-calendar__employee-name">
+                - {selectedProject.name}
               </span>
             )}
           </h3>
@@ -869,17 +889,26 @@ function UnifiedWorkloadCalendar({
               ? selectedEmployee
                 ? `Нет данных для сотрудника ${selectedEmployee.firstName} ${selectedEmployee.lastName}`
                 : "Выберите сотрудника для просмотра рабочей нагрузки"
-              : "Нет данных о рабочей нагрузке для всех сотрудников"
+              : selectedProject
+                ? `Нет данных для проекта ${selectedProject.name}`
+                : "Выберите проект для просмотра рабочей нагрузки"
           }
           action={
-            localDisplayMode === 'single-employee' && selectedEmployee && onCreateWorkload && (
+            localDisplayMode === 'single-employee' && selectedEmployee && onCreateWorkload ? (
               <Button
                 variant="primary"
                 onClick={() => onCreateWorkload(selectedDate)}
               >
                 Добавить план
               </Button>
-            )
+            ) : localDisplayMode === 'by-project' && selectedProject && onCreateWorkload ? (
+              <Button
+                variant="primary"
+                onClick={() => onCreateWorkload(selectedDate)}
+              >
+                Назначить сотрудника
+              </Button>
+            ) : undefined
           }
         />
       )}

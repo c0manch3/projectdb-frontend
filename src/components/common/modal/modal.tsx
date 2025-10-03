@@ -44,21 +44,28 @@ interface ModalProps {
   onClose?: () => void;
   id?: string;
   className?: string;
+  title?: string;
+  size?: 'small' | 'medium' | 'large';
 }
 
-function Modal({ children, isOpen = false, onClose, id, className = '' }: ModalProps): JSX.Element {
+function Modal({ children, isOpen = false, onClose, id, className = '', title, size = 'medium' }: ModalProps): JSX.Element {
   const overlayClasses = [
-    'modal-overlay', 
+    'modal-overlay',
     isOpen ? 'modal-overlay--open' : '',
     className
+  ].filter(Boolean).join(' ');
+
+  const modalClasses = [
+    'modal',
+    size ? `modal--${size}` : ''
   ].filter(Boolean).join(' ');
 
   // Don't render at all when closed (for better performance)
   if (!isOpen) return <></>;
 
   return (
-    <div 
-      className={overlayClasses} 
+    <div
+      className={overlayClasses}
       id={id}
       onClick={(e) => {
         if (e.target === e.currentTarget && onClose) {
@@ -66,8 +73,15 @@ function Modal({ children, isOpen = false, onClose, id, className = '' }: ModalP
         }
       }}
     >
-      <div className="modal">
-        {children}
+      <div className={modalClasses}>
+        {title ? (
+          <>
+            <ModalHeader onClose={onClose}>{title}</ModalHeader>
+            <div className="modal__content">{children}</div>
+          </>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );

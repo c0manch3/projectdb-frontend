@@ -77,6 +77,7 @@ function WorkloadDetailsModal({
   dateObj.setHours(0, 0, 0, 0);
 
   const isPast = dateObj < today;
+  const isPastOrToday = dateObj <= today; // Plans can only be created/edited/deleted for future dates
   const isManager = currentUser?.role === 'Manager';
   const currentUserId = currentUser?.id;
 
@@ -204,6 +205,12 @@ function WorkloadDetailsModal({
       return;
     }
 
+    // Check if trying to create plan for today or past
+    if (isPastOrToday) {
+      toast.error('Планы можно создавать только на будущие дни');
+      return;
+    }
+
     setLoading(true);
     try {
       await workloadService.createWorkloadPlan({
@@ -216,7 +223,13 @@ function WorkloadDetailsModal({
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Ошибка при создании плана');
+      // Check if error is about permissions
+      const errorMessage = error.message || 'Ошибка при создании плана';
+      if (errorMessage.includes('нет прав для создания планов')) {
+        toast.error('У вас нет прав для создания плана по этому проекту. Вы можете создавать планы только для проектов, которые ведёте.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -238,6 +251,28 @@ function WorkloadDetailsModal({
       setMode('view');
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при обновлении записи');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete workload plan only
+  const handleDeletePlan = async (workload: UnifiedWorkload) => {
+    if (!workload.planId) {
+      toast.error('У этого сотрудника нет плана для удаления');
+      return;
+    }
+
+    if (!confirm(`Вы уверены, что хотите удалить план для ${getEmployeeName(workload.userId)}?`)) return;
+
+    setLoading(true);
+    try {
+      await workloadService.deleteWorkloadPlan(workload.planId);
+      toast.success('План успешно удален');
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при удалении плана');
     } finally {
       setLoading(false);
     }
@@ -308,14 +343,14 @@ function WorkloadDetailsModal({
         {loading && <LoadingState message="Обработка запроса..." />}
 
         {!loading && mode === 'view' && (
-          <div className="workload-details-modal__view">
+          <div className="workload-details-modal__view" style={{ padding: '1.5rem' }}>
             {workloads.length === 0 ? (
               <div className="workload-details-modal__empty">
                 <div className="workload-details-modal__empty-icon">📅</div>
                 <h3>Нет запланированной работы</h3>
                 <p>На эту дату нет запланированной работы или отчетов о проделанной работе.</p>
 
-                {canCreate && (
+                {canCreate && !isPastOrToday && (
                   <div className="workload-details-modal__empty-actions">
                     <Button
                       variant="primary"
@@ -325,6 +360,11 @@ function WorkloadDetailsModal({
                     </Button>
                   </div>
                 )}
+                {isPastOrToday && (
+                  <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
+                    Планы можно создавать только на будущие дни
+                  </p>
+                )}
               </div>
             ) : (
               <>
@@ -333,6 +373,12 @@ function WorkloadDetailsModal({
                     <motion.div
                       key={index}
                       className={`workload-details-modal__workload workload-details-modal__workload--${getWorkloadStatus(workload)}`}
+                      style={{
+                        padding: '1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1rem'
+                      }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -364,14 +410,13 @@ function WorkloadDetailsModal({
 
                       {(canEdit && (workload.userId === currentUserId || isManager)) && (
                         <div className="workload-details-modal__workload-actions">
-                          {workload.actualId && !isPast && (
+                          {workload.planId && !isPastOrToday && (
                             <Button
-                              variant="secondary"
+                              variant="warning"
                               size="small"
-                              onClick={() => handleStartEdit(workload)}
-                              disabled={workload.userId !== currentUserId && !isManager}
+                              onClick={() => handleDeletePlan(workload)}
                             >
-                              Редактировать
+                              Удалить из плана
                             </Button>
                           )}
                           {canDeleteWorkload && (workload.userId === currentUserId || isManager) && (
@@ -381,7 +426,7 @@ function WorkloadDetailsModal({
                               onClick={() => handleDeleteWorkload(workload)}
                               disabled={isPast && !isManager}
                             >
-                              Удалить
+                              Удалить всё
                             </Button>
                           )}
                         </div>
@@ -390,8 +435,8 @@ function WorkloadDetailsModal({
                   ))}
                 </div>
 
-                {canCreate && (
-                  <div className="workload-details-modal__add-more">
+                {canCreate && !isPastOrToday && (
+                  <div className="workload-details-modal__add-more" style={{ marginTop: '1rem' }}>
                     <Button
                       variant="primary"
                       onClick={() => setMode('create-plan')}
