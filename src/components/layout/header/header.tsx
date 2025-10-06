@@ -122,10 +122,10 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
             {user ? getUserRoleDisplayName(user.role) : 'Загрузка...'}
           </div>
         </div>
-        <div className="header__user-avatar">
+        <Link to={AppRoute.Profile} className="header__user-avatar">
           {getUserAvatarLetters()}
-        </div>
-        <button 
+        </Link>
+        <button
           className="button button--secondary button--small"
           onClick={handleLogout}
           disabled={loading}

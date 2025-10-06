@@ -28,6 +28,11 @@ export interface RefreshTokenResponse {
   accessToken: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 // Authentication service
 export const authService = {
   // Login user
@@ -108,18 +113,43 @@ export const authService = {
       if (!accessToken) {
         return false;
       }
-      
+
       // Check if token is expired
       if (isTokenExpired(accessToken)) {
         return false;
       }
-      
+
       // TODO: Implement server-side token verification when endpoint is available
       // For now, just check if token can be decoded and is not expired
       return true;
     } catch (error) {
       console.error('Token verification failed:', error);
       return false;
+    }
+  },
+
+  // Change password
+  async changePassword(data: ChangePasswordRequest): Promise<User> {
+    try {
+      const response = await apiRequest.patch<User>('/auth/change-password', data);
+      return response.data;
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        throw new Error('Невалидные данные. Пароль должен содержать от 6 до 24 символов');
+      } else if (error.response?.status === 401) {
+        const message = error.response?.data?.message || '';
+        if (message.includes('password')) {
+          throw new Error('Неверный текущий пароль');
+        }
+        throw new Error('Необходима авторизация');
+      } else if (error.response?.status === 404) {
+        throw new Error('Пользователь не найден');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера. Попробуйте позже');
+      } else {
+        throw new Error(error.response?.data?.message || 'Ошибка при смене пароля');
+      }
     }
   },
 };

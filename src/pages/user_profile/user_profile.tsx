@@ -1,186 +1,266 @@
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { PageTitle, AppRoute } from '../../const';
+import { useSelector } from 'react-redux';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import toast from 'react-hot-toast';
+import Header from '../../components/layout/header/header';
+import { PageTitle } from '../../const';
+import { authService } from '../../services/auth';
+import type { RootState } from '../../store/types';
+
+// Validation schema for password change
+const changePasswordSchema = z.object({
+  currentPassword: z.string()
+    .min(6, 'Пароль должен содержать минимум 6 символов')
+    .max(24, 'Пароль должен содержать максимум 24 символа'),
+  newPassword: z.string()
+    .min(6, 'Пароль должен содержать минимум 6 символов')
+    .max(24, 'Пароль должен содержать максимум 24 символа'),
+  confirmPassword: z.string()
+    .min(6, 'Пароль должен содержать минимум 6 символов'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Пароли не совпадают',
+  path: ['confirmPassword'],
+});
+
+type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 function UserProfile(): JSX.Element {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+  });
+
+  // Get user avatar letters
+  const getUserAvatarLetters = () => {
+    if (!user) return '?';
+    const firstLetter = user.firstName?.charAt(0)?.toUpperCase() || '';
+    const lastLetter = user.lastName?.charAt(0)?.toUpperCase() || '';
+    return `${firstLetter}${lastLetter}` || '?';
+  };
+
+  // Get user role display name
+  const getUserRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'Admin':
+        return 'Администратор';
+      case 'Manager':
+        return 'Менеджер';
+      case 'Employee':
+        return 'Сотрудник';
+      case 'Customer':
+        return 'Клиент';
+      default:
+        return role;
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return '-';
+    }
+  };
+
+  // Format date for input
+  const formatDateForInput = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
+  // Handle password change
+  const onSubmitPasswordChange = async (data: ChangePasswordFormData) => {
+    setIsChangingPassword(true);
+    try {
+      await authService.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+
+      toast.success('Пароль успешно изменен');
+      setIsPasswordModalOpen(false);
+      reset();
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при смене пароля');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  // Handle modal close
+  const handleClosePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+    reset();
+  };
+
   return (
     <>
       <Helmet>
         <title>{PageTitle.Profile}</title>
       </Helmet>
-      {/* Header */}
-      <header className="header">
-        <Link to={AppRoute.Projects} className="header__logo">LenconDB</Link>
-        
-        <nav className="header__nav">
-          <Link to={AppRoute.Projects} className="header__nav-link">Проекты</Link>
-          <Link to={AppRoute.Employees} className="header__nav-link" id="employeesNav">Сотрудники</Link>
-          <Link to={AppRoute.Companies} className="header__nav-link">Компании</Link>
-          <Link to={AppRoute.Workload} className="header__nav-link">Загруженность</Link>
-        </nav>
-        
-        <div className="header__user">
-          <div className="header__user-info">
-            <div className="header__user-name" id="userName">Загрузка...</div>
-            <div className="header__user-role" id="userRole">Загрузка...</div>
-          </div>
-          <div className="header__user-avatar" id="userAvatar">?</div>
-          <button className="button button--secondary button--small">Выйти</button>
-        </div>
-      </header>
 
-      {/* Main Content */}
+      <Header />
+
       <main className="main">
         <div className="page-header">
           <div className="container">
-            <div className="breadcrumbs">
-              <Link to={AppRoute.Projects} className="breadcrumbs__link">Главная</Link>
-              <span className="breadcrumbs__separator">›</span>
-              <span className="breadcrumbs__item">Профиль пользователя</span>
-            </div>
             <h1 className="page-header__title">Профиль пользователя</h1>
-            <p className="page-header__subtitle">Управление личной информацией и настройками аккаунта</p>
+            <p className="page-header__subtitle">
+              Управление личной информацией и настройками аккаунта
+            </p>
           </div>
         </div>
 
         <div className="container">
-          <div style={{display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem'}}>
+          <div className="profile">
             {/* Profile Sidebar */}
-            <div>
+            <div className="profile__sidebar">
               {/* Profile Avatar Card */}
-              <div className="card profile-section">
-                <div className="card__content text-center">
-                  <div className="profile-avatar" id="profileAvatar">
-                    ?
+              <div className="card profile__card">
+                <div className="profile__avatar-section">
+                  <div className="profile__avatar-large">
+                    {getUserAvatarLetters()}
                   </div>
-                  <h2 id="profileFullName">Загрузка...</h2>
-                  <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}} id="profileRoleText">Загрузка...</p>
-                  
-                  <button className="button button--secondary w-full">
-                    📷 Изменить аватар
-                  </button>
+                  <h2 className="profile__name">
+                    {user ? `${user.firstName} ${user.lastName}` : 'Загрузка...'}
+                  </h2>
+                  <p className="profile__role">
+                    {user ? getUserRoleDisplayName(user.role) : 'Загрузка...'}
+                  </p>
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className="card profile-section">
+              <div className="card profile__card">
                 <div className="card__header">
-                  <h3 className="card__title">Статистика</h3>
+                  <h3 className="card__title">Информация</h3>
                 </div>
                 <div className="card__content">
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                      <span style={{color: 'var(--text-secondary)'}}>Проекты:</span>
-                      <span style={{fontWeight: '600'}} id="userProjectsCount">0</span>
+                  <div className="profile__stats">
+                    <div className="profile__stat-item">
+                      <span className="profile__stat-label">Email:</span>
+                      <span className="profile__stat-value">{user?.email || '-'}</span>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                      <span style={{color: 'var(--text-secondary)'}}>Часов в месяце:</span>
-                      <span style={{fontWeight: '600'}} id="userMonthlyHours">0</span>
+                    <div className="profile__stat-item">
+                      <span className="profile__stat-label">Телефон:</span>
+                      <span className="profile__stat-value">{user?.phone || '-'}</span>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                      <span style={{color: 'var(--text-secondary)'}}>Загруженность:</span>
-                      <span style={{fontWeight: '600', color: 'var(--success)'}} id="userUtilization">0%</span>
+                    <div className="profile__stat-item">
+                      <span className="profile__stat-label">Дата рождения:</span>
+                      <span className="profile__stat-value">
+                        {formatDate(user?.dateBirth)}
+                      </span>
                     </div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                      <span style={{color: 'var(--text-secondary)'}}>Дата регистрации:</span>
-                      <span style={{fontWeight: '600'}} id="userJoinDate">-</span>
-                    </div>
+                    {user?.telegramId && (
+                      <div className="profile__stat-item">
+                        <span className="profile__stat-label">Telegram ID:</span>
+                        <span className="profile__stat-value">{user.telegramId}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Profile Main Content */}
-            <div>
+            <div className="profile__content">
               {/* Personal Information */}
-              <div className="card profile-section">
+              <div className="card profile__card">
                 <div className="card__header">
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <h3 className="card__title">Личная информация</h3>
-                    <button className="button button--secondary">
-                      <span id="editPersonalButton">✏️ Редактировать</span>
-                    </button>
-                  </div>
+                  <h3 className="card__title">Личная информация</h3>
                 </div>
                 <div className="card__content">
-                  <form className="form" id="personalInfoForm">
-                    <div className="profile-info">
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Имя</label>
-                        <input type="text" id="firstName" className="form__input" readOnly />
-                      </div>
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Фамилия</label>
-                        <input type="text" id="lastName" className="form__input" readOnly />
-                      </div>
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Email</label>
-                        <input type="email" id="email" className="form__input" readOnly />
-                      </div>
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Телефон</label>
-                        <input type="tel" id="phone" className="form__input" readOnly />
-                      </div>
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Дата рождения</label>
-                        <input type="date" id="dateBirth" className="form__input" readOnly />
-                      </div>
-                      <div className="profile-info__item">
-                        <label className="profile-info__label">Компания</label>
-                        <div className="profile-info__value" id="companyName">Загрузка...</div>
+                  <div className="profile__info">
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Имя</label>
+                      <div className="profile__info-value">{user?.firstName || '-'}</div>
+                    </div>
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Фамилия</label>
+                      <div className="profile__info-value">{user?.lastName || '-'}</div>
+                    </div>
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Email</label>
+                      <div className="profile__info-value">{user?.email || '-'}</div>
+                    </div>
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Телефон</label>
+                      <div className="profile__info-value">{user?.phone || '-'}</div>
+                    </div>
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Дата рождения</label>
+                      <div className="profile__info-value">
+                        {formatDate(user?.dateBirth)}
                       </div>
                     </div>
-                    
-                    <div id="personalInfoActions" style={{display: 'none', marginTop: '1.5rem', gap: '0.5rem'}} className="flex">
-                      <button type="button" className="button button--primary">Сохранить</button>
-                      <button type="button" className="button button--secondary">Отмена</button>
+                    <div className="profile__info-item">
+                      <label className="profile__info-label">Роль</label>
+                      <div className="profile__info-value">
+                        {user ? getUserRoleDisplayName(user.role) : '-'}
+                      </div>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
 
               {/* Security Settings */}
-              <div className="card profile-section">
+              <div className="card profile__card">
                 <div className="card__header">
                   <h3 className="card__title">Безопасность</h3>
                 </div>
                 <div className="card__content">
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
-                    <div>
-                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
-                        <span style={{fontWeight: '500'}}>Пароль</span>
-                        <button className="button button--secondary button--small">
-                          🔐 Изменить пароль
-                        </button>
+                  <div className="profile__security">
+                    <div className="profile__security-item">
+                      <div className="profile__security-info">
+                        <span className="profile__security-title">Пароль</span>
+                        <p className="profile__security-description">
+                          Изменить пароль для входа в систему
+                        </p>
                       </div>
-                      <p style={{color: 'var(--text-secondary)', fontSize: '0.875rem'}}>
-                        Последнее изменение: <span id="lastPasswordChange">Никогда</span>
-                      </p>
+                      <button
+                        className="button button--secondary button--small"
+                        onClick={() => setIsPasswordModalOpen(true)}
+                      >
+                        Изменить пароль
+                      </button>
                     </div>
-                    
-                    <div>
-                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
-                        <span style={{fontWeight: '500'}}>Telegram интеграция</span>
-                        <button className="button button--secondary button--small">
-                          📱 <span id="telegramButtonText">Подключить</span>
-                        </button>
-                      </div>
-                      <p style={{color: 'var(--text-secondary)', fontSize: '0.875rem'}} id="telegramStatus">
-                        Telegram не подключен
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Activity Log */}
-              <div className="card profile-section">
-                <div className="card__header">
-                  <h3 className="card__title">Последняя активность</h3>
-                </div>
-                <div className="card__content">
-                  <div id="activityLog" style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                    {/* Activity items will be loaded here */}
+                    {user?.telegramId && (
+                      <div className="profile__security-item">
+                        <div className="profile__security-info">
+                          <span className="profile__security-title">
+                            Telegram интеграция
+                          </span>
+                          <p className="profile__security-description">
+                            Подключен: ID {user.telegramId}
+                          </p>
+                        </div>
+                        <span className="badge badge--success">Подключено</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -190,96 +270,96 @@ function UserProfile(): JSX.Element {
       </main>
 
       {/* Change Password Modal */}
-      <div className="modal-overlay" id="changePasswordModal">
-        <div className="modal">
-          <div className="modal__header">
-            <h3 className="modal__title">Изменить пароль</h3>
-            <button className="modal__close">×</button>
-          </div>
-          <div className="modal__content">
-            <form className="form" id="changePasswordForm">
-              <div className="form__group">
-                <label htmlFor="currentPassword" className="form__label form__label--required">Текущий пароль</label>
-                <input type="password" id="currentPassword" className="form__input" required />
-                <div className="form__error" id="currentPasswordError" style={{display: 'none'}}></div>
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="newPassword" className="form__label form__label--required">Новый пароль</label>
-                <input type="password" id="newPassword" className="form__input" required minLength={6} />
-                <div className="form__help">Минимум 6 символов</div>
-                <div className="form__error" id="newPasswordError" style={{display: 'none'}}></div>
-              </div>
-              
-              <div className="form__group">
-                <label htmlFor="confirmPassword" className="form__label form__label--required">Подтвердите пароль</label>
-                <input type="password" id="confirmPassword" className="form__input" required />
-                <div className="form__error" id="confirmPasswordError" style={{display: 'none'}}></div>
-              </div>
-            </form>
-          </div>
-          <div className="modal__footer">
-            <button className="button button--secondary">Отмена</button>
-            <button className="button button--primary" id="changePasswordButton">
-              <span id="changePasswordButtonText">Изменить пароль</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {isPasswordModalOpen && (
+        <div className="modal-overlay" onClick={handleClosePasswordModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
+              <h3 className="modal__title">Изменить пароль</h3>
+              <button
+                className="modal__close"
+                onClick={handleClosePasswordModal}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal__content">
+              <form
+                className="form"
+                onSubmit={handleSubmit(onSubmitPasswordChange)}
+                id="changePasswordForm"
+              >
+                <div className="form__group">
+                  <label htmlFor="currentPassword" className="form__label">
+                    Текущий пароль <span className="form__label-required">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    className={`form__input ${errors.currentPassword ? 'form__input--error' : ''}`}
+                    {...register('currentPassword')}
+                    disabled={isChangingPassword}
+                  />
+                  {errors.currentPassword && (
+                    <div className="form__error">{errors.currentPassword.message}</div>
+                  )}
+                </div>
 
-      {/* Telegram Modal */}
-      <div className="modal-overlay" id="telegramModal">
-        <div className="modal">
-          <div className="modal__header">
-            <h3 className="modal__title">Telegram интеграция</h3>
-            <button className="modal__close">×</button>
-          </div>
-          <div className="modal__content">
-            <div id="telegramContent">
-              {/* Content will be loaded dynamically */}
+                <div className="form__group">
+                  <label htmlFor="newPassword" className="form__label">
+                    Новый пароль <span className="form__label-required">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    className={`form__input ${errors.newPassword ? 'form__input--error' : ''}`}
+                    {...register('newPassword')}
+                    disabled={isChangingPassword}
+                  />
+                  <div className="form__help">Минимум 6 символов, максимум 24</div>
+                  {errors.newPassword && (
+                    <div className="form__error">{errors.newPassword.message}</div>
+                  )}
+                </div>
+
+                <div className="form__group">
+                  <label htmlFor="confirmPassword" className="form__label">
+                    Подтвердите пароль <span className="form__label-required">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    className={`form__input ${errors.confirmPassword ? 'form__input--error' : ''}`}
+                    {...register('confirmPassword')}
+                    disabled={isChangingPassword}
+                  />
+                  {errors.confirmPassword && (
+                    <div className="form__error">{errors.confirmPassword.message}</div>
+                  )}
+                </div>
+              </form>
+            </div>
+            <div className="modal__footer">
+              <button
+                className="button button--secondary"
+                onClick={handleClosePasswordModal}
+                type="button"
+                disabled={isChangingPassword}
+              >
+                Отмена
+              </button>
+              <button
+                className="button button--primary"
+                type="submit"
+                form="changePasswordForm"
+                disabled={isChangingPassword}
+              >
+                {isChangingPassword ? 'Изменение...' : 'Изменить пароль'}
+              </button>
             </div>
           </div>
-          <div className="modal__footer">
-            <button className="button button--secondary">Закрыть</button>
-            <button className="button button--primary" id="telegramActionButton">
-              <span id="telegramActionText">Сохранить</span>
-            </button>
-          </div>
         </div>
-      </div>
-
-      {/* Change Avatar Modal */}
-      <div className="modal-overlay" id="changeAvatarModal">
-        <div className="modal">
-          <div className="modal__header">
-            <h3 className="modal__title">Изменить аватар</h3>
-            <button className="modal__close">×</button>
-          </div>
-          <div className="modal__content">
-            <div className="text-center">
-              <p style={{marginBottom: '1.5rem'}}>Выберите новый аватар или загрузите изображение</p>
-              
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem'}}>
-                {['🏗️', '👷', '📐', '🔨', '🏢', '📋', '⚡', '🎯'].map((emoji, index) => (
-                  <button key={index} className="button button--secondary" style={{fontSize: '2rem', padding: '1rem'}}>
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="file-upload">
-                <input type="file" id="avatarFileInput" className="file-upload__input" accept="image/*" />
-                <div className="file-upload__icon">🖼️</div>
-                <div className="file-upload__text">Загрузить изображение</div>
-                <div className="file-upload__hint">JPG, PNG до 5 МБ</div>
-              </div>
-            </div>
-          </div>
-          <div className="modal__footer">
-            <button className="button button--secondary">Отмена</button>
-          </div>
-        </div>
-      </div>
+      )}
     </>
   );
 }
