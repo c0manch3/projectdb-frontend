@@ -107,7 +107,7 @@ function AddConstructionModal({ isOpen, onClose, projectId }: AddConstructionMod
       reset();
     } catch (error: any) {
       console.error('Error creating construction:', error);
-      toast.error(error || 'Ошибка при создании сооружения');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при создании сооружения');
     } finally {
       setIsSubmitting(false);
     }

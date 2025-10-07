@@ -204,7 +204,7 @@ function UploadProjectDocumentModal({
       handleClose();
     } catch (error: any) {
       console.error('Error uploading project document:', error);
-      toast.error(error || `Ошибка при загрузке ${documentType === 'tz' ? 'ТЗ' : 'договора'}`);
+      toast.error(typeof error === 'string' ? error : error?.message || `Ошибка при загрузке ${documentType === 'tz' ? 'ТЗ' : 'договора'}`);
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);

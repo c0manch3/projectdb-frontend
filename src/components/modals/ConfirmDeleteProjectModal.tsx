@@ -49,7 +49,7 @@ function ConfirmDeleteProjectModal({ isOpen, onClose, project }: ConfirmDeletePr
       onClose();
 
     } catch (error: any) {
-      toast.error(error || 'Ошибка при удалении проекта');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при удалении проекта');
     } finally {
       setIsDeleting(false);
     }

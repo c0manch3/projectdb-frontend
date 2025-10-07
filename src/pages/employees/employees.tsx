@@ -99,7 +99,7 @@ function Employees(): JSX.Element {
       setShowDeleteModal(false);
       setDeletingEmployee(null);
     } catch (error: any) {
-      toast.error(error || 'Ошибка при удалении сотрудника');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при удалении сотрудника');
       console.error('Delete failed:', error);
     } finally {
       setIsDeleting(false);

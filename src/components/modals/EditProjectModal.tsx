@@ -179,7 +179,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
       handleClose();
 
     } catch (error: any) {
-      toast.error(error || 'Ошибка при обновлении проекта');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при обновлении проекта');
     } finally {
       setIsSubmitting(false);
     }

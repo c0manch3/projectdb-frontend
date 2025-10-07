@@ -307,7 +307,7 @@ function UploadDocumentModal({
       } else if (error?.includes('cannot have type')) {
         toast.error('Данный тип документа недоступен для конструкций');
       } else {
-        toast.error(error || 'Ошибка при загрузке документа');
+        toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при загрузке документа');
       }
     } finally {
       setIsSubmitting(false);

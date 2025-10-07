@@ -167,7 +167,7 @@ function Projects(): JSX.Element {
   // Show error message
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      toast.error(typeof error === 'string' ? error : error?.message || 'Произошла ошибка');
     }
   }, [error]);
 

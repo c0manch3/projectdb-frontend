@@ -109,7 +109,7 @@ function Companies(): JSX.Element {
       setShowDeleteModal(false);
       setSelectedCompany(null);
     } catch (error: any) {
-      toast.error(error || 'Ошибка при удалении компании');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при удалении компании');
       console.error('Delete failed:', error);
     } finally {
       setIsDeleting(false);

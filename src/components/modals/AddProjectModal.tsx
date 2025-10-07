@@ -164,7 +164,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
       handleClose();
 
     } catch (error: any) {
-      toast.error(error || 'Ошибка при создании проекта');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при создании проекта');
     } finally {
       setIsSubmitting(false);
     }

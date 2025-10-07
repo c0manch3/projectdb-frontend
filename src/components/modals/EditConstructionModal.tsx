@@ -98,7 +98,7 @@ function EditConstructionModal({ isOpen, onClose, construction }: EditConstructi
       onClose();
     } catch (error: any) {
       console.error('Error updating construction:', error);
-      toast.error(error || 'Ошибка при обновлении сооружения');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при обновлении сооружения');
     } finally {
       setIsSubmitting(false);
     }

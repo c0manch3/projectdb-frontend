@@ -46,7 +46,7 @@ function ConfirmDeleteConstructionModal({
       onClose();
     } catch (error: any) {
       console.error('Error deleting construction:', error);
-      toast.error(error || 'Ошибка при удалении сооружения');
+      toast.error(typeof error === 'string' ? error : error?.message || 'Ошибка при удалении сооружения');
     } finally {
       setIsDeleting(false);
     }

@@ -243,6 +243,7 @@ function UserProfile(): JSX.Element {
                       <button
                         className="button button--secondary button--small"
                         onClick={() => setIsPasswordModalOpen(true)}
+                        type="button"
                       >
                         Изменить пароль
                       </button>
@@ -271,7 +272,7 @@ function UserProfile(): JSX.Element {
 
       {/* Change Password Modal */}
       {isPasswordModalOpen && (
-        <div className="modal-overlay" onClick={handleClosePasswordModal}>
+        <div className="modal-overlay modal-overlay--open" onClick={handleClosePasswordModal}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal__header">
               <h3 className="modal__title">Изменить пароль</h3>
