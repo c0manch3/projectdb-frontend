@@ -14,6 +14,13 @@ The LenconDB React frontend has **achieved complete MVP status** with the **full
 
 ### Major Development Session Results
 
+**Latest Commit - DBF-41: Document Management System Migration (September 20, 2025)**
+- Complete migration from 6 old document types to 4 new categorized types
+- Implemented automatic versioning for construction documents
+- Added new API endpoint for document replacement with version creation
+- Updated all UI components to support new document structure
+- Enhanced validation preventing incorrect document type associations
+
 #### DBF-1: Initial Project Setup (September 4, 2025)
 **Commit:** `8297eb7` - "INT DBF-1 Initial project setup with React + TypeScript + Vite"
 
@@ -1041,11 +1048,87 @@ The LenconDB React frontend has achieved **exceptional success** with **MVP comp
 - `src/services/constructions.ts` - Updated download implementation
 - `src/components/data_display/documents_table/documents_table.tsx` - Fixed error handling
 
+#### DBF-41: Document Management System Migration (September 20, 2025)
+**Major Achievement: Complete Document API Migration with Versioning Support**
+
+**Deliverables:**
+- ✅ **Removed 6 Old Document Types:** Eliminated deprecated document types from system
+  - Removed: km (Конструкции металлические)
+  - Removed: kz (Конструкции железобетонные)
+  - Removed: rpz (Расчетно-пояснительная записка)
+  - Removed: gp (Генплан)
+  - Removed: igi (Инженерно-геологические изыскания)
+  - Removed: spozu (Схема планировочной организации земельного участка)
+
+- ✅ **Added 4 New Document Types with Clear Categories:**
+  - **For Projects:** tz (Техническое задание), contract (Контракт)
+  - **For Constructions:** working_documentation (Рабочая документация), project_documentation (Проектная документация)
+  - Clear separation between project-level and construction-level documents
+  - Strict validation ensuring correct document type usage by level
+
+- ✅ **Implemented Versioning Support for Construction Documents:**
+  - Automatic version folder creation (v1, v2, v3, etc.)
+  - New API endpoint: `PUT /document/:fileId/replace` for creating new versions
+  - File storage structure: `/uploads/{year}/{constructionName}/{v1, v2, v3...}/{hashName}_{originalName}`
+  - Version history tracking and management
+  - Versioning only available for construction documents (working_documentation, project_documentation)
+
+- ✅ **Updated All Document Upload/Management UI:**
+  - Modified document upload modals to support only new document types
+  - Updated document type selection dropdowns
+  - Added validation messages for incorrect document type usage
+  - Improved user feedback for version creation
+  - Updated document filtering and search to work with new types
+
+- ✅ **Fixed Validation for Document Types by Level:**
+  - **Project Documents (tz, contract):**
+    - Require projectId
+    - Cannot have constructionId
+    - No versioning support
+    - Stored in project root folder
+  - **Construction Documents (working_documentation, project_documentation):**
+    - Require constructionId
+    - Cannot have projectId
+    - Automatic versioning enabled
+    - Stored in version-specific folders
+
+- ✅ **Backend API Integration:**
+  - Updated all document service layer methods
+  - Implemented document replacement with versioning
+  - Added proper error handling for invalid document type combinations
+  - Complete validation at both frontend and backend levels
+
+- ✅ **Enhanced User Experience:**
+  - Clear error messages for validation failures
+  - Intuitive document type selection based on context
+  - Version history display for construction documents
+  - Improved document organization and navigation
+
+**Technical Impact:**
+- **API Compatibility:** Complete migration to new document API structure
+- **Data Validation:** Multi-layer validation preventing incorrect document associations
+- **Storage Optimization:** Organized file structure with automatic version management
+- **User Interface:** Simplified document management with clear categorization
+
+**Files Changed:** Multiple files across services, components, and documentation
+- Updated: Document service layer (`src/services/documents.ts`)
+- Updated: Document upload components and modals
+- Updated: Document type validation schemas
+- Updated: API endpoint implementations
+- Updated: Project documentation (RPD.md)
+
+**Migration Benefits:**
+- **Clarity:** Clear document categories (project vs construction)
+- **Versioning:** Automatic version control for construction documents
+- **Validation:** Strict validation preventing data inconsistencies
+- **Organization:** Improved file storage structure
+- **User Experience:** Simplified document management workflow
+
 ### Final Status
 - **Original Estimate:** 8-12 weeks to MVP
 - **Actual Timeline:** MVP achieved ahead of schedule
 - **Current Progress:** 100% complete
-- **MVP Status:** ✅ **ACHIEVED** - Fully functional construction management system with complete document management
+- **MVP Status:** ✅ **ACHIEVED** - Fully functional construction management system with modernized document management
 - **Risk Level:** None (MVP complete, remaining features are enhancements)
 
 ---
