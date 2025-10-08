@@ -16,6 +16,8 @@ import ConfirmDeleteConstructionModal from '../../components/modals/ConfirmDelet
 import ConfirmDeleteDocumentModal from '../../components/modals/ConfirmDeleteDocumentModal';
 import ConstructionCardsList from '../../components/data_display/construction_cards_list/construction_cards_list';
 import UploadDocumentModal from '../../components/modals/UploadDocumentModal';
+import ReplaceDocumentModal from '../../components/modals/ReplaceDocumentModal';
+import UploadConstructionDocumentModal from '../../components/modals/UploadConstructionDocumentModal';
 
 import type { AppDispatch } from '../../store';
 import {
@@ -38,7 +40,7 @@ import {
 } from '../../store/slices/constructions_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import { fetchProjectById, selectCurrentProject } from '../../store/slices/projects_slice';
-import type { Construction, Document } from '../../store/types';
+import type { Construction, Document, ConstructionDocumentType } from '../../store/types';
 
 function Constructions(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -62,9 +64,13 @@ function Constructions(): JSX.Element {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showUploadConstructionModal, setShowUploadConstructionModal] = useState(false);
+  const [showReplaceDocumentModal, setShowReplaceDocumentModal] = useState(false);
   const [showDeleteDocumentModal, setShowDeleteDocumentModal] = useState(false);
   const [selectedConstruction, setSelectedConstruction] = useState<Construction | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [uploadVersion, setUploadVersion] = useState<number | undefined>(undefined);
+  const [uploadDocumentType, setUploadDocumentType] = useState<ConstructionDocumentType | undefined>(undefined);
   const [documentsLoaded, setDocumentsLoaded] = useState(false);
 
   // Check user permissions
@@ -122,9 +128,16 @@ function Constructions(): JSX.Element {
     setShowDeleteModal(true);
   };
 
-  const handleUploadDocument = (construction?: Construction) => {
+  const handleUploadDocument = (construction?: Construction, version?: number, type?: ConstructionDocumentType) => {
     setSelectedConstruction(construction || null);
-    setShowUploadModal(true);
+    setUploadVersion(version);
+    setUploadDocumentType(type);
+    setShowUploadConstructionModal(true);
+  };
+
+  const handleReplaceDocument = (document: Document) => {
+    setSelectedDocument(document);
+    setShowReplaceDocumentModal(true);
   };
 
   const handleDownloadDocument = async (document: Document) => {
@@ -343,9 +356,11 @@ function Constructions(): JSX.Element {
                     onDelete={handleDelete}
                     onUploadDocument={handleUploadDocument}
                     onDownloadDocument={handleDownloadDocument}
+                    onReplaceDocument={handleReplaceDocument}
                     onDeleteDocument={handleDeleteDocument}
                     onCreateConstruction={() => setShowCreateModal(true)}
                     projectId={projectId || ''}
+                    isLoadingDocuments={documentsLoading}
                   />
                 </Card.Content>
               </Card>
@@ -380,6 +395,42 @@ function Constructions(): JSX.Element {
         construction={selectedConstruction}
         existingDocuments={selectedConstruction ? documents.filter(doc => doc.constructionId === selectedConstruction.id) : []}
       />
+
+      {selectedConstruction && (
+        <UploadConstructionDocumentModal
+          isOpen={showUploadConstructionModal}
+          onClose={() => {
+            setShowUploadConstructionModal(false);
+            setSelectedConstruction(null);
+            setUploadVersion(undefined);
+            setUploadDocumentType(undefined);
+          }}
+          construction={selectedConstruction}
+          initialVersion={uploadVersion}
+          initialType={uploadDocumentType}
+          onUploadSuccess={() => {
+            if (selectedConstruction) {
+              dispatch(fetchDocumentsByConstruction(selectedConstruction.id));
+            }
+          }}
+        />
+      )}
+
+      {selectedDocument && (
+        <ReplaceDocumentModal
+          isOpen={showReplaceDocumentModal}
+          onClose={() => {
+            setShowReplaceDocumentModal(false);
+            setSelectedDocument(null);
+          }}
+          document={selectedDocument}
+          onReplaceSuccess={() => {
+            if (selectedDocument?.constructionId) {
+              dispatch(fetchDocumentsByConstruction(selectedDocument.constructionId));
+            }
+          }}
+        />
+      )}
 
       <ConfirmDeleteDocumentModal
         isOpen={showDeleteDocumentModal}

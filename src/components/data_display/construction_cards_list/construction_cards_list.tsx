@@ -1,7 +1,7 @@
 import ConstructionCard from '../construction_card/construction_card';
 import EmptyState from '../../common/empty_state/empty_state';
 import Button from '../../common/button/button';
-import type { Construction, Document } from '../../../store/types';
+import type { Construction, Document, ConstructionDocumentType } from '../../../store/types';
 
 interface ConstructionCardsListProps {
   constructions: Construction[];
@@ -14,11 +14,13 @@ interface ConstructionCardsListProps {
   canCreateConstructions: boolean;
   onEdit: (construction: Construction) => void;
   onDelete: (construction: Construction) => void;
-  onUploadDocument: (construction: Construction) => void;
+  onUploadDocument: (construction: Construction, version?: number, type?: ConstructionDocumentType) => void;
   onDownloadDocument: (document: Document) => void;
+  onReplaceDocument?: (document: Document) => void;
   onDeleteDocument: (document: Document) => void;
   onCreateConstruction: () => void;
   projectId?: string;
+  isLoadingDocuments?: boolean;
 }
 
 function ConstructionCardsList({
@@ -34,9 +36,11 @@ function ConstructionCardsList({
   onDelete,
   onUploadDocument,
   onDownloadDocument,
+  onReplaceDocument,
   onDeleteDocument,
   onCreateConstruction,
-  projectId
+  projectId,
+  isLoadingDocuments = false
 }: ConstructionCardsListProps): JSX.Element {
   const getDocumentCount = (constructionId: string): number => {
     return documents.filter(doc => doc.constructionId === constructionId).length;
@@ -96,8 +100,10 @@ function ConstructionCardsList({
           onDelete={onDelete}
           onUploadDocument={onUploadDocument}
           onDownloadDocument={onDownloadDocument}
+          onReplaceDocument={onReplaceDocument}
           onDeleteDocument={onDeleteDocument}
-          projectId={projectId || ''}
+          projectId={projectId}
+          isLoadingDocuments={isLoadingDocuments}
         />
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { apiRequest } from './api';
-import { Construction, Document } from '../store/types';
+import { Construction, Document, DocumentVersion } from '../store/types';
 
 // DTOs for construction operations
 export interface CreateConstructionDto {
@@ -19,15 +19,21 @@ export interface ConstructionsFilters {
 // DTOs for document operations
 export interface UploadDocumentDto {
   file: File;
-  type: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
-  projectId: string;
-  constructionId?: string | undefined;
+  type: 'working_documentation' | 'project_documentation';
+  projectId: string; // Required by backend even for construction documents
+  constructionId: string;
+  version?: number; // Optional: if not provided, backend will auto-increment
+}
+
+export interface ReplaceDocumentDto {
+  file: File;
+  fileId: string; // ID of the document to replace
 }
 
 export interface DocumentsFilters {
-  projectId?: string;
   constructionId?: string;
-  type?: 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
+  type?: 'working_documentation' | 'project_documentation';
+  version?: number;
 }
 
 // API response types
@@ -260,7 +266,7 @@ export const constructionsService = {
     }
   },
 
-  // Upload document
+  // Upload construction document (working_documentation or project_documentation)
   async uploadDocument(uploadData: UploadDocumentDto, onProgress?: (progress: number) => void): Promise<Document> {
     try {
       // Validate file
@@ -302,7 +308,16 @@ export const constructionsService = {
         throw new Error('Тип документа обязателен для заполнения');
       }
       if (!uploadData.projectId) {
-        throw new Error('ID проекта обязателен для заполнения');
+        throw new Error('ID проекта обязателен для загрузки документов');
+      }
+      if (!uploadData.constructionId) {
+        throw new Error('ID сооружения обязателен для загрузки документов конструкции');
+      }
+
+      // Validate construction document types
+      const constructionTypes: ('working_documentation' | 'project_documentation')[] = ['working_documentation', 'project_documentation'];
+      if (!constructionTypes.includes(uploadData.type)) {
+        throw new Error('Неверный тип документа для сооружения. Допустимы: working_documentation, project_documentation');
       }
 
       // Create FormData
@@ -310,9 +325,10 @@ export const constructionsService = {
       formData.append('file', uploadData.file);
       formData.append('type', uploadData.type);
       formData.append('projectId', uploadData.projectId);
+      formData.append('constructionId', uploadData.constructionId);
 
-      if (uploadData.constructionId) {
-        formData.append('constructionId', uploadData.constructionId);
+      if (uploadData.version) {
+        formData.append('version', uploadData.version.toString());
       }
 
       const response = await apiRequest.post<Document>('/document/upload', formData, {
@@ -344,6 +360,86 @@ export const constructionsService = {
       }
 
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке документа');
+    }
+  },
+
+  // Replace construction document (creates new version)
+  async replaceDocument(replaceData: ReplaceDocumentDto, onProgress?: (progress: number) => void): Promise<Document> {
+    try {
+      // Validate file
+      if (!replaceData.file) {
+        throw new Error('Файл обязателен для замены');
+      }
+
+      // Validate file size (max 100MB)
+      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+      if (replaceData.file.size > maxSize) {
+        throw new Error('Размер файла не должен превышать 100 МБ');
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/dwg',
+        'application/dwg',
+        'application/autocad',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/bmp',
+        'image/webp',
+        'image/svg+xml'
+      ];
+
+      if (!allowedTypes.includes(replaceData.file.type)) {
+        throw new Error('Неподдерживаемый тип файла. Поддерживаются: PDF, DOC, DOCX, XLS, XLSX, DWG, JPG, PNG, GIF, BMP, WebP, SVG');
+      }
+
+      // Validate required fields
+      if (!replaceData.fileId) {
+        throw new Error('ID документа обязателен для замены');
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', replaceData.file);
+
+      const response = await apiRequest.put<Document>(`/document/${replaceData.fileId}/replace`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && onProgress) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(progress);
+          }
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error replacing document:', error);
+      if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для замены документов');
+      } else if (error.response?.status === 404) {
+        throw new Error('Документ не найден');
+      } else if (error.response?.status === 413) {
+        throw new Error('Файл слишком большой для загрузки');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера при замене файла');
+      }
+
+      // Return the validation error if it's a client error
+      if (error.message && !error.response) {
+        throw error;
+      }
+
+      throw new Error(error.response?.data?.message || 'Ошибка при замене документа');
     }
   },
 
@@ -423,25 +519,47 @@ export const constructionsService = {
   // Helper function to get document type label
   getDocumentTypeLabel: (type: string): string => {
     switch (type) {
-      case 'km':
-        return 'КМ';
-      case 'kz':
-        return 'КЖ';
-      case 'rpz':
-        return 'РПЗ';
+      case 'working_documentation':
+        return 'Рабочая документация';
+      case 'project_documentation':
+        return 'Проектная документация';
       case 'tz':
-        return 'ТЗ';
-      case 'gp':
-        return 'ГП';
-      case 'igi':
-        return 'ИГИ';
-      case 'spozu':
-        return 'СПОЗУ';
+        return 'Техническое задание';
       case 'contract':
         return 'Договор';
       default:
         return type.toUpperCase();
     }
+  },
+
+  // Helper function to organize documents by version
+  organizeDocumentsByVersion: (documents: Document[]): DocumentVersion[] => {
+    // Group documents by version number
+    const versionMap = new Map<number, Document[]>();
+
+    documents.forEach(doc => {
+      const version = doc.version || 1;
+      if (!versionMap.has(version)) {
+        versionMap.set(version, []);
+      }
+      versionMap.get(version)!.push(doc);
+    });
+
+    // Convert to array of DocumentVersion objects
+    const versions: DocumentVersion[] = [];
+    versionMap.forEach((docs, versionNumber) => {
+      const versionDocs = {
+        working_documentation: docs.filter(d => d.type === 'working_documentation'),
+        project_documentation: docs.filter(d => d.type === 'project_documentation')
+      };
+      versions.push({
+        versionNumber,
+        documents: versionDocs
+      });
+    });
+
+    // Sort by version number descending (newest first)
+    return versions.sort((a, b) => b.versionNumber - a.versionNumber);
   },
 
 };

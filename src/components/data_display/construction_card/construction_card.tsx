@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import type { Construction, Document } from '../../../store/types';
+import type { Construction, Document, ConstructionDocumentType } from '../../../store/types';
+import DocumentTree from '../document_tree/document_tree';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../../store/slices/auth_slice';
 
 interface ConstructionCardProps {
   construction: Construction;
@@ -11,10 +14,12 @@ interface ConstructionCardProps {
   canDeleteDocuments: boolean;
   onEdit: (construction: Construction) => void;
   onDelete: (construction: Construction) => void;
-  onUploadDocument: (construction: Construction) => void;
+  onUploadDocument: (construction: Construction, version?: number, type?: ConstructionDocumentType) => void;
   onDownloadDocument: (document: Document) => void;
+  onReplaceDocument?: (document: Document) => void;
   onDeleteDocument: (document: Document) => void;
   projectId?: string;
+  isLoadingDocuments?: boolean;
 }
 
 function ConstructionCard({
@@ -29,9 +34,12 @@ function ConstructionCard({
   onDelete,
   onUploadDocument,
   onDownloadDocument,
-  onDeleteDocument
+  onReplaceDocument,
+  onDeleteDocument,
+  isLoadingDocuments = false
 }: ConstructionCardProps): JSX.Element {
   const [isExpanded, setIsExpanded] = useState(false);
+  const currentUser = useSelector(selectCurrentUser);
 
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -52,8 +60,18 @@ function ConstructionCard({
     onUploadDocument(construction);
   };
 
+  const handleAddDocument = (version: number, type: ConstructionDocumentType) => {
+    onUploadDocument(construction, version, type);
+  };
+
   const handleDownloadDocument = (document: Document) => {
     onDownloadDocument(document);
+  };
+
+  const handleReplaceDocument = (document: Document) => {
+    if (onReplaceDocument) {
+      onReplaceDocument(document);
+    }
   };
 
   const handleDeleteDocument = (document: Document) => {
@@ -64,38 +82,6 @@ function ConstructionCard({
     if (!dateString) return '—';
     const date = new Date(dateString);
     return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ru-RU');
-  };
-
-  const formatFileSize = (bytes: number | undefined): string => {
-    if (!bytes || bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
-  const getDocumentTypeLabel = (type: string): string => {
-    const typeLabels: { [key: string]: string } = {
-      km: 'КМ',
-      kz: 'КЖ',
-      rpz: 'РПЗ',
-      tz: 'ТЗ',
-      gp: 'ГП',
-      igi: 'ИГИ',
-      spozu: 'СПОЗУ',
-      contract: 'Договор'
-    };
-    return typeLabels[type] || type.toUpperCase();
-  };
-
-  const getDocumentIcon = (mimeType: string | undefined): string => {
-    if (!mimeType) return '📎';
-    if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('word')) return '📝';
-    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
-    if (mimeType.includes('image')) return '🖼️';
-    if (mimeType.includes('zip') || mimeType.includes('rar')) return '🗜️';
-    return '📎';
   };
 
   const constructionDocuments = documents.filter(doc => doc.constructionId === construction.id);
@@ -160,84 +146,20 @@ function ConstructionCard({
         </div>
       </div>
 
-      {/* Expandable Content - Documents */}
+      {/* Expandable Content - Documents with Version Tree */}
       <div className="construction-card__content">
         <div className="construction-card__content-inner">
-          <div className="construction-card__documents-section">
-            <div className="construction-card__documents-header">
-              <h4 className="construction-card__documents-title">
-                Документы
-                <span className="construction-card__documents-count">({constructionDocuments.length})</span>
-              </h4>
-              {canUploadDocuments && (
-                <button
-                  className="construction-card__upload-button"
-                  onClick={() => onUploadDocument(construction)}
-                >
-                  + Загрузить документ
-                </button>
-              )}
-            </div>
-
-            {constructionDocuments.length > 0 ? (
-              <div className="construction-card__documents-list">
-                {constructionDocuments.map((document) => (
-                  <div key={document.id} className="construction-document-item">
-                    <div className="construction-document-item__info">
-                      <div className="construction-document-item__icon">
-                        {getDocumentIcon(document.mimeType)}
-                      </div>
-                      <div className="construction-document-item__details">
-                        <div className="construction-document-item__name">
-                          {document.originalName}
-                        </div>
-                        <div className="construction-document-item__meta">
-                          <span className="construction-document-item__type-badge">
-                            {getDocumentTypeLabel(document.type)}
-                          </span>
-                          <span className="document-separator">•</span>
-                          <span className="construction-document-item__date">
-                            Дата загрузки: {formatDate(document.uploadedAt)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="construction-document-item__actions">
-                      <button
-                        className="construction-document-item__action"
-                        onClick={() => handleDownloadDocument(document)}
-                        title="Скачать документ"
-                      >
-                        <span className="construction-document-item__action-icon">⬇️</span>
-                        Скачать
-                      </button>
-                      {canDeleteDocuments && (
-                        <button
-                          className="construction-document-item__action construction-document-item__action--danger"
-                          onClick={() => handleDeleteDocument(document)}
-                          title="Удалить документ"
-                        >
-                          <span className="construction-document-item__action-icon">🗑️</span>
-                          Удалить
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="construction-card__documents-empty">
-                <div className="construction-card__documents-empty-icon">📁</div>
-                <div className="construction-card__documents-empty-title">
-                  Документы не найдены
-                </div>
-                <div className="construction-card__documents-empty-description">
-                  К этому сооружению пока не загружены документы. Нажмите кнопку "Загрузить документ" для добавления документов.
-                </div>
-              </div>
-            )}
-          </div>
+          <DocumentTree
+            constructionId={construction.id}
+            constructionName={construction.name}
+            documents={constructionDocuments}
+            onDownload={handleDownloadDocument}
+            onReplace={handleReplaceDocument}
+            onDelete={handleDeleteDocument}
+            onAddDocument={handleAddDocument}
+            currentUser={currentUser}
+            isLoading={isLoadingDocuments}
+          />
         </div>
       </div>
     </div>
