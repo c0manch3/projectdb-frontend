@@ -72,10 +72,17 @@ function AddWorkloadPlanModal({
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchWorkloadEmployees());
-      dispatch(fetchWorkloadProjects());
+
+      // For managers, filter projects by their managerId
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const managerId = currentUser?.role === 'Manager' && isValidUUID
+        ? currentUser.id
+        : undefined;
+      dispatch(fetchWorkloadProjects(managerId));
+
       dispatch(clearError());
     }
-  }, [isOpen, dispatch]);
+  }, [isOpen, dispatch, currentUser?.role, currentUser?.id]);
 
   // Reset form when modal opens
   useEffect(() => {

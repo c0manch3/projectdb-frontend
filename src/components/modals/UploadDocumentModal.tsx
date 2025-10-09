@@ -27,13 +27,13 @@ import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { Construction, Document, DocumentType } from '../../store/types';
 import { constructionsService } from '../../services/constructions';
 
-// Validation schema
+// Validation schema for construction documents only
 const uploadDocumentSchema = z.object({
-  type: z.enum(['km', 'kz', 'rpz', 'tz', 'gp', 'igi', 'spozu', 'contract'], {
+  type: z.enum(['working_documentation', 'project_documentation'], {
     required_error: 'Выберите тип документа'
   }),
-  projectId: z.string().min(1, 'Выберите проект'),
-  constructionId: z.string().optional(),
+  constructionId: z.string().min(1, 'Выберите сооружение'),
+  version: z.number().optional(),
   file: z
     .instanceof(File)
     .refine((file) => file.size > 0, 'Выберите файл для загрузки')
@@ -71,9 +71,10 @@ type UploadDocumentFormData = z.infer<typeof uploadDocumentSchema>;
 interface UploadDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectId?: string | undefined; // If provided, pre-select and disable project selection
-  construction?: Construction | null; // If provided, pre-select construction
+  construction: Construction | null; // Required construction for document upload
   existingDocuments?: Document[]; // Existing documents for selected construction
+  initialVersion?: number; // Optional: specific version to upload to
+  initialType?: 'working_documentation' | 'project_documentation'; // Optional: pre-select type
 }
 
 function UploadDocumentModal({
