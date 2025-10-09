@@ -172,7 +172,13 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
       toast.success('Проект успешно обновлен');
 
       // Refresh data
-      dispatch(fetchProjects());
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const filterParams = currentUser?.role === 'Manager' && isValidUUID
+        ? { managerId: currentUser.id }
+        : undefined;
+      dispatch(fetchProjects(filterParams));
       dispatch(fetchProjectStats());
 
       // Close modal

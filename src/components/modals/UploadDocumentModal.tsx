@@ -127,9 +127,15 @@ function UploadDocumentModal({
   // Load projects when modal opens
   useEffect(() => {
     if (isOpen && projects.length === 0 && !projectsLoading) {
-      dispatch(fetchProjects());
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const filterParams = currentUser?.role === 'Manager' && isValidUUID
+        ? { managerId: currentUser.id }
+        : undefined;
+      dispatch(fetchProjects(filterParams));
     }
-  }, [isOpen, projects.length, projectsLoading, dispatch]);
+  }, [isOpen, projects.length, projectsLoading, dispatch, currentUser?.id, currentUser?.role]);
 
   // Set form defaults when modal opens
   useEffect(() => {

@@ -42,7 +42,13 @@ function ConfirmDeleteProjectModal({ isOpen, onClose, project }: ConfirmDeletePr
       toast.success('Проект успешно удален');
 
       // Refresh data
-      dispatch(fetchProjects());
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const filterParams = currentUser?.role === 'Manager' && isValidUUID
+        ? { managerId: currentUser.id }
+        : undefined;
+      dispatch(fetchProjects(filterParams));
       dispatch(fetchProjectStats());
 
       // Close modal

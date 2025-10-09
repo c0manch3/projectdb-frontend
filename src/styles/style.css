@@ -926,7 +926,9 @@ body {
 
 .unified-workload-calendar__edit-button-text {
   font-size: 0.7rem;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
 }
 
 /* === ALL EMPLOYEES WORKLOAD MODAL === */
@@ -6503,35 +6505,6 @@ option:disabled {
   margin-top: 0.25rem;
 }
 
-.unified-workload-calendar__add-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.2s ease;
-  z-index: 1;
-}
-
-.unified-workload-calendar__cell:hover .unified-workload-calendar__add-button {
-  opacity: 1;
-}
-
-.unified-workload-calendar__add-button:hover {
-  background: #1d4ed8;
-  transform: translate(-50%, -50%) scale(1.1);
-}
 
 .unified-workload-calendar__tooltip {
   position: absolute;
@@ -7264,3 +7237,874 @@ option:disabled {
   }
 }
 
+
+/* ==========================================================================
+   Document Tree Component - Version Management System
+   ========================================================================== */
+
+/* Document Tree Container */
+.document-tree {
+  background-color: var(--background);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.document-tree--loading,
+.document-tree--empty {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Document Tree Header */
+.document-tree__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.document-tree__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.document-tree__stats {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.document-tree__stat {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.document-tree__stat strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Document Tree Content */
+.document-tree__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Document Tree Footer */
+.document-tree__footer {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+
+.document-tree__create-version-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.document-tree__create-version-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.document-tree__create-version-button svg {
+  flex-shrink: 0;
+}
+
+/* Loading State */
+.document-tree__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.document-tree__loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--surface-muted);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.document-tree__loading-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Empty State */
+.document-tree__empty-state {
+  text-align: center;
+  max-width: 400px;
+}
+
+.document-tree__empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.document-tree__empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.document-tree__empty-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xl);
+  line-height: 1.6;
+}
+
+/* Version Folder */
+.document-tree__version {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Folder Styles */
+.document-tree__folder {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md);
+  background-color: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.document-tree__folder:hover {
+  background-color: var(--surface);
+  border-color: var(--primary-alpha);
+  box-shadow: var(--shadow-sm);
+}
+
+.document-tree__folder--expanded {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.document-tree__folder--version {
+  font-weight: 600;
+  background-color: var(--surface);
+}
+
+.document-tree__folder--version.document-tree__folder--expanded {
+  background-color: var(--primary-alpha);
+}
+
+.document-tree__folder-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.document-tree__folder-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.document-tree__folder-count {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.document-tree__folder-chevron {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.document-tree__folder--expanded .document-tree__folder-chevron {
+  transform: rotate(90deg);
+}
+
+/* Version Badge */
+.document-tree__version-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background-color: var(--success-light);
+  color: var(--success);
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Folder Content */
+.document-tree__folder-content {
+  padding-left: var(--spacing-xl);
+  margin-top: var(--spacing-md);
+  overflow: hidden;
+}
+
+/* Category Folder */
+.document-tree__category {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Empty Category */
+.document-tree__empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  background-color: var(--surface-light);
+  border-radius: var(--border-radius);
+  border: 1px dashed var(--border);
+  margin-top: var(--spacing-md);
+}
+
+.document-tree__empty-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-md);
+}
+
+/* Add Document Button */
+.document-tree__add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-alpha);
+  border-radius: var(--border-radius);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.document-tree__add-button:hover {
+  background-color: var(--primary-alpha);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.document-tree__add-button--inline {
+  margin-top: var(--spacing-md);
+  width: 100%;
+  justify-content: center;
+}
+
+.document-tree__add-button--primary {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: 0.9375rem;
+}
+
+.document-tree__add-button--primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.document-tree__add-button svg {
+  flex-shrink: 0;
+}
+
+/* Document Items Container */
+.document-tree__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* Document Item */
+.document-tree__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.document-tree__item:hover {
+  background-color: var(--surface-light);
+  border-color: var(--primary-alpha);
+  box-shadow: var(--shadow-sm);
+}
+
+.document-tree__item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.document-tree__item-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.document-tree__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  flex: 1;
+}
+
+.document-tree__item-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-tree__item-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Document Item Actions */
+.document-tree__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.document-tree__action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+
+.document-tree__action-button:hover {
+  background-color: var(--surface);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.document-tree__action-button--download:hover {
+  background-color: var(--info);
+  border-color: var(--info);
+  color: white;
+}
+
+.document-tree__action-button--replace:hover {
+  background-color: var(--warning);
+  border-color: var(--warning);
+  color: white;
+}
+
+.document-tree__action-button--delete:hover {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+
+.document-tree__action-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ==========================================================================
+   Replace Document Modal Specific Styles
+   ========================================================================== */
+
+.replace-document-info {
+  margin-bottom: var(--spacing-xl);
+}
+
+.replace-document-info__section {
+  background-color: var(--surface-light);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.replace-document-info__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md);
+}
+
+.replace-document-info__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.replace-document-info__item {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+}
+
+.replace-document-info__label {
+  color: var(--text-secondary);
+  min-width: 140px;
+}
+
+.replace-document-info__value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.replace-document-info__notice {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary-alpha);
+  border-radius: var(--border-radius);
+}
+
+.replace-document-info__notice-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.replace-document-info__notice-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.replace-document-info__notice-text strong {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   Document Category Info
+   ========================================================================== */
+
+.document-category-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--surface-light);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.8125rem;
+}
+
+.document-category-info__item {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.document-category-info__item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   File Upload Styles (Enhanced for Document Versioning)
+   ========================================================================== */
+
+.file-upload {
+  margin-bottom: var(--spacing-md);
+}
+
+.file-upload__dropzone {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  border: 2px dashed var(--border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--surface-light);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.file-upload__dropzone:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.file-upload__dropzone--drag-over {
+  border-color: var(--primary);
+  background-color: var(--primary-alpha);
+  transform: scale(1.02);
+}
+
+.file-upload__dropzone--has-file {
+  border-style: solid;
+  cursor: default;
+}
+
+.file-upload__dropzone--has-file:hover {
+  background-color: var(--surface-light);
+}
+
+.file-upload__placeholder {
+  text-align: center;
+  pointer-events: none;
+}
+
+.file-upload__icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.file-upload__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.file-upload__primary {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.file-upload__secondary {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.file-upload__size-limit {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-xs);
+}
+
+/* File Upload - Selected File */
+.file-upload__selected {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.file-info__icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.file-info__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.file-info__name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-info__size {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.file-info__type {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.file-upload__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+/* ==========================================================================
+   Upload Progress Bar
+   ========================================================================== */
+
+.upload-progress {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-lg);
+  background-color: var(--surface-light);
+  border-radius: var(--border-radius);
+}
+
+.upload-progress__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.upload-progress__bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--surface-muted);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.upload-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--info));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ==========================================================================
+   Form Info and Help Styles
+   ========================================================================== */
+
+.form-info {
+  padding: var(--spacing-md);
+  background-color: var(--surface-light);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-info__text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.form-info__text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.form-help {
+  margin-top: var(--spacing-sm);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Responsive Design - Mobile Optimizations
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .document-tree {
+    padding: var(--spacing-md);
+  }
+
+  .document-tree__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .document-tree__stats {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+  }
+
+  .document-tree__folder-content {
+    padding-left: var(--spacing-lg);
+  }
+
+  .document-tree__item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .document-tree__item-content {
+    width: 100%;
+  }
+
+  .document-tree__item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .document-tree__action-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .replace-document-info__item {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .replace-document-info__label {
+    min-width: 0;
+    font-weight: 600;
+  }
+
+  .file-upload__dropzone {
+    min-height: 160px;
+    padding: var(--spacing-lg);
+  }
+
+  .file-upload__icon {
+    font-size: 2rem;
+  }
+
+  .file-upload__primary {
+    font-size: 0.875rem;
+  }
+
+  .file-upload__actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .file-upload__actions button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   Keyboard Navigation and Focus Styles
+   ========================================================================== */
+
+.document-tree__folder:focus,
+.document-tree__action-button:focus,
+.document-tree__add-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.document-tree__folder:focus-visible,
+.document-tree__action-button:focus-visible,
+.document-tree__add-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Animation Keyframes
+   ========================================================================== */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+  .document-tree__item-actions,
+  .document-tree__add-button,
+  .document-tree__create-version-button,
+  .file-upload__actions {
+    display: none;
+  }
+
+  .document-tree__folder--expanded .document-tree__folder-content {
+    display: block !important;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Support (Future Enhancement)
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  /* Dark mode styles can be added here in the future */
+}
+
+/* ==========================================================================
+   High Contrast Mode Support
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+  .document-tree__folder,
+  .document-tree__item,
+  .document-tree__action-button {
+    border-width: 2px;
+  }
+
+  .document-tree__version-badge {
+    border: 2px solid currentColor;
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Support
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .document-tree__folder,
+  .document-tree__item,
+  .document-tree__action-button,
+  .document-tree__add-button,
+  .file-upload__dropzone,
+  .upload-progress__fill {
+    transition: none;
+  }
+
+  .document-tree__loading-spinner {
+    animation: none;
+  }
+
+  .document-tree__folder-chevron {
+    transition: none;
+  }
+}

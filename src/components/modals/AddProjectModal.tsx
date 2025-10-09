@@ -157,7 +157,13 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
       toast.success('Проект успешно создан');
 
       // Refresh data
-      dispatch(fetchProjects());
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const filterParams = currentUser?.role === 'Manager' && isValidUUID
+        ? { managerId: currentUser.id }
+        : undefined;
+      dispatch(fetchProjects(filterParams));
       dispatch(fetchProjectStats());
 
       // Close modal and reset form
