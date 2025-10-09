@@ -57,7 +57,7 @@ function ConstructionCard({
 
   const handleUploadDocument = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onUploadDocument(construction);
+    onUploadDocument(construction, undefined, undefined);
   };
 
   const handleAddDocument = (version: number, type: ConstructionDocumentType) => {
