@@ -92,14 +92,8 @@ function Workload(): JSX.Element {
     if (!isInitialized) {
       dispatch(fetchWorkloadEmployees());
 
-      // For managers, filter projects by their managerId
-      // For admins, show all projects
-      // Check if user ID is a valid UUID (not temp-id)
-      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
-      const managerId = currentUser?.role === 'Manager' && isValidUUID
-        ? currentUser.id
-        : undefined;
-      dispatch(fetchWorkloadProjects(managerId));
+      // Load all projects for workload view (no filtering by manager)
+      dispatch(fetchWorkloadProjects());
 
       dispatch(fetchUnifiedWorkload(filters));
       dispatch(fetchWorkloadStats(filters));
@@ -302,23 +296,6 @@ function Workload(): JSX.Element {
                   {employees.filter(emp => emp.role === 'Employee').map(employee => (
                     <option key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
-                    </option>
-                  ))}
-                </FormSelect>
-              </Filters.Group>
-
-              <Filters.Group>
-                <Filters.Label htmlFor="projectFilter">Проект:</Filters.Label>
-                <FormSelect
-                  id="projectFilter"
-                  value={filters.projectId || 'all'}
-                  onChange={(e) => handleFilterChange('projectId', e.target.value)}
-                  className="filters__select"
-                >
-                  <option value="all">Все проекты</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
                     </option>
                   ))}
                 </FormSelect>
