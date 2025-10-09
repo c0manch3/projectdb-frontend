@@ -75,7 +75,9 @@ function Projects(): JSX.Element {
     if (canViewProjects) {
       // For managers, filter projects by their managerId
       // For admins, show all projects
-      const filterParams = currentUser?.role === 'Manager' && currentUser?.id
+      // Check if user ID is a valid UUID (not temp-id)
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const filterParams = currentUser?.role === 'Manager' && isValidUUID
         ? { managerId: currentUser.id }
         : undefined;
 

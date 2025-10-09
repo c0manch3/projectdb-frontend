@@ -94,7 +94,9 @@ function Workload(): JSX.Element {
 
       // For managers, filter projects by their managerId
       // For admins, show all projects
-      const managerId = currentUser?.role === 'Manager' && currentUser?.id
+      // Check if user ID is a valid UUID (not temp-id)
+      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
+      const managerId = currentUser?.role === 'Manager' && isValidUUID
         ? currentUser.id
         : undefined;
       dispatch(fetchWorkloadProjects(managerId));
