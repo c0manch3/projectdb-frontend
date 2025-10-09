@@ -91,12 +91,19 @@ function Workload(): JSX.Element {
   useEffect(() => {
     if (!isInitialized) {
       dispatch(fetchWorkloadEmployees());
-      dispatch(fetchWorkloadProjects());
+
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const managerId = currentUser?.role === 'Manager' && currentUser?.id
+        ? currentUser.id
+        : undefined;
+      dispatch(fetchWorkloadProjects(managerId));
+
       dispatch(fetchUnifiedWorkload(filters));
       dispatch(fetchWorkloadStats(filters));
       setIsInitialized(true);
     }
-  }, [dispatch, filters, isInitialized]);
+  }, [dispatch, filters, isInitialized, currentUser?.role, currentUser?.id]);
 
   // Refresh data when filters change
   useEffect(() => {

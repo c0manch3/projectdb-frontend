@@ -75,6 +75,11 @@ export const projectsService = {
         params.append('status', filters.status);
       }
 
+      // Add managerId filter to backend query (now supported by backend)
+      if (filters?.managerId) {
+        params.append('managerId', filters.managerId);
+      }
+
       const url = params.toString() ? `/project?${params.toString()}` : '/project';
       const response = await apiRequest.get<Project[]>(url);
       let projects = response.data;
@@ -83,9 +88,6 @@ export const projectsService = {
       if (filters) {
         if (filters.customerId) {
           projects = projects.filter(p => p.customerId === filters.customerId);
-        }
-        if (filters.managerId) {
-          projects = projects.filter(p => p.managerId === filters.managerId);
         }
         if (filters.type && filters.type !== 'all') {
           projects = projects.filter(p => p.type === filters.type);
@@ -299,7 +301,7 @@ export const projectsService = {
 
   // Project Document Operations
 
-  // Get project documents (TZ and Contract)
+  // Get project documents (TZ and Contract only - project-level documents)
   async getProjectDocuments(filters: ProjectDocumentsFilters): Promise<Document[]> {
     try {
       const params = new URLSearchParams();
@@ -307,7 +309,7 @@ export const projectsService = {
       if (filters.type) {
         params.append('type', filters.type);
       } else {
-        // Get both TZ and Contract documents
+        // Get both TZ and Contract documents (project-level only)
         params.append('type', 'contract,tz');
       }
 
@@ -323,7 +325,7 @@ export const projectsService = {
     }
   },
 
-  // Upload project document (TZ or Contract)
+  // Upload project document (TZ or Contract only - no versioning for project docs)
   async uploadProjectDocument(uploadData: UploadProjectDocumentDto, onProgress?: (progress: number) => void): Promise<Document> {
     try {
       // Validate file
@@ -365,12 +367,18 @@ export const projectsService = {
         throw new Error('ID проекта обязателен для заполнения');
       }
 
+      // Validate project document types (only tz and contract allowed for projects)
+      const projectTypes: ('tz' | 'contract')[] = ['tz', 'contract'];
+      if (!projectTypes.includes(uploadData.type)) {
+        throw new Error('Неверный тип документа для проекта. Допустимы: tz (ТЗ), contract (Договор)');
+      }
+
       // Create FormData
       const formData = new FormData();
       formData.append('file', uploadData.file);
       formData.append('type', uploadData.type);
-      formData.append('version', '1'); // Add version field
       formData.append('projectId', uploadData.projectId);
+      // Note: projectId is required, constructionId must NOT be present
 
       const response = await apiRequest.post<Document>('/document/upload', formData, {
         headers: {

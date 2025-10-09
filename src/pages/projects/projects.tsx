@@ -73,12 +73,18 @@ function Projects(): JSX.Element {
   // Load data on component mount
   useEffect(() => {
     if (canViewProjects) {
-      dispatch(fetchProjects());
+      // For managers, filter projects by their managerId
+      // For admins, show all projects
+      const filterParams = currentUser?.role === 'Manager' && currentUser?.id
+        ? { managerId: currentUser.id }
+        : undefined;
+
+      dispatch(fetchProjects(filterParams));
       dispatch(fetchProjectStats());
       dispatch(fetchCustomers());
       dispatch(fetchManagers());
     }
-  }, [dispatch, canViewProjects]);
+  }, [dispatch, canViewProjects, currentUser?.role, currentUser?.id]);
 
   // Handle filter changes
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

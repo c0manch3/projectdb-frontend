@@ -228,9 +228,9 @@ export const fetchWorkloadEmployees = createAsyncThunk(
 // Fetch projects for workload management
 export const fetchWorkloadProjects = createAsyncThunk(
   'workload/fetchWorkloadProjects',
-  async (_, { rejectWithValue }) => {
+  async (managerId: string | undefined = undefined, { rejectWithValue }) => {
     try {
-      const projects = await workloadService.getProjects();
+      const projects = await workloadService.getProjects(managerId);
       return projects;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Ошибка при загрузке проектов');

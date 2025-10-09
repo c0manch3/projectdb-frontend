@@ -421,11 +421,20 @@ export const workloadService = {
   },
 
   // Get projects for workload management
-  async getProjects(): Promise<Project[]> {
+  async getProjects(managerId?: string): Promise<Project[]> {
     try {
-      const response = await apiRequest.get<Project[]>('/project');
-      // Return only active projects for workload planning
-      return response.data.filter(project => project.status === 'Active');
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('status', 'Active'); // Only active projects for workload planning
+
+      // Add managerId filter if provided (for managers)
+      if (managerId) {
+        params.append('managerId', managerId);
+      }
+
+      const url = `/project?${params.toString()}`;
+      const response = await apiRequest.get<Project[]>(url);
+      return response.data;
     } catch (error: any) {
       console.error('Error fetching projects:', error);
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке списка проектов');
