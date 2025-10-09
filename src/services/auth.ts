@@ -10,6 +10,7 @@ export interface LoginCredentials {
 
 // API response format (based on actual server response)
 export interface LoginApiResponse {
+  id: string; // User UUID from backend
   email: string;
   firstName: string;
   lastName: string;
@@ -43,10 +44,11 @@ export const authService = {
       
       // Decode JWT token to get additional user info including role
       const jwtPayload = decodeJWT(apiData.accessToken);
-      
+
       // Transform API response to our internal format
+      // Use ID from API response (backend now returns it)
       const user: User = {
-        id: jwtPayload?.sub || 'temp-id', // Use ID from JWT token or fallback
+        id: apiData.id || (jwtPayload?.userId as string) || 'temp-id', // Prefer API response id, fallback to JWT userId
         email: apiData.email,
         firstName: apiData.firstName,
         lastName: apiData.lastName,
