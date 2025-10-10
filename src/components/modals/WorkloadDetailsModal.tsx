@@ -91,15 +91,10 @@ function WorkloadDetailsModal({
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchWorkloadEmployees());
-
-      // For managers, filter projects by their managerId
-      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
-      const managerId = currentUser?.role === 'Manager' && isValidUUID
-        ? currentUser.id
-        : undefined;
-      dispatch(fetchWorkloadProjects(managerId));
+      // Load all projects without filtering
+      dispatch(fetchWorkloadProjects());
     }
-  }, [isOpen, dispatch, currentUser?.role, currentUser?.id]);
+  }, [isOpen, dispatch]);
 
   // Initialize form when modal opens
   useEffect(() => {
@@ -330,6 +325,11 @@ function WorkloadDetailsModal({
     });
   };
 
+  // Filter projects for managers - show only their own projects
+  const filteredProjects = currentUser?.role === 'Manager'
+    ? projects.filter(project => project.managerId === currentUser.id)
+    : projects;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -414,7 +414,7 @@ function WorkloadDetailsModal({
                         )}
                       </div>
 
-                      {(canEdit && (workload.userId === currentUserId || isManager)) && (
+                      {(canEdit && (workload.userId === currentUserId || isManager) && !isPast) && (
                         <div className="workload-details-modal__workload-actions">
                           {workload.planId && !isPastOrToday && (
                             <Button
@@ -425,32 +425,11 @@ function WorkloadDetailsModal({
                               Удалить из плана
                             </Button>
                           )}
-                          {canDeleteWorkload && (workload.userId === currentUserId || isManager) && (
-                            <Button
-                              variant="danger"
-                              size="small"
-                              onClick={() => handleDeleteWorkload(workload)}
-                              disabled={isPast && !isManager}
-                            >
-                              Удалить всё
-                            </Button>
-                          )}
                         </div>
                       )}
                     </motion.div>
                   ))}
                 </div>
-
-                {canCreate && !isPastOrToday && (
-                  <div className="workload-details-modal__add-more" style={{ marginTop: '1rem' }}>
-                    <Button
-                      variant="primary"
-                      onClick={() => setMode('create-plan')}
-                    >
-                      Редактировать план
-                    </Button>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -495,7 +474,7 @@ function WorkloadDetailsModal({
                 required
               >
                 <option value="">Выберите проект</option>
-                {projects.map(project => (
+                {filteredProjects.map(project => (
                   <option key={project.id} value={project.id}>
                     {project.name}
                   </option>
