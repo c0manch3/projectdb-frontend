@@ -15,6 +15,7 @@ import {
   selectWorkloadFilters,
   updateSelectedDate
 } from '../../../store/slices/workload_slice';
+import { selectCurrentUser } from '../../../store/slices/auth_slice';
 import type { UnifiedWorkload } from '../../../store/types';
 import { workloadService } from '../../../services/workload';
 
@@ -47,6 +48,7 @@ function UnifiedWorkloadCalendar({
   const employees = useSelector(selectWorkloadEmployees);
   const projects = useSelector(selectWorkloadProjects);
   const filters = useSelector(selectWorkloadFilters);
+  const currentUser = useSelector(selectCurrentUser);
 
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -174,7 +176,14 @@ function UnifiedWorkloadCalendar({
   // Check if date editing is allowed
   const isDateEditable = (date: string): boolean => {
     const today = new Date().toISOString().split('T')[0];
-    return date >= today; // Allow editing today and future dates
+    return date > today; // Allow editing only future dates (not today)
+  };
+
+  // Check if current user owns the project
+  const currentUserOwnsProject = (projectId: string): boolean => {
+    if (!currentUser || currentUser.role !== 'Manager') return true; // Admin sees all
+    const project = projects.find(p => p.id === projectId);
+    return project?.managerId === currentUser.id;
   };
 
   // Get employee name by ID
@@ -400,8 +409,8 @@ function UnifiedWorkloadCalendar({
           </div>
         )}
 
-        {/* Add button for editable days when employee is selected and no workload */}
-        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && !employeeWorkload && (
+        {/* Add button for editable days when employee is selected and no workload - Only for Manager */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && !employeeWorkload && currentUser?.role === 'Manager' && (
           <div className="unified-workload-calendar__add-button" onClick={(e) => {
             e.stopPropagation();
             onCreateWorkload?.(day.date);
@@ -411,8 +420,8 @@ function UnifiedWorkloadCalendar({
           </div>
         )}
 
-        {/* Edit button for editable days when employee has a plan */}
-        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && employeeWorkload && hasPlan && (
+        {/* Edit button for editable days when employee has a plan - Only for Manager */}
+        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && employeeWorkload && hasPlan && currentUser?.role === 'Manager' && currentUserOwnsProject(employeeWorkload.projectId) && (
           <div className="unified-workload-calendar__edit-button" onClick={(e) => {
             e.stopPropagation();
             onCellClick?.(day.date, [employeeWorkload]);
@@ -510,7 +519,7 @@ function UnifiedWorkloadCalendar({
 
           {/* Calendar Days */}
           <div className="unified-workload-calendar__days">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {calendarDays.map(renderWorkloadCell)}
             </AnimatePresence>
           </div>
@@ -528,7 +537,7 @@ function UnifiedWorkloadCalendar({
               : "Выберите сотрудника для просмотра рабочей нагрузки"
           }
           action={
-            selectedEmployee && onCreateWorkload ? (
+            selectedEmployee && onCreateWorkload && currentUser?.role === 'Manager' ? (
               <Button
                 variant="primary"
                 onClick={() => onCreateWorkload(selectedDate)}

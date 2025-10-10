@@ -89,17 +89,23 @@ function Workload(): JSX.Element {
 
   // Initialize data on component mount
   useEffect(() => {
-    if (!isInitialized) {
+    if (!isInitialized && currentUser) {
       dispatch(fetchWorkloadEmployees());
 
       // Load all projects for workload view (no filtering by manager)
       dispatch(fetchWorkloadProjects());
 
-      dispatch(fetchUnifiedWorkload(filters));
-      dispatch(fetchWorkloadStats(filters));
+      // For Employee, automatically set userId filter to current user
+      const initialFilters = currentUser.role === 'Employee'
+        ? { ...filters, userId: currentUser.id }
+        : filters;
+
+      dispatch(updateFilters(initialFilters));
+      dispatch(fetchUnifiedWorkload(initialFilters));
+      dispatch(fetchWorkloadStats(initialFilters));
       setIsInitialized(true);
     }
-  }, [dispatch, filters, isInitialized, currentUser?.role, currentUser?.id]);
+  }, [dispatch, isInitialized, currentUser]);
 
   // Refresh data when filters change
   useEffect(() => {
@@ -284,22 +290,25 @@ function Workload(): JSX.Element {
           {/* Filters and Controls */}
           <Card>
             <Filters>
-              <Filters.Group>
-                <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
-                <FormSelect
-                  id="employeeFilter"
-                  value={filters.userId || 'all'}
-                  onChange={(e) => handleFilterChange('userId', e.target.value)}
-                  className="filters__select"
-                >
-                  <option value="all">Все сотрудники</option>
-                  {employees.filter(emp => emp.role === 'Employee').map(employee => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.firstName} {employee.lastName}
-                    </option>
-                  ))}
-                </FormSelect>
-              </Filters.Group>
+              {/* Hide employee filter for Employee role - they can only see their own data */}
+              {currentUser?.role !== 'Employee' && (
+                <Filters.Group>
+                  <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
+                  <FormSelect
+                    id="employeeFilter"
+                    value={filters.userId || 'all'}
+                    onChange={(e) => handleFilterChange('userId', e.target.value)}
+                    className="filters__select"
+                  >
+                    <option value="all">Все сотрудники</option>
+                    {employees.filter(emp => emp.role === 'Employee').map(employee => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.firstName} {employee.lastName}
+                      </option>
+                    ))}
+                  </FormSelect>
+                </Filters.Group>
+              )}
 
               <Filters.Group>
                 <Filters.Label htmlFor="periodFilter">Вид:</Filters.Label>
@@ -406,14 +415,19 @@ function Workload(): JSX.Element {
                     Календарь рабочей нагрузки
                   </h3>
                   <div style={{display: 'flex', gap: '0.5rem'}}>
-                    {filters.userId ? (
-                      <Button variant="primary" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
-                        + Добавить план
-                      </Button>
-                    ) : (
-                      <Button variant="outline" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
-                        + Добавить данные
-                      </Button>
+                    {/* Only Manager/Admin can add plans */}
+                    {currentUser?.role !== 'Employee' && (
+                      <>
+                        {filters.userId ? (
+                          <Button variant="primary" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
+                            + Добавить план
+                          </Button>
+                        ) : (
+                          <Button variant="outline" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
+                            + Добавить данные
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button
                       variant="secondary"

@@ -342,9 +342,50 @@ export const workloadService = {
 
   // === UNIFIED WORKLOAD OPERATIONS ===
 
-  // Get unified workload data (combined plans and actuals)
-  async getUnifiedWorkload(filters?: WorkloadFilters): Promise<UnifiedWorkload[]> {
+  // Get unified workload data for Employee (only their own data)
+  async getMyWorkload(filters?: Omit<WorkloadFilters, 'userId'>): Promise<UnifiedWorkload[]> {
     try {
+      // Build query parameters (without userId - extracted from JWT)
+      const params = new URLSearchParams();
+
+      if (filters?.projectId) {
+        params.append('projectId', filters.projectId);
+      }
+      if (filters?.type) {
+        params.append('type', filters.type);
+      }
+      if (filters?.startDate) {
+        params.append('startDate', filters.startDate);
+      }
+      if (filters?.endDate) {
+        params.append('endDate', filters.endDate);
+      }
+
+      const url = params.toString() ? `/workload/my?${params.toString()}` : '/workload/my';
+      const response = await apiRequest.get<UnifiedWorkload[]>(url);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching my workload:', error);
+      if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для просмотра рабочей нагрузки');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера при загрузке данных');
+      }
+      throw new Error(error.response?.data?.message || 'Ошибка при загрузке рабочей нагрузки');
+    }
+  },
+
+  // Get unified workload data (combined plans and actuals)
+  // For Manager/Admin: can filter by any userId
+  // For Employee: automatically uses /workload/my endpoint
+  async getUnifiedWorkload(filters?: WorkloadFilters, userRole?: string): Promise<UnifiedWorkload[]> {
+    try {
+      // If Employee role, use /workload/my endpoint
+      if (userRole === 'Employee') {
+        return await this.getMyWorkload(filters);
+      }
+
+      // For Manager/Admin, use /workload endpoint
       // Build query parameters
       const params = new URLSearchParams();
 
@@ -381,10 +422,10 @@ export const workloadService = {
   // === HELPER FUNCTIONS ===
 
   // Get workload statistics
-  async getWorkloadStats(filters?: WorkloadFilters): Promise<WorkloadStatsResponse> {
+  async getWorkloadStats(filters?: WorkloadFilters, userRole?: string): Promise<WorkloadStatsResponse> {
     try {
       // Get unified workload data and calculate stats
-      const workloads = await this.getUnifiedWorkload(filters);
+      const workloads = await this.getUnifiedWorkload(filters, userRole);
 
       const stats: WorkloadStatsResponse = {
         totalPlanned: workloads.filter(w => w.planId).length,

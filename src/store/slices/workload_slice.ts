@@ -187,9 +187,13 @@ export const deleteWorkloadActual = createAsyncThunk(
 // Fetch unified workload data
 export const fetchUnifiedWorkload = createAsyncThunk(
   'workload/fetchUnifiedWorkload',
-  async (filters: WorkloadFilters | undefined = undefined, { rejectWithValue }) => {
+  async (filters: WorkloadFilters | undefined = undefined, { rejectWithValue, getState }) => {
     try {
-      const unified = await workloadService.getUnifiedWorkload(filters);
+      // Get current user role from auth state
+      const state = getState() as any;
+      const userRole = state.auth?.user?.role;
+
+      const unified = await workloadService.getUnifiedWorkload(filters, userRole);
       return unified;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Ошибка при загрузке рабочей нагрузки');
@@ -200,9 +204,13 @@ export const fetchUnifiedWorkload = createAsyncThunk(
 // Fetch workload statistics
 export const fetchWorkloadStats = createAsyncThunk(
   'workload/fetchWorkloadStats',
-  async (filters: WorkloadFilters | undefined = undefined, { rejectWithValue }) => {
+  async (filters: WorkloadFilters | undefined = undefined, { rejectWithValue, getState }) => {
     try {
-      const stats = await workloadService.getWorkloadStats(filters);
+      // Get current user role from auth state
+      const state = getState() as any;
+      const userRole = state.auth?.user?.role;
+
+      const stats = await workloadService.getWorkloadStats(filters, userRole);
       return stats;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Ошибка при загрузке статистики');

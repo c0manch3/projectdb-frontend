@@ -84,6 +84,7 @@ function WorkloadDetailsModal({
   // Role-based permissions
   const canEdit = isManager || (!isPast && workloads.some(w => w.userId === currentUserId));
   const canCreate = !isPast && currentUser; // Authenticated users can create workload
+  const canCreatePlan = isManager && !isPastOrToday; // Only Manager can create plans
   const canEditOtherUsers = isManager;
   const canDeleteWorkload = isManager || workloads.some(w => w.userId === currentUserId && !isPast);
 
@@ -99,8 +100,12 @@ function WorkloadDetailsModal({
   // Initialize form when modal opens
   useEffect(() => {
     if (isOpen) {
-      // If no workloads, go directly to create-plan mode
-      setMode(workloads.length === 0 ? 'create-plan' : 'view');
+      // If no workloads and user is Manager, go to create-plan mode
+      // Otherwise, just show view mode
+      const initialMode = workloads.length === 0 && currentUser?.role === 'Manager' && !isPastOrToday
+        ? 'create-plan'
+        : 'view';
+      setMode(initialMode);
       setSelectedWorkload(null);
       setFormData({
         userId: selectedEmployeeId || currentUser?.id || '',
@@ -111,7 +116,7 @@ function WorkloadDetailsModal({
       });
       setErrors({});
     }
-  }, [isOpen, date, currentUser?.id, workloads.length, selectedEmployeeId]);
+  }, [isOpen, date, currentUser?.id, currentUser?.role, workloads.length, selectedEmployeeId, isPastOrToday]);
 
   // Get employee name
   const getEmployeeName = (userId: string): string => {
@@ -356,7 +361,8 @@ function WorkloadDetailsModal({
                 <h3>Нет запланированной работы</h3>
                 <p>На эту дату нет запланированной работы или отчетов о проделанной работе.</p>
 
-                {canCreate && !isPastOrToday && (
+                {/* Only Manager can create plans */}
+                {canCreatePlan && (
                   <div className="workload-details-modal__empty-actions">
                     <Button
                       variant="primary"
@@ -394,9 +400,6 @@ function WorkloadDetailsModal({
                           <h4>{getEmployeeName(workload.userId)}</h4>
                           <p>{getProjectName(workload.projectId)}</p>
                         </div>
-                        <div className="workload-details-modal__workload-status">
-                          {getWorkloadStatusLabel(workload)}
-                        </div>
                       </div>
 
                       <div className="workload-details-modal__workload-content">
@@ -414,17 +417,16 @@ function WorkloadDetailsModal({
                         )}
                       </div>
 
-                      {(canEdit && (workload.userId === currentUserId || isManager) && !isPast) && (
+                      {/* Only Manager can delete plans */}
+                      {isManager && workload.planId && !isPastOrToday && (
                         <div className="workload-details-modal__workload-actions">
-                          {workload.planId && !isPastOrToday && (
-                            <Button
-                              variant="warning"
-                              size="small"
-                              onClick={() => handleDeletePlan(workload)}
-                            >
-                              Удалить из плана
-                            </Button>
-                          )}
+                          <Button
+                            variant="warning"
+                            size="small"
+                            onClick={() => handleDeletePlan(workload)}
+                          >
+                            Удалить из плана
+                          </Button>
                         </div>
                       )}
                     </motion.div>
