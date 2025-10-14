@@ -1,0 +1,114 @@
+name: Deploy to Production
+
+# Trigger deployment when code is pushed to main or development branch
+on:
+  push:
+    branches:
+      - main
+      - development
+
+# Cancel in-progress deployments for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Build
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npx vite build
+        env:
+          VITE_API_BASE_URL: http://209.38.74.75:3000
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # Job 2: Deploy to Production
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://lencondb.ru
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Deploy to server via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/var/www/lencondb.ru/"
+          strip_components: 1
+          rm: true
+
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== Reloading Nginx ==="
+            systemctl reload nginx
+            echo "✅ Deployment completed successfully!"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Deployment completed successfully!"
+            echo "🌐 Frontend: http://209.38.74.75"
+          else
+            echo "❌ Deployment failed!"
+          fi
+
+  # Job 3: Verify Deployment
+  verify:
+    name: Verify Deployment
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check frontend availability
+        run: |
+          echo "Checking frontend availability..."
+          sleep 5
+
+          # Check HTTP endpoint
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://209.38.74.75)
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Frontend is accessible (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Frontend is not accessible (HTTP $HTTP_CODE)"
+            exit 1
+          fi
