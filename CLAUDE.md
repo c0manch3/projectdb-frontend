@@ -15,6 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:watch` - Run Jest tests in watch mode
 - `npm run test:coverage` - Run Jest tests with coverage report
 
+## Backend Configuration
+
+- **Backend API** runs on `localhost:3000` during development
+- All API requests are configured to communicate with the backend server at this address
+
 ## Architecture
 
 This is a React + TypeScript frontend application using:
@@ -75,7 +80,7 @@ export default ProjectList;
 
 ## Styling Approach
 
-- All styles should be in `public/style.css`
+- All styles should be in `src/styles/style.css`
 - Use **BEM methodology** for CSS class naming
 - **No inline styles** allowed
 - Use CSS custom properties (variables) for colors and dimensions
@@ -121,3 +126,13 @@ git push origin development
 ```
 
 This simplified workflow allows for faster development while maintaining clear commit history and progress tracking.
+
+## Documentation Storage
+
+All project documentation should be stored in the `about-project/` folder:
+
+- **`about-project/RPD.md`** - Product Requirements Document with full project specifications
+- **`about-project/PROJECT_STATUS.md`** - Current project status, progress, and development roadmap
+- **Additional documentation** - Any new project documentation, technical specs, or progress reports should be placed in the `about-project/` folder
+
+This centralized approach ensures all project documentation is easily accessible and well-organized for current and future team members.

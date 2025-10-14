@@ -153,17 +153,20 @@ LenconDB - система управления проектами и докум�
 ### 5.4 Управление документами
 
 #### 5.4.1 Типы документов
-**Проектная документация:**
-- КМ (km) - Конструкции металлические
-- КЖ (kz) - Конструкции железобетонные  
-- РПЗ (rpz) - Расчетно-пояснительная записка
 
-**Исходные данные:**
+**Документы проектов:**
 - ТЗ (tz) - Техническое задание
-- ГП (gp) - Генплан
-- ИГИ (igi) - Инженерно-геологические изыскания
-- СПОЗУ (spozu) - Схема планировочной организации земельного участка
-- Договор (contract)
+- Договор (contract) - Контракт
+
+**Документы сооружений:**
+- Рабочая документация (working_documentation) - Рабочая документация
+- Проектная документация (project_documentation) - Проектная документация
+
+**Важно:**
+- Документы проектов могут использовать только типы: tz, contract
+- Документы сооружений могут использовать только типы: working_documentation, project_documentation
+- Для документов сооружений поддерживается версионирование (v1, v2, v3 и т.д.)
+- Каждая новая версия документа сооружения сохраняется в отдельной папке версии
 
 #### 5.4.2 Операции с документами
 - Загрузка файлов (до 100 МБ)
@@ -174,6 +177,8 @@ LenconDB - система управления проектами и докум�
 - Предпросмотр PDF
 - Фильтрация по типу документа
 - Поиск по названию
+- **Замена документа с созданием новой версии** (только для документов сооружений)
+- Просмотр истории версий документа
 
 ### 5.5 Управление компаниями
 
@@ -422,11 +427,20 @@ PATCH  /company/:uuid     - Обновить компанию (Admin тольк�
 
 #### Project (/project)
 ```
-GET    /project/:id       - Получить проект по ID
-GET    /project/         - Получить все проекты
-POST   /project/create   - Создать проект (Manager+)
-DELETE /project/:id      - Удалить проект (Admin только)
-PATCH  /project/:id      - Обновить проект (Admin только)
+GET    /project                    - Получить все проекты (с фильтрами)
+GET    /project/:id               - Получить проект по ID
+POST   /project/create           - Создать проект (Admin/Manager)
+PATCH  /project/:id              - Обновить проект (Admin/Manager)
+DELETE /project/:id              - Удалить проект (Admin/Manager)
+GET    /project/stats            - Получить статистику проектов
+GET    /project/by-manager/:managerId - Получить проекты менеджера
+
+# Фильтры для GET /project:
+# ?status=active|completed|overdue
+# &customerId=uuid
+# &managerId=uuid
+# &type=main|additional
+# &search=название
 ```
 
 #### Construction (/construction)
@@ -438,12 +452,6 @@ DELETE /construction/:id     - Удалить конструкцию (Manager+)
 PATCH  /construction/:id     - Обновить конструкцию (Manager+)
 ```
 
-#### Document (/document)
-```
-POST   /document/upload      - Загрузить документ (Manager+)
-GET    /document/:fileId     - Получить документ по ID
-GET    /document/:projectId  - Получить документы по ID проекта
-```
 
 #### Workload Plan (/workload-plan)
 ```
@@ -474,17 +482,38 @@ PATCH  /auth/change-password  - Изменить пароль (для себя)
 
 #### Projects
 ```
-GET    /project/:id/users     - Получить участников проекта
-POST   /project/:id/users     - Добавить участника в проект
-DELETE /project/:id/users/:userId - Удалить участника из проекта
-GET    /project/by-manager/:managerId - Проекты менеджера
+GET    /project                         - Получить все проекты (с фильтрами)
+GET    /project/:id                    - Получить проект по ID
+POST   /project/create                 - Создать проект (Admin/Manager)
+PATCH  /project/:id                    - Обновить проект (Admin/Manager)
+DELETE /project/:id                    - Удалить проект (Admin/Manager)
+GET    /project/stats                  - Получить статистику проектов
+GET    /project/by-manager/:managerId  - Получить проекты менеджера
+GET    /project/:id/users              - Получить участников проекта
+POST   /project/:id/users              - Добавить участника в проект
+DELETE /project/:id/users/:userId      - Удалить участника из проекта
+
+# Фильтры для GET /project:
+# ?status=active|completed|overdue&customerId=uuid&managerId=uuid&type=main|additional&search=название
 ```
 
 #### Documents
 ```
-DELETE /document/:id          - Удалить документ
-GET    /construction/:id/documents - Документы конструкции
-GET    /document/download/:id - Скачать файл документа
+GET    /document/:id                    - Получить информацию о документе (включая path для скачивания)
+DELETE /document/:id                    - Удалить документ
+GET    /document/project/:projectId     - Получить документы проекта (с фильтрами)
+GET    /document/construction/:constructionId - Получить документы конструкции
+POST   /document/upload                 - Загрузить документ
+PUT    /document/:fileId/replace        - Заменить документ с созданием новой версии (только для документов сооружений)
+
+# Скачивание файлов (двухэтапный процесс):
+# 1. GET /document/:id -> получить информацию с полем path
+# 2. GET [path] -> скачать файл по пути из первого запроса
+
+# Версионирование:
+# - PUT /document/:fileId/replace создает новую версию в папке v2, v3 и т.д.
+# - Версионирование доступно только для документов сооружений (working_documentation, project_documentation)
+# - Попытка заменить документ проекта (tz, contract) вернет ошибку
 ```
 
 #### Workload
@@ -540,12 +569,15 @@ GET    /auth?role=Employee&companyId=uuid
 ```typescript
 {
   file: File;
-  type: "km" | "kz" | "rpz" | "tz" | "gp" | "igi" | "spozu" | "contract";
-  context: "initial_data" | "project_doc";
-  version: number;
-  projectId: string;
-  constructionId?: string;
+  type: "tz" | "contract" | "working_documentation" | "project_documentation";
+  projectId?: string;      // Обязательно для type: "tz" | "contract"
+  constructionId?: string; // Обязательно для type: "working_documentation" | "project_documentation"
 }
+
+// Примечания:
+// - Для документов проектов (tz, contract): требуется projectId, constructionId должен быть пустым
+// - Для документов сооружений (working_documentation, project_documentation): требуется constructionId, projectId должен быть пустым
+// - Версия автоматически определяется бэкендом для документов сооружений
 ```
 
 #### CreateWorkloadPlanDto
@@ -771,7 +803,7 @@ function ProjectList(): JSX.Element {
 ```
 
 ### 11.2 Стилизация
-- Все стили в `public/style.css`
+- Все стили в `src/styles/style.css`
 - БЭМ методология для именования классов
 - Никаких inline стилей
 - CSS переменные для цветов и размеров
@@ -851,7 +883,7 @@ function NotFound(): JSX.Element {
 }
 ```
 
-### 11.4 Стили для страницы 404 (в public/style.css)
+### 11.4 Стили для страницы 404 (в src/styles/style.css)
 
 ```css
 /* Страница 404 - Not Found */
@@ -1018,10 +1050,13 @@ function NotFound(): JSX.Element {
 ## 13. Технические особенности реализации
 
 ### 13.1 Файловая система документов
-- **Путь хранения**: `/uploads/{year}/{newName}/{hashName}_{originalName}`
+- **Путь хранения**: `/uploads/{year}/{constructionName или projectName}/{v1, v2, v3...}/{hashName}_{originalName}`
 - **Максимальный размер**: 100 МБ
 - **Поддерживаемые форматы**: PDF, DWG, DOC, DOCX, XLS, XLSX
-- **Версионирование**: Поле version в БД (только последняя версия в MVP)
+- **Версионирование**:
+  - Для документов сооружений: автоматическое создание папок версий (v1, v2, v3...)
+  - Для документов проектов: без версионирования, хранятся в корневой папке проекта
+  - Endpoint для создания новой версии: `PUT /document/:fileId/replace`
 
 ### 13.2 Интеграция с Telegram
 - **Поле telegramId** у пользователей для связи аккаунтов
@@ -1176,17 +1211,15 @@ const groupProjects = (projects: Project[]) => {
 ## 17. Глоссарий
 
 - **ЖБК** - Железобетонные конструкции
-- **КЖ** - Конструкции железобетонные (раздел проекта)
-- **КМ** - Конструкции металлические (раздел проекта)
-- **РПЗ** - Расчетно-пояснительная записка
-- **ТЗ** - Техническое задание
-- **ГП** - Генеральный план
-- **ИГИ** - Инженерно-геологические изыскания
-- **СПОЗУ** - Схема планировочной организации земельного участка
+- **ТЗ** - Техническое задание (тип документа проекта)
+- **Договор (Contract)** - Контракт (тип документа проекта)
+- **Рабочая документация (Working Documentation)** - Рабочая документация сооружения
+- **Проектная документация (Project Documentation)** - Проектная документация сооружения
 - **JWT** - JSON Web Token
 - **MVP** - Minimum Viable Product
 - **CRUD** - Create, Read, Update, Delete
 - **SPA** - Single Page Application
+- **Версионирование** - Автоматическое создание папок версий (v1, v2, v3...) для документов сооружений
 
 ## 18. Приложения
 
@@ -1226,16 +1259,25 @@ Headers: { Authorization: "Bearer {token}" }
 
 #### Загрузка документа
 ```javascript
+// Загрузка документа проекта (ТЗ)
 POST /document/upload
 Content-Type: multipart/form-data
 
 FormData:
 - file: File
-- type: "kz"
-- context: "project_doc"
-- version: 1
+- type: "tz"
 - projectId: "uuid"
-- constructionId?: "uuid"
+
+// Загрузка документа сооружения (Рабочая документация)
+POST /document/upload
+Content-Type: multipart/form-data
+
+FormData:
+- file: File
+- type: "working_documentation"
+- constructionId: "uuid"
+
+// Версия автоматически определяется бэкендом
 ```
 
 #### Плановая загруженность
@@ -1379,6 +1421,270 @@ const ProtectedRoute = ({ children, roles }) => {
 
 При следовании данному PRD и соблюдении технических требований, система будет успешно внедрена и обеспечит значительное повышение эффективности работы конструкторского бюро.
 
-**Версия документа**: 1.0
+---
+
+## Приложение Г: API для работы с документами
+
+### Общие требования
+- Все запросы требуют JWT токен в заголовке `Authorization: Bearer {token}`
+- Доступ контролируется ролями (Admin, Manager, Employee, Customer)
+- Поддержка кириллических имен файлов
+- Статические файлы с настройками `etag: true` для кэширования
+
+### Эндпоинты
+
+#### Получение информации о документе
+```
+GET /document/:fileId
+Authorization: Bearer {token}
+
+Response:
+{
+  id: string;
+  originalName: string;
+  hashName: string;
+  mimetype: string;
+  size: number;
+  path: string; // Полный URL для скачивания
+  type: string;
+  context: string;
+  version: number;
+  projectId?: string;
+  constructionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Получение документов проекта
+```
+GET /document/project/:projectId
+Authorization: Bearer {token}
+Query params: type?, context?, version?
+
+Response: Массив документов с теми же полями
+```
+
+#### Получение документов конструкции
+```
+GET /document/construction/:constructionId
+Authorization: Bearer {token}
+Query params: type?, context?, version?
+
+Path Parameters:
+- constructionId: string (UUID) - ID конструкции
+
+Response: Массив документов с теми же полями
+
+Пример:
+GET /document/construction/12345678-1234-1234-1234-123456789abc
+```
+
+#### Загрузка документа
+```
+POST /document/upload
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+FormData:
+- file: File
+- type: 'tz' | 'contract' | 'working_documentation' | 'project_documentation'
+- projectId?: string      (обязательно для type: 'tz' | 'contract')
+- constructionId?: string (обязательно для type: 'working_documentation' | 'project_documentation')
+
+Response: Document object
+
+Примечания:
+- Версия автоматически определяется бэкендом для документов сооружений
+- Для документов проектов (tz, contract) - только projectId
+- Для документов сооружений (working_documentation, project_documentation) - только constructionId
+```
+
+#### Удаление документа
+```
+DELETE /document/:id
+Authorization: Bearer {token}
+
+Response: 204 No Content
+```
+
+### Реализация скачивания на фронтенде
+
+#### Прямое скачивание через ссылку
+```typescript
+// Получить документ и использовать поле path
+const document = await fetch('/api/document/fileId', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const data = await document.json();
+
+// data.path содержит готовый URL для скачивания
+window.open(data.path, '_blank');
+```
+
+#### Скачивание с сохранением оригинального имени
+```typescript
+const downloadFile = async (fileId: string, token: string) => {
+  const response = await fetch(`/api/document/${fileId}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const fileInfo = await response.json();
+
+  // Скачивание файла
+  const fileResponse = await fetch(fileInfo.path, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  const blob = await fileResponse.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileInfo.originalName;
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+};
+```
+
+### Особенности
+1. **Поддержка кириллицы**: Сервер корректно обрабатывает русские имена файлов
+2. **Статические файлы**: Используется ServeStaticModule с настройками etag: true для кэширования
+3. **Безопасность**: Все операции защищены JWT авторизацией
+4. **Фильтрация**: Можно фильтровать документы по типу, контексту и версии
+
+---
+
+## Приложение Д: API для работы с проектами
+
+### Основные CRUD операции
+
+#### Получение всех проектов
+```
+GET /project
+Authorization: Bearer {token}
+Query parameters:
+- status?: 'active' | 'completed' | 'overdue'
+- customerId?: string (UUID)
+- managerId?: string (UUID)
+- type?: 'main' | 'additional'
+- search?: string (поиск по названию)
+
+Response: Project[]
+```
+
+#### Получение проекта по ID
+```
+GET /project/:id
+Authorization: Bearer {token}
+
+Response: Project
+{
+  id: string;
+  name: string;
+  customerId: string;
+  contractDate: string; // ISO date
+  expirationDate: string; // ISO date
+  cost: number;
+  type: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string; // для дополнительных соглашений
+  status: 'active' | 'completed' | 'overdue';
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Создание проекта
+```
+POST /project/create
+Authorization: Bearer {token}
+Content-Type: application/json
+Permissions: Admin, Manager
+
+Body: CreateProjectDto
+{
+  name: string;
+  customerId: string;
+  contractDate: string; // ISO date
+  expirationDate: string; // ISO date
+  cost: number;
+  type: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string; // обязательно для type: 'additional'
+}
+
+Response: Project
+```
+
+#### Обновление проекта
+```
+PATCH /project/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+Permissions: Admin, Manager
+
+Body: UpdateProjectDto (все поля опциональны)
+{
+  name?: string;
+  customerId?: string;
+  contractDate?: string;
+  expirationDate?: string;
+  cost?: number;
+  type?: 'main' | 'additional';
+  managerId?: string;
+  mainProjectId?: string;
+  status?: 'active' | 'completed' | 'overdue';
+}
+
+Response: Project
+```
+
+#### Удаление проекта
+```
+DELETE /project/:id
+Authorization: Bearer {token}
+Permissions: Admin, Manager
+
+Response: 204 No Content
+```
+
+
+### Связанные операции
+
+#### Получение проектов менеджера
+```
+GET /project/by-manager/:managerId
+Authorization: Bearer {token}
+
+Response: Project[]
+```
+
+#### Работа с участниками проекта
+```
+GET /project/:id/users
+Authorization: Bearer {token}
+Response: User[]
+
+POST /project/:id/users
+Authorization: Bearer {token}
+Body: { userId: string }
+Response: 201 Created
+
+DELETE /project/:id/users/:userId
+Authorization: Bearer {token}
+Response: 204 No Content
+```
+
+### Валидация и бизнес-правила
+
+1. **Валидация дат**: contractDate должна быть раньше expirationDate
+2. **Валидация стоимости**: cost должна быть больше 0
+3. **Дополнительные соглашения**: при type='additional' обязательно mainProjectId
+4. **Уникальность**: name должно быть уникальным
+5. **Статус проекта**: автоматически определяется на основе дат
+
+**Версия документа**: 1.2
 **Дата создания**: Январь 2025
+**Дата обновления**: Сентябрь 2025 (добавлена детальная документация по API документов и проектов)
 **Автор**: LenconDB Team
