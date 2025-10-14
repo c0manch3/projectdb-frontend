@@ -1,11 +1,10 @@
 name: Deploy to Production
 
-# Trigger deployment when code is pushed to main or development branch
+# Trigger deployment only when pull request is merged to main
 on:
   push:
     branches:
       - main
-      - development
 
 # Cancel in-progress deployments for the same branch
 concurrency:
