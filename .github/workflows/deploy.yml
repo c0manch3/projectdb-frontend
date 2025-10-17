@@ -67,7 +67,7 @@ jobs:
           source: "dist/*"
           target: "/var/www/lencondb.ru/"
           strip_components: 1
-          rm: true
+          overwrite: true
 
       - name: Reload Nginx
         uses: appleboy/ssh-action@master
@@ -77,7 +77,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "=== Reloading Nginx ==="
-            systemctl reload nginx
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S systemctl reload nginx
             echo "✅ Deployment completed successfully!"
 
       - name: Notify deployment status
