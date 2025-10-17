@@ -3,7 +3,8 @@ import { store } from '../store';
 import { updateAccessToken, logout } from '../store/slices/auth_slice';
 
 // API Configuration
-export const API_BASE_URL = 'http://localhost:3000';
+// Use environment variable if available, fallback to default
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://80.249.146.121:3000';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
