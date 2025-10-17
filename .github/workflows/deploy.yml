@@ -33,7 +33,7 @@ jobs:
       - name: Build application
         run: npx vite build
         env:
-          VITE_API_BASE_URL: http://209.38.74.75:3000
+          VITE_API_BASE_URL: http://80.249.146.121:3000
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -85,7 +85,7 @@ jobs:
         run: |
           if [ "${{ job.status }}" = "success" ]; then
             echo "✅ Deployment completed successfully!"
-            echo "🌐 Frontend: http://209.38.74.75"
+            echo "🌐 Frontend: https://lencondb.ru"
           else
             echo "❌ Deployment failed!"
           fi
@@ -102,8 +102,8 @@ jobs:
           echo "Checking frontend availability..."
           sleep 5
 
-          # Check HTTP endpoint
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://209.38.74.75)
+          # Check HTTPS endpoint
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://lencondb.ru)
 
           if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Frontend is accessible (HTTP $HTTP_CODE)"
