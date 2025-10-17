@@ -32,8 +32,6 @@ jobs:
 
       - name: Build application
         run: npx vite build
-        env:
-          VITE_API_BASE_URL: http://80.249.146.121:3000
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -3,8 +3,8 @@ import { store } from '../store';
 import { updateAccessToken, logout } from '../store/slices/auth_slice';
 
 // API Configuration
-// Use environment variable if available, fallback to default
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://80.249.146.121:3000';
+// Use environment variable if available, fallback to /api proxy
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
