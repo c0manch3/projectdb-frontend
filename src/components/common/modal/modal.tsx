@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, ReactElement, cloneElement, isValidElement } from 'react';
 
 interface ModalHeaderProps {
   children: ReactNode;
@@ -63,6 +63,25 @@ function Modal({ children, isOpen = false, onClose, id, className = '', title, s
   // Don't render at all when closed (for better performance)
   if (!isOpen) return <></>;
 
+  // Process children to inject onClose into Modal.Header
+  const processChildren = (children: ReactNode): ReactNode => {
+    return Array.isArray(children)
+      ? children.map((child, index) => {
+          if (isValidElement(child) && (child.type as any) === ModalHeader) {
+            return cloneElement(child as ReactElement<ModalHeaderProps>, {
+              key: index,
+              onClose: child.props.onClose || onClose
+            });
+          }
+          return child;
+        })
+      : isValidElement(children) && (children.type as any) === ModalHeader
+      ? cloneElement(children as ReactElement<ModalHeaderProps>, {
+          onClose: children.props.onClose || onClose
+        })
+      : children;
+  };
+
   return (
     <div
       className={overlayClasses}
@@ -80,7 +99,7 @@ function Modal({ children, isOpen = false, onClose, id, className = '', title, s
             <div className="modal__content">{children}</div>
           </>
         ) : (
-          children
+          processChildren(children)
         )}
       </div>
     </div>

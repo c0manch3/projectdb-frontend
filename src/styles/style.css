@@ -2605,6 +2605,51 @@ a:hover {
   color: var(--text-secondary);
 }
 
+.form__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form__input-wrapper .form__input {
+  padding-right: 3rem;
+  flex: 1;
+}
+
+.form__password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  border-radius: 0.25rem;
+}
+
+.form__password-toggle:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.form__password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.form__password-icon {
+  width: 20px;
+  height: 20px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .form__error {
   font-size: 0.75rem;
   color: var(--danger);
