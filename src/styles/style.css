@@ -2728,8 +2728,17 @@ a:hover {
   background: var(--surface);
 }
 
+.table__row--clickable {
+  cursor: pointer;
+}
+
+.table__row--clickable:hover {
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
 .table__cell {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-sm);
   color: var(--text-primary);
   vertical-align: middle;
 }
@@ -2737,6 +2746,8 @@ a:hover {
 .table__cell--actions {
   text-align: right;
   white-space: nowrap;
+  width: 1%;
+  padding-right: var(--spacing-md);
 }
 
 .table__actions {
@@ -2745,6 +2756,94 @@ a:hover {
   gap: var(--spacing-sm);
   justify-content: flex-end;
 }
+
+/* Employee-specific table styles */
+.employee-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.table__row--clickable:hover .employee-name {
+  color: var(--primary);
+}
+
+.employee-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.employee-actions .button {
+  font-size: 0.7rem !important;
+  padding: 0.25rem 0.5rem !important;
+  min-width: auto !important;
+  white-space: nowrap !important;
+}
+
+/* Company-specific table styles */
+.company-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.table__row--clickable:hover .company-name {
+  color: var(--primary);
+}
+
+.company-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.company-actions .button {
+  font-size: 0.7rem !important;
+  padding: 0.25rem 0.5rem !important;
+  min-width: auto !important;
+  white-space: nowrap !important;
+}
+
+/* Project-specific table styles */
+.project-name__text {
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.table__row--clickable:hover .project-name__text {
+  color: var(--primary);
+}
+
+.project-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.project-actions .button {
+  font-size: 0.7rem !important;
+  padding: 0.25rem 0.5rem !important;
+  min-width: auto !important;
+  white-space: nowrap !important;
+}
+
+.employee-actions .button,
+.company-actions .button,
+.project-actions .button {
+  flex-shrink: 0;
+}
+
 
 /* Status Badges */
 .status-badge {
