@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { PageTitle } from '../../const';
 import Header from '../../components/layout/header/header';
@@ -43,6 +43,7 @@ import type { Project } from '../../store/types';
 
 function Projects(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   // Redux state
   const filteredProjects = useSelector(selectFilteredProjects);
@@ -335,20 +336,21 @@ function Projects(): JSX.Element {
                     <Table.Header>Срок сдачи</Table.Header>
                     <Table.Header>Стоимость</Table.Header>
                     <Table.Header>Статус</Table.Header>
-                    <Table.Header>Действия</Table.Header>
+                    {(canEditProjects || canDeleteProjects) && <Table.Header>Действия</Table.Header>}
                   </tr>
                 </Table.Head>
                 <Table.Body>
                   {filteredProjects.map((project) => (
-                    <tr key={project.id}>
+                    <tr
+                      key={project.id}
+                      className="table__row table__row--clickable"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
                       <Table.Cell>
                         <div className="project-name">
-                          <Link
-                            to={`/projects/${project.id}`}
-                            className="project-name__link"
-                          >
+                          <span className="project-name__text">
                             {project.name}
-                          </Link>
+                          </span>
                           {project.type === 'additional' && (
                             <span className="project-type-badge project-type-badge--additional">
                               Доп.
@@ -370,36 +372,30 @@ function Projects(): JSX.Element {
                           {getStatusLabel(project.status)}
                         </span>
                       </Table.Cell>
-                      <Table.Cell>
-                        <Button
-                          variant="secondary"
-                          size="small"
-                          onClick={() => handleView(project)}
-                          style={{ marginRight: '0.25rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                        >
-                          Просмотр
-                        </Button>
-                        {canEditProjects && (
-                          <Button
-                            variant="secondary"
-                            size="small"
-                            onClick={() => handleEdit(project)}
-                            style={{ marginRight: '0.25rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                          >
-                            Изменить
-                          </Button>
-                        )}
-                        {canDeleteProjects && (
-                          <Button
-                            variant="secondary"
-                            size="small"
-                            onClick={() => handleDelete(project)}
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                          >
-                            Удалить
-                          </Button>
-                        )}
-                      </Table.Cell>
+                      {(canEditProjects || canDeleteProjects) && (
+                        <Table.Cell className="table__cell--actions">
+                          <div className="project-actions" onClick={(e) => e.stopPropagation()}>
+                            {canEditProjects && (
+                              <Button
+                                variant="secondary"
+                                size="small"
+                                onClick={() => handleEdit(project)}
+                              >
+                                Изменить
+                              </Button>
+                            )}
+                            {canDeleteProjects && (
+                              <Button
+                                variant="secondary"
+                                size="small"
+                                onClick={() => handleDelete(project)}
+                              >
+                                Удалить
+                              </Button>
+                            )}
+                          </div>
+                        </Table.Cell>
+                      )}
                     </tr>
                   ))}
                 </Table.Body>

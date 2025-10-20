@@ -253,32 +253,31 @@ function Companies(): JSX.Element {
                     <Table.Header>Тип</Table.Header>
                     <Table.Header>Email</Table.Header>
                     <Table.Header>Телефон</Table.Header>
-                    <Table.Header>Действия</Table.Header>
+                    {canManageCompanies && <Table.Header>Действия</Table.Header>}
                   </tr>
                 </Table.Head>
                 <Table.Body id="companiesTableBody">
                   {filteredCompanies.map((company) => (
-                    <tr key={company.id}>
-                      <td>{company.name}</td>
-                      <td>{getCompanyTypeDisplayName(company.type)}</td>
-                      <td>{company.email || 'Не указан'}</td>
-                      <td>{company.phone || 'Не указан'}</td>
-                      <td>
-                        <Button
-                          size="small"
-                          variant="secondary"
-                          onClick={() => handleView(company)}
-                          style={{ marginRight: '0.5rem' }}
-                        >
-                          Просмотр
-                        </Button>
-                        {canManageCompanies && (
-                          <>
+                    <tr
+                      key={company.id}
+                      className="table__row table__row--clickable"
+                      onClick={() => handleView(company)}
+                    >
+                      <Table.Cell>
+                        <span className="company-name">
+                          {company.name}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>{getCompanyTypeDisplayName(company.type)}</Table.Cell>
+                      <Table.Cell>{company.email || 'Не указан'}</Table.Cell>
+                      <Table.Cell>{company.phone || 'Не указан'}</Table.Cell>
+                      {canManageCompanies && (
+                        <Table.Cell className="table__cell--actions">
+                          <div className="company-actions" onClick={(e) => e.stopPropagation()}>
                             <Button
                               size="small"
                               variant="secondary"
                               onClick={() => handleEdit(company)}
-                              style={{ marginRight: '0.5rem' }}
                             >
                               Редактировать
                             </Button>
@@ -289,9 +288,9 @@ function Companies(): JSX.Element {
                             >
                               Удалить
                             </Button>
-                          </>
-                        )}
-                      </td>
+                          </div>
+                        </Table.Cell>
+                      )}
                     </tr>
                   ))}
                 </Table.Body>

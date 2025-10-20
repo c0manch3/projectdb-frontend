@@ -253,29 +253,38 @@ function Employees(): JSX.Element {
                 </Table.Head>
                 <Table.Body id="employeesTableBody">
                   {filteredUsers.map((employee) => (
-                    <tr key={employee.id}>
-                      <td>{employee.firstName} {employee.lastName}</td>
-                      <td>{employee.email}</td>
-                      <td>{employee.phone || 'Не указан'}</td>
-                      <td>{getRoleDisplayName(employee.role)}</td>
+                    <tr
+                      key={employee.id}
+                      className={`table__row ${canManageEmployees ? 'table__row--clickable' : ''}`}
+                      onClick={() => canManageEmployees && handleEdit(employee)}
+                    >
+                      <Table.Cell>
+                        <span className="employee-name">
+                          {employee.firstName} {employee.lastName}
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>{employee.email}</Table.Cell>
+                      <Table.Cell>{employee.phone || 'Не указан'}</Table.Cell>
+                      <Table.Cell>{getRoleDisplayName(employee.role)}</Table.Cell>
                       {canManageEmployees && (
-                        <td>
-                          <Button 
-                            size="small" 
-                            variant="secondary"
-                            onClick={() => handleEdit(employee)}
-                            style={{ marginRight: '0.5rem' }}
-                          >
-                            Редактировать
-                          </Button>
-                          <Button 
-                            size="small" 
-                            variant="secondary"
-                            onClick={() => handleDelete(employee)}
-                          >
-                            Удалить
-                          </Button>
-                        </td>
+                        <Table.Cell className="table__cell--actions">
+                          <div className="employee-actions" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="small"
+                              variant="secondary"
+                              onClick={() => handleEdit(employee)}
+                            >
+                              Редактировать
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="secondary"
+                              onClick={() => handleDelete(employee)}
+                            >
+                              Удалить
+                            </Button>
+                          </div>
+                        </Table.Cell>
                       )}
                     </tr>
                   ))}
