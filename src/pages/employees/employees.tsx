@@ -16,6 +16,7 @@ import LoadingState from '../../components/common/loading_state/loading_state';
 import EmptyState from '../../components/common/empty_state/empty_state';
 import AddEmployeeModal from '../../components/modals/AddEmployeeModal';
 import EditEmployeeModal from '../../components/modals/EditEmployeeModal';
+import EmployeeDetailsModal from '../../components/modals/EmployeeDetailsModal';
 import ConfirmDeleteModal from '../../components/modals/ConfirmDeleteModal';
 
 import type { AppDispatch } from '../../store';
@@ -48,6 +49,7 @@ function Employees(): JSX.Element {
   
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<User | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -79,8 +81,18 @@ function Employees(): JSX.Element {
   };
 
   // Handle employee actions
+  const handleView = (employee: User) => {
+    setEditingEmployee(employee);
+    setShowDetailsModal(true);
+  };
+
   const handleEdit = (employee: User) => {
     setEditingEmployee(employee);
+    setShowEditModal(true);
+  };
+
+  const handleEditFromDetails = (employee: User) => {
+    setShowDetailsModal(false);
     setShowEditModal(true);
   };
 
@@ -256,7 +268,7 @@ function Employees(): JSX.Element {
                     <tr
                       key={employee.id}
                       className={`table__row ${canManageEmployees ? 'table__row--clickable' : ''}`}
-                      onClick={() => canManageEmployees && handleEdit(employee)}
+                      onClick={() => canManageEmployees && handleView(employee)}
                     >
                       <Table.Cell>
                         <span className="employee-name">
@@ -296,14 +308,25 @@ function Employees(): JSX.Element {
       </main>
 
       {/* Add Employee Modal */}
-      <AddEmployeeModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <AddEmployeeModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
-      
+
+      {/* Employee Details Modal */}
+      <EmployeeDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setEditingEmployee(null);
+        }}
+        employee={editingEmployee}
+        onEdit={canManageEmployees ? handleEditFromDetails : undefined}
+      />
+
       {/* Edit Employee Modal */}
-      <EditEmployeeModal 
-        isOpen={showEditModal} 
+      <EditEmployeeModal
+        isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
           setEditingEmployee(null);
@@ -312,7 +335,7 @@ function Employees(): JSX.Element {
       />
 
       {/* Confirm Delete Modal */}
-      <ConfirmDeleteModal 
+      <ConfirmDeleteModal
         isOpen={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);

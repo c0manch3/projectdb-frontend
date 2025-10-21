@@ -90,7 +90,7 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
         lastName: employee.lastName,
         email: employee.email,
         phone: employee.phone,
-        telegramId: employee.telegramId ? String(employee.telegramId) : '',
+        telegramId: employee.telegramId || '',
         role: employee.role,
         dateBirth: employee.dateBirth ? employee.dateBirth.split('T')[0] : '' // Convert to YYYY-MM-DD format
       });
@@ -116,12 +116,9 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
         dateBirth: data.dateBirth
       };
 
-      // Add telegramId only if provided and valid
+      // Add telegramId only if provided
       if (data.telegramId && data.telegramId.trim() !== '') {
-        const telegramIdNum = parseInt(data.telegramId, 10);
-        if (!isNaN(telegramIdNum)) {
-          updateEmployeeDto.telegramId = telegramIdNum;
-        }
+        updateEmployeeDto.telegramId = data.telegramId.trim();
       }
 
       await dispatch(updateEmployee({ id: employee.id, data: updateEmployeeDto })).unwrap();
@@ -235,7 +232,7 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
               <FormInput
                 id="telegramId"
                 type="text"
-                placeholder="@username или ID"
+                placeholder="Например: 1234567890"
                 {...register('telegramId')}
                 className={errors.telegramId ? 'error' : ''}
               />

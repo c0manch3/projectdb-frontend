@@ -110,12 +110,9 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
         dateBirth: data.dateBirth
       };
 
-      // Add telegramId only if provided and valid
+      // Add telegramId only if provided
       if (data.telegramId && data.telegramId.trim() !== '') {
-        const telegramIdNum = parseInt(data.telegramId, 10);
-        if (!isNaN(telegramIdNum)) {
-          createEmployeeDto.telegramId = telegramIdNum;
-        }
+        createEmployeeDto.telegramId = data.telegramId.trim();
       }
 
       await dispatch(createEmployee(createEmployeeDto)).unwrap();
@@ -229,7 +226,7 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
               <FormInput
                 id="telegramId"
                 type="text"
-                placeholder="@username или ID"
+                placeholder="Например: 1234567890"
                 {...register('telegramId')}
                 className={errors.telegramId ? 'error' : ''}
               />
