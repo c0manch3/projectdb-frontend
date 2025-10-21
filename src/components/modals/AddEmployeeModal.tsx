@@ -38,7 +38,9 @@ const createEmployeeSchema = z.object({
     .min(1, 'Телефон обязателен для заполнения')
     .min(10, 'Телефон должен содержать минимум 10 символов')
     .regex(/^[\+\d\s\-\(\)]+$/, 'Неверный формат номера телефона'),
-  
+
+  telegramId: z.string().optional(),
+
   password: z.string()
     .min(1, 'Пароль обязателен для заполнения')
     .min(6, 'Пароль должен содержать минимум 6 символов'),
@@ -86,6 +88,7 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
       lastName: '',
       email: '',
       phone: '',
+      telegramId: '',
       password: '',
       role: 'Employee',
       dateBirth: ''
@@ -96,10 +99,24 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     try {
+      // Prepare create data
       const createEmployeeDto: CreateEmployeeDto = {
-        ...data
-        // telegramId is optional and can be omitted
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: data.role,
+        dateBirth: data.dateBirth
       };
+
+      // Add telegramId only if provided and valid
+      if (data.telegramId && data.telegramId.trim() !== '') {
+        const telegramIdNum = parseInt(data.telegramId, 10);
+        if (!isNaN(telegramIdNum)) {
+          createEmployeeDto.telegramId = telegramIdNum;
+        }
+      }
 
       await dispatch(createEmployee(createEmployeeDto)).unwrap();
       
@@ -204,6 +221,20 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
               />
               {errors.phone && (
                 <span className="error-message">{errors.phone.message}</span>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <label htmlFor="telegramId">Telegram ID</label>
+              <FormInput
+                id="telegramId"
+                type="text"
+                placeholder="@username или ID"
+                {...register('telegramId')}
+                className={errors.telegramId ? 'error' : ''}
+              />
+              {errors.telegramId && (
+                <span className="error-message">{errors.telegramId.message}</span>
               )}
             </FormGroup>
 

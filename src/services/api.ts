@@ -3,10 +3,10 @@ import { store } from '../store';
 import { updateAccessToken, logout } from '../store/slices/auth_slice';
 
 // API Configuration
-// Development: direct connection to production server
+// Development: local backend server
 // Production: use /api proxy (nginx)
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? 'http://80.249.146.121:3000' : '/api');
+  (import.meta.env.DEV ? 'http://localhost:3000' : '/api');
 
 // Create axios instance
 const api: AxiosInstance = axios.create({

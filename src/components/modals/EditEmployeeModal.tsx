@@ -38,7 +38,9 @@ const editEmployeeSchema = z.object({
     .min(1, 'Телефон обязателен для заполнения')
     .min(10, 'Телефон должен содержать минимум 10 символов')
     .regex(/^[\+\d\s\-\(\)]+$/, 'Неверный формат номера телефона'),
-  
+
+  telegramId: z.string().optional(),
+
   role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
@@ -88,6 +90,7 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
         lastName: employee.lastName,
         email: employee.email,
         phone: employee.phone,
+        telegramId: employee.telegramId ? String(employee.telegramId) : '',
         role: employee.role,
         dateBirth: employee.dateBirth ? employee.dateBirth.split('T')[0] : '' // Convert to YYYY-MM-DD format
       });
@@ -103,10 +106,23 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
     }
 
     try {
+      // Prepare update data
       const updateEmployeeDto: UpdateEmployeeDto = {
-        ...data
-        // telegramId is optional and not included in form data
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        dateBirth: data.dateBirth
       };
+
+      // Add telegramId only if provided and valid
+      if (data.telegramId && data.telegramId.trim() !== '') {
+        const telegramIdNum = parseInt(data.telegramId, 10);
+        if (!isNaN(telegramIdNum)) {
+          updateEmployeeDto.telegramId = telegramIdNum;
+        }
+      }
 
       await dispatch(updateEmployee({ id: employee.id, data: updateEmployeeDto })).unwrap();
       
@@ -211,6 +227,20 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
               />
               {errors.phone && (
                 <span className="error-message">{errors.phone.message}</span>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <label htmlFor="telegramId">Telegram ID</label>
+              <FormInput
+                id="telegramId"
+                type="text"
+                placeholder="@username или ID"
+                {...register('telegramId')}
+                className={errors.telegramId ? 'error' : ''}
+              />
+              {errors.telegramId && (
+                <span className="error-message">{errors.telegramId.message}</span>
               )}
             </FormGroup>
 
