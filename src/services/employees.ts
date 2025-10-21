@@ -10,7 +10,7 @@ export interface CreateEmployeeDto {
   dateBirth: string; // ISO date string
   password: string;
   role: UserRole;
-  telegramId?: number;
+  telegramId?: string;
 }
 
 export interface UpdateEmployeeDto {
@@ -20,7 +20,7 @@ export interface UpdateEmployeeDto {
   phone?: string;
   dateBirth?: string;
   role?: UserRole;
-  telegramId?: number;
+  telegramId?: string;
 }
 
 export interface EmployeesFilters {

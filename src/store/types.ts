@@ -8,7 +8,7 @@ export interface User {
   lastName: string;
   phone: string;
   dateBirth: string;
-  telegramId?: number;
+  telegramId?: string;
   role: UserRole;
   createdAt: string;
   updatedAt: string;
@@ -70,14 +70,34 @@ export interface Document {
   mimeType: string;
   type: DocumentType;
   version: number;
-  projectId: string;
+  projectId?: string;
   constructionId?: string;
   uploadedAt: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type DocumentType = 'km' | 'kz' | 'rpz' | 'tz' | 'gp' | 'igi' | 'spozu' | 'contract';
+// New document types: 4 types instead of old 8
+// For Projects: tz, contract
+// For Constructions: working_documentation, project_documentation
+export type DocumentType =
+  | 'tz'                        // Техническое задание (Projects only)
+  | 'contract'                  // Контракт (Projects only)
+  | 'working_documentation'     // Рабочая документация (Constructions only)
+  | 'project_documentation';    // Проектная документация (Constructions only)
+
+// Helper type for categorizing document types
+export type ProjectDocumentType = 'tz' | 'contract';
+export type ConstructionDocumentType = 'working_documentation' | 'project_documentation';
+
+// Document version structure for constructions
+export interface DocumentVersion {
+  versionNumber: number;
+  documents: {
+    working_documentation: Document[];
+    project_documentation: Document[];
+  };
+}
 
 // Workload Plan - планирование рабочей нагрузки
 export interface WorkloadPlan {

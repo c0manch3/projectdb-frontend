@@ -2844,6 +2844,70 @@ a:hover {
   flex-shrink: 0;
 }
 
+/* Details Modal Styles */
+.employee-details,
+.company-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.employee-details__section,
+.company-details__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.employee-details__title,
+.company-details__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--border);
+}
+
+.employee-details__field,
+.company-details__field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.employee-details__label,
+.company-details__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
+.employee-details__value,
+.company-details__value {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+}
+
+.employee-details__value a,
+.company-details__value a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.employee-details__value a:hover,
+.company-details__value a:hover {
+  text-decoration: underline;
+  color: var(--primary-dark);
+}
 
 /* Status Badges */
 .status-badge {
