@@ -46,13 +46,7 @@ const createProjectSchema = z.object({
   managerId: z.string().optional(),
 
   contractDate: z.string()
-    .min(1, 'Дата договора обязательна для заполнения')
-    .refine((date) => {
-      const contractDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return contractDate >= today;
-    }, 'Дата договора не может быть в прошлом'),
+    .min(1, 'Дата договора обязательна для заполнения'),
 
   expirationDate: z.string()
     .min(1, 'Срок сдачи обязателен для заполнения'),
