@@ -162,7 +162,8 @@ function Projects(): JSX.Element {
     }
   };
 
-  const getCustomerName = (customerId: string): string => {
+  const getCustomerName = (customerId?: string): string => {
+    if (!customerId) return 'Не указан';
     const customer = customers.find(c => c.id === customerId);
     return customer ? customer.name : 'Неизвестен';
   };

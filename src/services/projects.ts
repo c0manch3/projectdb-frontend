@@ -4,7 +4,7 @@ import { Project, User, Company, Document } from '../store/types';
 // DTOs for project operations
 export interface CreateProjectDto {
   name: string;
-  customerId: string;
+  customerId?: string;
   contractDate: string; // ISO date string
   expirationDate: string; // ISO date string
   cost: number;
@@ -131,7 +131,7 @@ export const projectsService = {
     try {
       // Validate required fields
       const requiredFields: (keyof CreateProjectDto)[] = [
-        'name', 'customerId', 'contractDate', 'expirationDate', 'cost', 'type'
+        'name', 'contractDate', 'expirationDate', 'cost', 'type'
       ];
 
       for (const field of requiredFields) {

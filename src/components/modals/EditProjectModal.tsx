@@ -41,8 +41,7 @@ const updateProjectSchema = z.object({
 
   mainProjectId: z.string().optional(),
 
-  customerId: z.string()
-    .min(1, 'Заказчик обязателен для выбора'),
+  customerId: z.string().optional(),
 
   managerId: z.string().optional(),
 
@@ -131,7 +130,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
       reset({
         name: project.name,
         type: project.type,
-        customerId: project.customerId,
+        customerId: project.customerId || '',
         managerId: project.managerId || '',
         mainProjectId: project.mainProjectId || '',
         contractDate: project.contractDate.split('T')[0], // Convert to YYYY-MM-DD format
@@ -158,11 +157,11 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
       const projectData: UpdateProjectDto = {
         name: data.name,
         type: data.type,
-        customerId: data.customerId,
         contractDate: data.contractDate,
         expirationDate: data.expirationDate,
         cost: data.cost,
         status: data.status,
+        ...(data.customerId && { customerId: data.customerId }),
         ...(data.managerId && { managerId: data.managerId }),
         ...(data.type === 'additional' && data.mainProjectId && { mainProjectId: data.mainProjectId })
       };
@@ -260,7 +259,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
           )}
 
           <FormGroup>
-            <FormGroup.Label htmlFor="edit-customerId" required>
+            <FormGroup.Label htmlFor="edit-customerId">
               Заказчик
             </FormGroup.Label>
             <FormSelect
@@ -268,7 +267,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
               id="edit-customerId"
               error={errors.customerId?.message}
             >
-              <option value="">Выберите заказчика</option>
+              <option value="">Выберите заказчика (необязательно)</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}

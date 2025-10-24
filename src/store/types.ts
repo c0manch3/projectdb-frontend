@@ -19,7 +19,7 @@ export type UserRole = 'Admin' | 'Manager' | 'Employee';
 export interface Project {
   id: string;
   name: string;
-  customerId: string;
+  customerId?: string;
   contractDate: string;
   expirationDate: string;
   cost: number;
