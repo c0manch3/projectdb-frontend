@@ -40,8 +40,7 @@ const createProjectSchema = z.object({
 
   mainProjectId: z.string().optional(),
 
-  customerId: z.string()
-    .min(1, 'Заказчик обязателен для выбора'),
+  customerId: z.string().optional(),
 
   managerId: z.string().optional(),
 
@@ -138,10 +137,10 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
       const projectData: CreateProjectDto = {
         name: data.name,
         type: data.type,
-        customerId: data.customerId,
         contractDate: data.contractDate,
         expirationDate: data.expirationDate,
         cost: data.cost,
+        ...(data.customerId && { customerId: data.customerId }),
         ...(data.managerId && { managerId: data.managerId }),
         ...(data.type === 'additional' && data.mainProjectId && { mainProjectId: data.mainProjectId })
       };
@@ -236,7 +235,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
           )}
 
           <FormGroup>
-            <FormGroup.Label htmlFor="customerId" required>
+            <FormGroup.Label htmlFor="customerId">
               Заказчик
             </FormGroup.Label>
             <FormSelect
@@ -244,7 +243,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
               id="customerId"
               error={errors.customerId?.message}
             >
-              <option value="">Выберите заказчика</option>
+              <option value="">Выберите заказчика (необязательно)</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}

@@ -124,7 +124,7 @@ function ProjectDetailsModal({ isOpen, onClose, project, onEdit, onDelete }: Pro
                 <div className="project-info-item">
                   <span className="project-info-item__label">Заказчик:</span>
                   <span className="project-info-item__value">
-                    {customer ? customer.name : 'Неизвестен'}
+                    {customer ? customer.name : project.customerId ? 'Неизвестен' : 'Не указан'}
                   </span>
                 </div>
 
