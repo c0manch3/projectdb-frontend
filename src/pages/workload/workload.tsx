@@ -16,7 +16,6 @@ import ErrorBoundary from '../../components/common/error_boundary/error_boundary
 
 // Workload components
 import UnifiedWorkloadCalendar from '../../components/data_display/unified_workload_calendar/unified_workload_calendar';
-import WorkloadComparisonTable from '../../components/data_display/workload_comparison_table/workload_comparison_table';
 
 // Modal components
 import AddWorkloadPlanModal from '../../components/modals/AddWorkloadPlanModal';
@@ -41,15 +40,12 @@ import {
   selectWorkloadStatsLoading,
   selectWorkloadEmployees,
   selectWorkloadProjects,
-  selectWorkloadActiveTab,
   selectWorkloadView,
   selectWorkloadFilters,
   selectWorkloadSelectedDate,
   updateFilters,
-  updateActiveTab,
   updateView,
   updateSelectedDate,
-  resetFilters,
   clearError
 } from '../../store/slices/workload_slice';
 import {
@@ -77,7 +73,6 @@ function Workload(): JSX.Element {
   const statsLoading = useSelector(selectWorkloadStatsLoading);
   const employees = useSelector(selectWorkloadEmployees);
   const projects = useSelector(selectWorkloadProjects);
-  const activeTab = useSelector(selectWorkloadActiveTab);
   const view = useSelector(selectWorkloadView);
   const filters = useSelector(selectWorkloadFilters);
   const selectedDate = useSelector(selectWorkloadSelectedDate);
@@ -146,16 +141,6 @@ function Workload(): JSX.Element {
   // Handle view change
   const handleViewChange = (newView: 'week' | 'month') => {
     dispatch(updateView(newView));
-  };
-
-  // Handle tab change
-  const handleTabChange = (tab: 'planned' | 'actual' | 'comparison') => {
-    dispatch(updateActiveTab(tab));
-  };
-
-  // Handle reset filters
-  const handleResetFilters = () => {
-    dispatch(resetFilters());
   };
 
   // Modal handlers
@@ -347,14 +332,6 @@ function Workload(): JSX.Element {
 
               <Button
                 variant="secondary"
-                onClick={handleResetFilters}
-                title="Сбросить фильтры"
-              >
-                🔄 Сброс
-              </Button>
-
-              <Button
-                variant="secondary"
                 onClick={handleExport}
                 title="Экспорт в Excel"
               >
@@ -393,56 +370,17 @@ function Workload(): JSX.Element {
 
           {/* Main Workload Calendar */}
           <ErrorBoundary>
-            {activeTab === 'comparison' ? (
-              <div className="card">
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
-                  <h3>Сравнение план/факт</h3>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleTabChange('planned')}
-                  >
-                    ← Календарь
-                  </Button>
-                </div>
-                <WorkloadComparisonTable
-                  onViewDetails={handleViewDetails}
-                />
+            <div className="workload-main-calendar">
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                <h3 style={{margin: 0, color: 'var(--text-primary)'}}>
+                  Календарь рабочей нагрузки
+                </h3>
               </div>
-            ) : (
-              <div className="workload-main-calendar">
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
-                  <h3 style={{margin: 0, color: 'var(--text-primary)'}}>
-                    Календарь рабочей нагрузки
-                  </h3>
-                  <div style={{display: 'flex', gap: '0.5rem'}}>
-                    {/* Only Manager/Admin can add plans */}
-                    {currentUser?.role !== 'Employee' && (
-                      <>
-                        {filters.userId ? (
-                          <Button variant="primary" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
-                            + Добавить план
-                          </Button>
-                        ) : (
-                          <Button variant="outline" onClick={() => handleCreateWorkloadFromCalendar(selectedDate)}>
-                            + Добавить данные
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleTabChange('comparison')}
-                    >
-                      Сравнение →
-                    </Button>
-                  </div>
-                </div>
-                <UnifiedWorkloadCalendar
-                  onCellClick={handleWorkloadCellClick}
-                  onCreateWorkload={handleCreateWorkloadFromCalendar}
-                />
-              </div>
-            )}
+              <UnifiedWorkloadCalendar
+                onCellClick={handleWorkloadCellClick}
+                onCreateWorkload={handleCreateWorkloadFromCalendar}
+              />
+            </div>
           </ErrorBoundary>
         </div>
       </main>
