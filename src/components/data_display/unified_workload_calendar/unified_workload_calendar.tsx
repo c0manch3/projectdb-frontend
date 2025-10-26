@@ -54,6 +54,14 @@ function UnifiedWorkloadCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
+  // Helper function to convert Date to local date string (YYYY-MM-DD)
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Get selected employee for filtering
   const selectedEmployee = useMemo(() => {
     if (!filters.userId) return null;
@@ -64,17 +72,25 @@ function UnifiedWorkloadCalendar({
   const calendarDays = useMemo(() => {
     const days: CalendarDay[] = [];
     const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    // Use local date string to avoid timezone issues
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
 
     if (view === 'week') {
       // Week view - show 7 days from Monday
       const startOfWeek = new Date(currentDate);
-      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday
+      const dayOfWeek = currentDate.getDay();
+      // Adjust for Monday as first day: Sunday(0) -> -6, Monday(1) -> 0, Tuesday(2) -> -1, etc.
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      startOfWeek.setDate(currentDate.getDate() + daysToMonday);
 
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = toLocalDateString(date);
 
         days.push({
           date: dateString,
@@ -98,16 +114,22 @@ function UnifiedWorkloadCalendar({
 
       // Start from Monday of the week containing first day
       const startDate = new Date(firstDay);
-      startDate.setDate(firstDay.getDate() - firstDay.getDay() + 1);
+      const firstDayOfWeek = firstDay.getDay();
+      // Adjust for Monday as first day: Sunday(0) -> -6, Monday(1) -> 0, Tuesday(2) -> -1, etc.
+      const daysToMonday = firstDayOfWeek === 0 ? -6 : 1 - firstDayOfWeek;
+      startDate.setDate(firstDay.getDate() + daysToMonday);
 
       // End at Sunday of the week containing last day
       const endDate = new Date(lastDay);
-      endDate.setDate(lastDay.getDate() + (7 - lastDay.getDay()));
+      const lastDayOfWeek = lastDay.getDay();
+      // Adjust for Sunday as last day: Sunday(0) -> +0, Monday(1) -> +6, Tuesday(2) -> +5, etc.
+      const daysToSunday = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
+      endDate.setDate(lastDay.getDate() + daysToSunday);
 
       const currentDateObj = new Date(startDate);
 
       while (currentDateObj <= endDate) {
-        const dateString = currentDateObj.toISOString().split('T')[0];
+        const dateString = toLocalDateString(currentDateObj);
 
         days.push({
           date: dateString,
@@ -150,33 +172,42 @@ function UnifiedWorkloadCalendar({
   const navigateToday = () => {
     const today = new Date();
     setCurrentDate(today);
-    dispatch(updateSelectedDate(today.toISOString().split('T')[0]));
+    dispatch(updateSelectedDate(toLocalDateString(today)));
   };
 
   // Handle day click
   const handleDayClick = (day: CalendarDay) => {
+    if (!selectedEmployee) return;
+
     dispatch(updateSelectedDate(day.date));
 
-    // In single-employee mode, filter workloads for selected employee
-    const employeeWorkloads = selectedEmployee
-      ? day.workloads.filter(w => w.userId === selectedEmployee.id)
-      : [];
-    onCellClick?.(day.date, employeeWorkloads);
-  };
+    // Get workloads for selected employee
+    const employeeWorkloads = day.workloads.filter(w => w.userId === selectedEmployee.id);
+    const workloadWithPlan = employeeWorkloads.find(w => w.planId);
+    const workloadWithActual = employeeWorkloads.find(w => w.actualId);
+    const employeeWorkload = employeeWorkloads.find(w => w.planId && w.actualId) || workloadWithPlan || workloadWithActual;
 
-  // Handle day double-click for creating workload
-  const handleDayDoubleClick = (day: CalendarDay) => {
-    // Only allow creation on future dates and current date
-    if (!day.isPast && onCreateWorkload && selectedEmployee) {
-      // In single-employee mode, create for selected employee
+    // If there is any workload (plan or actual), open details modal
+    if (employeeWorkload) {
+      onCellClick?.(day.date, [employeeWorkload]);
+    } else if (isDateEditable(day.date) && onCreateWorkload && currentUser?.role === 'Manager') {
+      // No workload exists - allow creation only for Manager on future dates
       onCreateWorkload(day.date);
+    } else if (employeeWorkloads.length > 0) {
+      // Show all workloads if there are any
+      onCellClick?.(day.date, employeeWorkloads);
     }
   };
 
+
   // Check if date editing is allowed
   const isDateEditable = (date: string): boolean => {
-    const today = new Date().toISOString().split('T')[0];
-    return date > today; // Allow editing only future dates (not today)
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+    return date > todayString; // Allow editing only future dates (not today)
   };
 
   // Check if current user owns the project
@@ -202,7 +233,10 @@ function UnifiedWorkloadCalendar({
   const formatPeriodTitle = (): string => {
     if (view === 'week') {
       const startOfWeek = new Date(currentDate);
-      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+      const dayOfWeek = currentDate.getDay();
+      // Adjust for Monday as first day: Sunday(0) -> -6, Monday(1) -> 0, Tuesday(2) -> -1, etc.
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      startOfWeek.setDate(currentDate.getDate() + daysToMonday);
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
 
@@ -262,7 +296,6 @@ function UnifiedWorkloadCalendar({
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.2 }}
         onClick={() => handleDayClick(day)}
-        onDoubleClick={() => handleDayDoubleClick(day)}
         onMouseEnter={() => setHoveredDate(day.date)}
         onMouseLeave={() => setHoveredDate(null)}
       >
@@ -391,9 +424,9 @@ function UnifiedWorkloadCalendar({
                         <div className="unified-workload-calendar__tooltip-empty-message">
                           Нет запланированной работы
                         </div>
-                        {!day.isPast && (
+                        {isDateEditable(day.date) && currentUser?.role === 'Manager' && (
                           <div className="unified-workload-calendar__tooltip-action">
-                            Двойной клик для создания плана
+                            Нажмите для создания плана
                           </div>
                         )}
                       </>
@@ -409,27 +442,6 @@ function UnifiedWorkloadCalendar({
           </div>
         )}
 
-        {/* Add button for editable days when employee is selected and no workload - Only for Manager */}
-        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && !employeeWorkload && currentUser?.role === 'Manager' && (
-          <div className="unified-workload-calendar__add-button" onClick={(e) => {
-            e.stopPropagation();
-            onCreateWorkload?.(day.date);
-          }}>
-            <span className="unified-workload-calendar__add-button-icon">+</span>
-            <span className="unified-workload-calendar__add-button-text">Добавить план</span>
-          </div>
-        )}
-
-        {/* Edit button for editable days when employee has a plan - Only for Manager */}
-        {isDateEditable(day.date) && day.isCurrentMonth && selectedEmployee && employeeWorkload && hasPlan && currentUser?.role === 'Manager' && currentUserOwnsProject(employeeWorkload.projectId) && (
-          <div className="unified-workload-calendar__edit-button" onClick={(e) => {
-            e.stopPropagation();
-            onCellClick?.(day.date, [employeeWorkload]);
-          }}>
-            <span className="unified-workload-calendar__edit-button-icon">✏️</span>
-            <span className="unified-workload-calendar__edit-button-text">Редактировать<br />план</span>
-          </div>
-        )}
       </motion.div>
     );
   };

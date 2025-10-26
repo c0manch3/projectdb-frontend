@@ -22,8 +22,16 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
     if (pathname.startsWith('/employees')) return 'employees';
     if (pathname.startsWith('/companies')) return 'companies';
     if (pathname.startsWith('/workload')) return 'workload';
-    return 'projects'; // default
+    // Default route based on user role
+    if (user?.role === 'Employee') return 'workload';
+    return 'projects';
   })();
+
+  // Get home route based on user role
+  const getHomeRoute = () => {
+    if (user?.role === 'Employee') return AppRoute.Workload;
+    return AppRoute.Projects;
+  };
 
   // Handle logout (client-side only)
   const handleLogout = () => {
@@ -57,7 +65,7 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
   // Check if user has access to a specific navigation item
   const hasAccessToNavItem = (navItem: string) => {
     if (!user) return false;
-    
+
     switch (navItem) {
       case 'employees':
         return user.role === 'Admin' || user.role === 'Manager';
@@ -66,7 +74,7 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
       case 'workload':
         return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Employee';
       case 'projects':
-        return true; // All authenticated users can access projects
+        return user.role === 'Admin' || user.role === 'Manager'; // Only Admin and Manager can access projects
       default:
         return false;
     }
@@ -74,7 +82,7 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
 
   return (
     <header className="header">
-      <Link to={AppRoute.Projects} className="header__logo">
+      <Link to={getHomeRoute()} className="header__logo">
         LenconDB
       </Link>
       

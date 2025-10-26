@@ -330,6 +330,13 @@ function WorkloadDetailsModal({
     });
   };
 
+  // Check if current user is the project owner
+  const isProjectOwner = (projectId: string): boolean => {
+    if (!currentUser || currentUser.role !== 'Manager') return false;
+    const project = projects.find(p => p.id === projectId);
+    return project?.managerId === currentUser.id;
+  };
+
   // Filter projects for managers - show only their own projects
   const filteredProjects = currentUser?.role === 'Manager'
     ? projects.filter(project => project.managerId === currentUser.id)
@@ -398,27 +405,45 @@ function WorkloadDetailsModal({
                       <div className="workload-details-modal__workload-header">
                         <div className="workload-details-modal__workload-info">
                           <h4>{getEmployeeName(workload.userId)}</h4>
-                          <p>{getProjectName(workload.projectId)}</p>
+                          {workload.projectId && !workload.projectWorkloadDistributions && (
+                            <p>{getProjectName(workload.projectId)}</p>
+                          )}
                         </div>
                       </div>
 
                       <div className="workload-details-modal__workload-content">
                         {workload.hoursWorked && (
                           <div className="workload-details-modal__workload-hours">
-                            <strong>Отработано:</strong> {workloadService.formatHours(workload.hoursWorked)}
+                            <strong>Всего отработано:</strong> {workloadService.formatHours(workload.hoursWorked)}
                           </div>
                         )}
 
                         {workload.userText && (
                           <div className="workload-details-modal__workload-text">
-                            <strong>Описание работы:</strong>
+                            <strong>Общее описание дня:</strong>
                             <p>{workload.userText}</p>
+                          </div>
+                        )}
+
+                        {/* Display project distributions if available */}
+                        {workload.projectWorkloadDistributions && workload.projectWorkloadDistributions.length > 0 && (
+                          <div className="workload-details-modal__distributions">
+                            <strong>Распределение по проектам:</strong>
+                            {workload.projectWorkloadDistributions.map((dist, distIndex) => (
+                              <div key={distIndex} className="workload-details-modal__distribution-item" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                                <div className="workload-details-modal__distribution-header">
+                                  <h5 style={{ margin: '0 0 0.5rem 0' }}>{dist.project?.name || getProjectName(dist.projectId)}</h5>
+                                  <span style={{ color: 'var(--text-secondary)' }}>{workloadService.formatHours(dist.hours)}</span>
+                                </div>
+                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)' }}>{dist.description}</p>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
 
-                      {/* Only Manager can delete plans */}
-                      {isManager && workload.planId && !isPastOrToday && (
+                      {/* Only Manager who owns the project can delete plans */}
+                      {isManager && workload.planId && !isPastOrToday && isProjectOwner(workload.projectId) && (
                         <div className="workload-details-modal__workload-actions">
                           <Button
                             variant="warning"
