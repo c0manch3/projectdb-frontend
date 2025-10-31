@@ -112,17 +112,20 @@ export const authService = {
   async verifyToken(): Promise<boolean> {
     try {
       const accessToken = tokenStorage.getAccessToken();
-      if (!accessToken) {
+      const refreshToken = tokenStorage.getRefreshToken();
+
+      if (!accessToken || !refreshToken) {
         return false;
       }
 
-      // Check if token is expired
-      if (isTokenExpired(accessToken)) {
+      // Check if REFRESH token is expired (not access token!)
+      // If access token is expired but refresh token is valid, we can refresh it
+      if (isTokenExpired(refreshToken)) {
         return false;
       }
 
       // TODO: Implement server-side token verification when endpoint is available
-      // For now, just check if token can be decoded and is not expired
+      // For now, just check if we have valid tokens
       return true;
     } catch (error) {
       console.error('Token verification failed:', error);
@@ -213,16 +216,17 @@ export const tokenStorage = {
   hasValidTokens(): boolean {
     const accessToken = this.getAccessToken();
     const refreshToken = this.getRefreshToken();
-    
+
     if (!accessToken || !refreshToken) {
       return false;
     }
-    
-    // Check if access token is expired
-    if (isTokenExpired(accessToken)) {
+
+    // Check if REFRESH token is expired (not access token!)
+    // Access token can be expired - it will be refreshed automatically
+    if (isTokenExpired(refreshToken)) {
       return false;
     }
-    
+
     return true;
   },
 };

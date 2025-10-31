@@ -43,20 +43,24 @@ export const decodeJWT = (token: string): JWTPayload | null => {
 
 /**
  * Check if JWT token is expired
+ * @param token - JWT token to check
+ * @param bufferSeconds - Buffer time in seconds before considering token expired (default: 60s)
  */
-export const isTokenExpired = (token: string): boolean => {
+export const isTokenExpired = (token: string, bufferSeconds: number = 60): boolean => {
   try {
     const payload = decodeJWT(token);
-    
+
     if (!payload || !payload.exp) {
       return true;
     }
-    
+
     // Convert exp from seconds to milliseconds and compare with current time
+    // Add buffer time to prevent edge cases where token expires during request
     const expirationTime = payload.exp * 1000;
     const currentTime = Date.now();
-    
-    return currentTime >= expirationTime;
+    const bufferTime = bufferSeconds * 1000;
+
+    return currentTime >= (expirationTime - bufferTime);
   } catch (error) {
     console.warn('Failed to check token expiration:', error);
     return true;
