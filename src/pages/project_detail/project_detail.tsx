@@ -12,6 +12,7 @@ import EmptyState from '../../components/common/empty_state/empty_state';
 import Button from '../../components/common/button/button';
 import UploadProjectDocumentModal from '../../components/modals/UploadProjectDocumentModal';
 import ConfirmDeleteDocumentModal from '../../components/modals/ConfirmDeleteDocumentModal';
+import EditProjectModal from '../../components/modals/EditProjectModal';
 
 import type { AppDispatch } from '../../store';
 import {
@@ -49,6 +50,9 @@ function ProjectDetail(): JSX.Element {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Local state for edit project modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   // Check user permissions
   const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
@@ -136,6 +140,18 @@ function ProjectDetail(): JSX.Element {
     }
   };
 
+  // Edit project handlers
+  const handleEditProject = () => {
+    setEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    if (id) {
+      dispatch(fetchProjectById(id));
+    }
+    setEditModalOpen(false);
+  };
+
   // Helper functions
   const formatCost = (cost: number): string => {
     return new Intl.NumberFormat('ru-RU', {
@@ -205,13 +221,6 @@ function ProjectDetail(): JSX.Element {
   };
 
   const handleNavigateToDocuments = () => {
-    if (currentProject?.id) {
-      navigate(`/projects/${currentProject.id}/constructions`);
-    }
-  };
-
-  const handleNavigateToReports = () => {
-    // Future implementation - for now navigate to constructions
     if (currentProject?.id) {
       navigate(`/projects/${currentProject.id}/constructions`);
     }
@@ -456,13 +465,13 @@ function ProjectDetail(): JSX.Element {
                 <Card.Content>
                   <div className="project-actions">
                     {canEditProjects && (
-                      <>
-                        <Link to={`/projects/${currentProject.id}/edit`}>
-                          <Button variant="primary" className="project-action-button">
-                            ✏️ Редактировать проект
-                          </Button>
-                        </Link>
-                      </>
+                      <Button
+                        variant="primary"
+                        className="project-action-button"
+                        onClick={handleEditProject}
+                      >
+                        ✏️ Редактировать проект
+                      </Button>
                     )}
                     <Button
                       variant="outline"
@@ -470,13 +479,6 @@ function ProjectDetail(): JSX.Element {
                       onClick={handleNavigateToConstructions}
                     >
                       🏗️ Сооружения
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="project-action-button"
-                      onClick={handleNavigateToReports}
-                    >
-                      📊 Отчеты
                     </Button>
                   </div>
                 </Card.Content>
@@ -695,6 +697,16 @@ function ProjectDetail(): JSX.Element {
               </Card.Content>
             </Card>
           </div>
+        )}
+
+        {/* Edit Project Modal */}
+        {currentProject && (
+          <EditProjectModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            project={currentProject}
+            onSuccess={handleEditSuccess}
+          />
         )}
 
         {/* Upload Project Document Modal */}
