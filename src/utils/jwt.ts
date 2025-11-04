@@ -19,24 +19,26 @@ export const decodeJWT = (token: string): JWTPayload | null => {
   try {
     // JWT structure: header.payload.signature
     const parts = token.split('.');
-    
+
     if (parts.length !== 3) {
-      console.warn('Invalid JWT token format');
       return null;
     }
 
     // Decode the payload (second part)
     const payload = parts[1];
-    
+
+    if (!payload) {
+      return null;
+    }
+
     // Base64 URL decode
     const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
     
     // Parse JSON
     const parsedPayload = JSON.parse(decodedPayload) as JWTPayload;
-    
+
     return parsedPayload;
   } catch (error) {
-    console.warn('Failed to decode JWT token:', error);
     return null;
   }
 };
@@ -62,7 +64,6 @@ export const isTokenExpired = (token: string, bufferSeconds: number = 60): boole
 
     return currentTime >= (expirationTime - bufferTime);
   } catch (error) {
-    console.warn('Failed to check token expiration:', error);
     return true;
   }
 };
@@ -75,7 +76,6 @@ export const getUserRoleFromToken = (token: string): UserRole | null => {
     const payload = decodeJWT(token);
     return payload?.role || null;
   } catch (error) {
-    console.warn('Failed to extract user role from token:', error);
     return null;
   }
 };

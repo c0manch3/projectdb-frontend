@@ -50,17 +50,40 @@ export const checkAuthStatus = createAsyncThunk(
       }
 
       const storedUser = tokenStorage.getUser();
-      const storedAccessToken = tokenStorage.getAccessToken();
-      const storedRefreshToken = tokenStorage.getRefreshToken();
+      let storedAccessToken = tokenStorage.getAccessToken();
+      let storedRefreshToken = tokenStorage.getRefreshToken();
 
       if (!storedUser || !storedAccessToken || !storedRefreshToken) {
         throw new Error('Incomplete authentication data');
       }
 
-      // Verify token with server
-      const isValid = await authService.verifyToken();
-      if (!isValid) {
-        throw new Error('Token validation failed');
+      // Check if access token is expired (with small buffer)
+      const { isTokenExpired } = await import('../../utils/jwt');
+      if (isTokenExpired(storedAccessToken, 5)) {
+        // Access token expired, try to refresh it
+        try {
+          const refreshResponse = await authService.refreshToken(storedRefreshToken);
+          storedAccessToken = refreshResponse.accessToken;
+
+          // Backend may return new refresh token
+          if (refreshResponse.refreshToken) {
+            storedRefreshToken = refreshResponse.refreshToken;
+          }
+
+          // Update tokens in storage
+          tokenStorage.setTokens(storedAccessToken, storedRefreshToken);
+        } catch (refreshError: any) {
+          // If refresh fails, clear tokens and reject
+          tokenStorage.clearAll();
+
+          // Check if it's a server error (5xx) vs authentication error (4xx)
+          if (refreshError.response?.status >= 500) {
+            // Server error - maybe temporary, don't logout immediately
+            throw new Error('Server error during token refresh. Please try again.');
+          }
+
+          throw new Error('Token refresh failed');
+        }
       }
 
       return {
@@ -88,11 +111,15 @@ export const refreshUserToken = createAsyncThunk(
       }
 
       const response = await authService.refreshToken(refreshToken);
-      
-      // Update stored access token
-      tokenStorage.setTokens(response.accessToken, refreshToken);
-      
-      return response.accessToken;
+
+      // Update stored tokens (use new refresh token if provided, otherwise keep old one)
+      const newRefreshToken = response.refreshToken || refreshToken;
+      tokenStorage.setTokens(response.accessToken, newRefreshToken);
+
+      return {
+        accessToken: response.accessToken,
+        refreshToken: newRefreshToken,
+      };
     } catch (error: any) {
       // Clear invalid tokens
       tokenStorage.clearAll();
@@ -106,9 +133,28 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // Update access token
-    updateAccessToken: (state, action: PayloadAction<string>) => {
-      state.accessToken = action.payload;
+    // Update access token and optionally refresh token
+    updateAccessToken: (state, action: PayloadAction<string | { accessToken: string; refreshToken?: string }>) => {
+      if (typeof action.payload === 'string') {
+        // Legacy: just update access token
+        state.accessToken = action.payload;
+        const currentRefreshToken = state.refreshToken;
+        if (currentRefreshToken) {
+          tokenStorage.setTokens(action.payload, currentRefreshToken);
+        }
+      } else {
+        // New: update both tokens
+        state.accessToken = action.payload.accessToken;
+        if (action.payload.refreshToken) {
+          state.refreshToken = action.payload.refreshToken;
+          tokenStorage.setTokens(action.payload.accessToken, action.payload.refreshToken);
+        } else {
+          const currentRefreshToken = state.refreshToken;
+          if (currentRefreshToken) {
+            tokenStorage.setTokens(action.payload.accessToken, currentRefreshToken);
+          }
+        }
+      }
     },
 
     // Set user data
@@ -214,7 +260,8 @@ const authSlice = createSlice({
     // Refresh token
     builder
       .addCase(refreshUserToken.fulfilled, (state, action) => {
-        state.accessToken = action.payload;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
       })
       .addCase(refreshUserToken.rejected, (state) => {
         state.user = null;

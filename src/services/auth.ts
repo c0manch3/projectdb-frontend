@@ -27,6 +27,7 @@ export interface LoginResponse {
 
 export interface RefreshTokenResponse {
   accessToken: string;
+  refreshToken?: string; // Backend may optionally return new refresh token
 }
 
 export interface ChangePasswordRequest {
@@ -48,7 +49,7 @@ export const authService = {
       // Transform API response to our internal format
       // Use ID from API response (backend now returns it)
       const user: User = {
-        id: apiData.id || (jwtPayload?.userId as string) || 'temp-id', // Prefer API response id, fallback to JWT userId
+        id: apiData.id || (jwtPayload?.sub as string) || 'temp-id', // Prefer API response id, fallback to JWT sub
         email: apiData.email,
         firstName: apiData.firstName,
         lastName: apiData.lastName,
@@ -85,16 +86,23 @@ export const authService = {
       await apiRequest.post('/auth/logout');
     } catch (error) {
       // Even if logout fails on server (endpoint not available), we still want to clear local state
-      console.warn('Logout request failed, but clearing local state:', error);
+      // Silently ignore logout errors
     }
   },
 
   // Refresh access token
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     try {
-      const response = await apiRequest.post<RefreshTokenResponse>('/auth/refresh', {
-        refreshToken,
-      });
+      // Backend expects refresh token in Authorization header, not in body
+      const response = await apiRequest.post<RefreshTokenResponse>(
+        '/auth/refresh',
+        {}, // Empty body
+        {
+          headers: {
+            'Authorization': `Bearer ${refreshToken}`
+          }
+        }
+      );
       return response.data;
     } catch (error: any) {
       // If refresh fails, token is probably expired
@@ -128,7 +136,6 @@ export const authService = {
       // For now, just check if we have valid tokens
       return true;
     } catch (error) {
-      console.error('Token verification failed:', error);
       return false;
     }
   },
@@ -200,7 +207,6 @@ export const tokenStorage = {
         
         return storedUser;
       } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
         return null;
       }
     }

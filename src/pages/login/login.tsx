@@ -25,15 +25,15 @@ function Login(): JSX.Element {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  // If user is already authenticated, redirect to projects
-  if (isAuthenticated) {
-    return <Navigate to={AppRoute.Projects} replace />;
-  }
-
   // Clear auth error when component mounts
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
+
+  // If user is already authenticated, redirect to projects
+  if (isAuthenticated) {
+    return <Navigate to={AppRoute.Projects} replace />;
+  }
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,12 +96,10 @@ function Login(): JSX.Element {
 
       if (loginUser.fulfilled.match(result)) {
         // Navigate after successful login - no delay needed since App component handles initialization
-        console.log('Login successful, navigating to projects...');
         navigate(AppRoute.Projects, { replace: true });
       }
     } catch (error) {
       // Error is handled by Redux and displayed in UI
-      console.error('Login error:', error);
     }
   };
 
