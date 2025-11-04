@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
@@ -22,10 +22,14 @@ import NotFound from '../../pages/not_found/not_found';
 function App(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
   const { isInitialized, loading } = useSelector((state: RootState) => state.auth);
+  const authCheckInitiated = useRef(false);
 
-  // Check authentication status on app initialization
+  // Check authentication status on app initialization (only once)
   useEffect(() => {
-    dispatch(checkAuthStatus());
+    if (!authCheckInitiated.current) {
+      authCheckInitiated.current = true;
+      dispatch(checkAuthStatus());
+    }
   }, [dispatch]);
 
   // Show loading screen while auth is being initialized
