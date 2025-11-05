@@ -72,17 +72,11 @@ function AddWorkloadPlanModal({
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchWorkloadEmployees());
-
-      // For managers, filter projects by their managerId
-      const isValidUUID = currentUser?.id && !currentUser.id.startsWith('temp-');
-      const managerId = currentUser?.role === 'Manager' && isValidUUID
-        ? currentUser.id
-        : undefined;
-      dispatch(fetchWorkloadProjects(managerId));
-
+      // Load all projects without filtering
+      dispatch(fetchWorkloadProjects());
       dispatch(clearError());
     }
-  }, [isOpen, dispatch, currentUser?.role, currentUser?.id]);
+  }, [isOpen, dispatch]);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -128,10 +122,11 @@ function AddWorkloadPlanModal({
     if (!formData.date) {
       errors.date = 'Выберите дату';
     } else {
-      // Validate date is not in the past
+      // Validate date is not in the past (current date is allowed)
       const selectedDate = new Date(formData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
         errors.date = 'Нельзя создавать планы на прошедшие даты';
@@ -183,6 +178,11 @@ function AddWorkloadPlanModal({
     }
   };
 
+  // Filter projects for managers - show only their own projects
+  const filteredProjects = currentUser?.role === 'Manager'
+    ? projects.filter(project => project.managerId === currentUser.id)
+    : projects;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -228,7 +228,7 @@ function AddWorkloadPlanModal({
             required
           >
             <option value="">Выберите проект</option>
-            {projects.map(project => (
+            {filteredProjects.map(project => (
               <option key={project.id} value={project.id}>
                 {project.name}
               </option>

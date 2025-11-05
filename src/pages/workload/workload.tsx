@@ -240,7 +240,7 @@ function Workload(): JSX.Element {
 
   // Handle create workload from unified calendar
   const handleCreateWorkloadFromCalendar = (date: string) => {
-    // Always show workload details modal for creation
+    // Open workload details modal which will show create-plan mode for empty cells
     setModalState({
       type: 'workload-details',
       data: { date, workloads: [] }
