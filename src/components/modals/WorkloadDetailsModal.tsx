@@ -77,14 +77,14 @@ function WorkloadDetailsModal({
   dateObj.setHours(0, 0, 0, 0);
 
   const isPast = dateObj < today;
-  const isPastOrToday = dateObj <= today; // Plans can only be created/edited/deleted for future dates
+  const isBeforeToday = dateObj < today; // Plans can only be created/edited/deleted for current and future dates
   const isManager = currentUser?.role === 'Manager';
   const currentUserId = currentUser?.id;
 
   // Role-based permissions
   const canEdit = isManager || (!isPast && workloads.some(w => w.userId === currentUserId));
   const canCreate = !isPast && currentUser; // Authenticated users can create workload
-  const canCreatePlan = isManager && !isPastOrToday; // Only Manager can create plans
+  const canCreatePlan = isManager && !isBeforeToday; // Manager can create plans for current and future dates
   const canEditOtherUsers = isManager;
   const canDeleteWorkload = isManager || workloads.some(w => w.userId === currentUserId && !isPast);
 
@@ -102,7 +102,7 @@ function WorkloadDetailsModal({
     if (isOpen) {
       // If no workloads and user is Manager, go to create-plan mode
       // Otherwise, just show view mode
-      const initialMode = workloads.length === 0 && currentUser?.role === 'Manager' && !isPastOrToday
+      const initialMode = workloads.length === 0 && currentUser?.role === 'Manager' && !isBeforeToday
         ? 'create-plan'
         : 'view';
       setMode(initialMode);
@@ -116,7 +116,7 @@ function WorkloadDetailsModal({
       });
       setErrors({});
     }
-  }, [isOpen, date, currentUser?.id, currentUser?.role, workloads.length, selectedEmployeeId, isPastOrToday]);
+  }, [isOpen, date, currentUser?.id, currentUser?.role, workloads.length, selectedEmployeeId, isBeforeToday]);
 
   // Get employee name
   const getEmployeeName = (userId: string): string => {
@@ -211,9 +211,9 @@ function WorkloadDetailsModal({
       return;
     }
 
-    // Check if trying to create plan for today or past
-    if (isPastOrToday) {
-      toast.error('Планы можно создавать только на будущие дни');
+    // Check if trying to create plan for past dates
+    if (isBeforeToday) {
+      toast.error('Планы можно создавать только на текущую и будущие даты');
       return;
     }
 
@@ -379,9 +379,9 @@ function WorkloadDetailsModal({
                     </Button>
                   </div>
                 )}
-                {isPastOrToday && (
+                {isBeforeToday && (
                   <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
-                    Планы можно создавать только на будущие дни
+                    Планы можно создавать только на текущую и будущие даты
                   </p>
                 )}
               </div>
@@ -443,7 +443,7 @@ function WorkloadDetailsModal({
                       </div>
 
                       {/* Only Manager who owns the project can delete plans */}
-                      {isManager && workload.planId && !isPastOrToday && isProjectOwner(workload.projectId) && (
+                      {isManager && workload.planId && !isBeforeToday && isProjectOwner(workload.projectId) && (
                         <div className="workload-details-modal__workload-actions">
                           <Button
                             variant="warning"
