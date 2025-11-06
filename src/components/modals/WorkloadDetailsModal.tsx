@@ -421,7 +421,7 @@ function WorkloadDetailsModal({
                         {workload.userText && (
                           <div className="workload-details-modal__workload-text">
                             <strong>Общее описание дня:</strong>
-                            <p>{workload.userText}</p>
+                            <p>{workload.userText.replace(/^undefined\s*\|\s*/, '')}</p>
                           </div>
                         )}
 
