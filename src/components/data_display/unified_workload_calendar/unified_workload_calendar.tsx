@@ -183,19 +183,13 @@ function UnifiedWorkloadCalendar({
 
     // Get workloads for selected employee
     const employeeWorkloads = day.workloads.filter(w => w.userId === selectedEmployee.id);
-    const workloadWithPlan = employeeWorkloads.find(w => w.planId);
-    const workloadWithActual = employeeWorkloads.find(w => w.actualId);
-    const employeeWorkload = employeeWorkloads.find(w => w.planId && w.actualId) || workloadWithPlan || workloadWithActual;
 
-    // If there is any workload (plan or actual), open details modal
-    if (employeeWorkload) {
-      onCellClick?.(day.date, [employeeWorkload]);
-    } else if (isDateEditable(day.date) && onCreateWorkload && currentUser?.role === 'Manager') {
-      // No workload exists - allow creation only for Manager on future dates
-      onCreateWorkload(day.date);
-    } else if (employeeWorkloads.length > 0) {
-      // Show all workloads if there are any
+    // If there are any workloads (plan or actual), open details modal with ALL workloads
+    if (employeeWorkloads.length > 0) {
       onCellClick?.(day.date, employeeWorkloads);
+    } else if (isDateEditable(day.date) && onCreateWorkload && currentUser?.role === 'Manager') {
+      // No workload exists - allow creation only for Manager on future/current dates
+      onCreateWorkload(day.date);
     }
   };
 
