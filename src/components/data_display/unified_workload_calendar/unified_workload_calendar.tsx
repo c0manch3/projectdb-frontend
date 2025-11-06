@@ -326,10 +326,12 @@ function UnifiedWorkloadCalendar({
                 </div>
                 {workloadWithActual.userText && (
                   <div className="unified-workload-calendar__work-description">
-                    {workloadWithActual.userText.length > 20
-                      ? `${workloadWithActual.userText.substring(0, 20)}...`
-                      : workloadWithActual.userText
-                    }
+                    {(() => {
+                      const cleanText = workloadWithActual.userText.replace(/^undefined\s*\|\s*/, '');
+                      return cleanText.length > 20
+                        ? `${cleanText.substring(0, 20)}...`
+                        : cleanText;
+                    })()}
                   </div>
                 )}
               </div>
@@ -391,10 +393,12 @@ function UnifiedWorkloadCalendar({
                         </div>
                         {hasActual && employeeWorkload.userText && (
                           <div className="unified-workload-calendar__tooltip-section-content">
-                            {employeeWorkload.userText.length > 50
-                              ? `${employeeWorkload.userText.substring(0, 50)}...`
-                              : employeeWorkload.userText
-                            }
+                            {(() => {
+                              const cleanText = employeeWorkload.userText.replace(/^undefined\s*\|\s*/, '');
+                              return cleanText.length > 50
+                                ? `${cleanText.substring(0, 50)}...`
+                                : cleanText;
+                            })()}
                           </div>
                         )}
                       </div>
