@@ -24,7 +24,6 @@ export interface ExportRow {
   date: string;
   employeeName: string;
   projectName: string;
-  status: string;
   hoursWorked: string;
   userText: string;
 }
@@ -41,7 +40,6 @@ export const workloadExportService = {
 
       if (!employee || !project) return;
 
-      const status = this.getWorkloadStatus(workload);
       const formattedDate = new Date(workload.date).toLocaleDateString('ru-RU');
 
       // Clean userText from 'undefined' string
@@ -56,7 +54,6 @@ export const workloadExportService = {
         date: formattedDate,
         employeeName: `${employee.firstName} ${employee.lastName}`,
         projectName: project.name,
-        status: this.getStatusLabel(status),
         hoursWorked: workload.hoursWorked ? `${workload.hoursWorked} ч` : '-',
         userText: cleanUserText
       });
@@ -160,12 +157,11 @@ export const workloadExportService = {
     // Table with full Cyrillic support using DejaVu Sans
     autoTable(doc, {
       startY: yPos + 5,
-      head: [['Дата', 'Сотрудник', 'Проект', 'Статус', 'Часы', 'Описание работы']],
+      head: [['Дата', 'Сотрудник', 'Проект', 'Часы', 'Описание работы']],
       body: rows.map((row) => [
         row.date,
         row.employeeName,
         row.projectName,
-        row.status,
         row.hoursWorked,
         row.userText
       ]),
@@ -192,11 +188,10 @@ export const workloadExportService = {
       margin: { top: 10 },
       columnStyles: {
         0: { cellWidth: 25, halign: 'center' }, // Date
-        1: { cellWidth: 45 }, // Employee
-        2: { cellWidth: 50 }, // Project
-        3: { cellWidth: 30, halign: 'center' }, // Status
-        4: { cellWidth: 20, halign: 'center' }, // Hours
-        5: { cellWidth: 'auto' }, // Description
+        1: { cellWidth: 50 }, // Employee
+        2: { cellWidth: 60 }, // Project
+        3: { cellWidth: 20, halign: 'center' }, // Hours
+        4: { cellWidth: 'auto' }, // Description
       },
     });
 
@@ -228,14 +223,13 @@ export const workloadExportService = {
     const rows = this.prepareExportData(data);
 
     // Create CSV content
-    const headers = ['Дата', 'Сотрудник', 'Проект', 'Статус', 'Часы', 'Описание работы'];
+    const headers = ['Дата', 'Сотрудник', 'Проект', 'Часы', 'Описание работы'];
     const csvRows = [
       headers.join(','),
       ...rows.map((row) => [
         this.escapeCsvValue(row.date),
         this.escapeCsvValue(row.employeeName),
         this.escapeCsvValue(row.projectName),
-        this.escapeCsvValue(row.status),
         this.escapeCsvValue(row.hoursWorked),
         this.escapeCsvValue(row.userText)
       ].join(','))

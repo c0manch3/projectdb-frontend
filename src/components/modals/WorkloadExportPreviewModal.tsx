@@ -244,7 +244,6 @@ function WorkloadExportPreviewModal({
                     <th>Дата</th>
                     <th>Сотрудник</th>
                     <th>Проект</th>
-                    <th>Статус</th>
                     <th>Часы</th>
                     <th>Описание работы</th>
                   </tr>
@@ -255,11 +254,6 @@ function WorkloadExportPreviewModal({
                       <td>{row.date}</td>
                       <td>{row.employeeName}</td>
                       <td>{row.projectName}</td>
-                      <td>
-                        <span className={`export-preview-modal__status export-preview-modal__status--${getStatusClass(row.status)}`}>
-                          {row.status}
-                        </span>
-                      </td>
                       <td>{row.hoursWorked}</td>
                       <td className="export-preview-modal__text-cell">
                         {row.userText.length > 50
@@ -301,22 +295,6 @@ function WorkloadExportPreviewModal({
       </div>
     </Modal>
   );
-}
-
-// Helper function to get status CSS class
-function getStatusClass(status: string): string {
-  switch (status) {
-    case 'Запланировано':
-      return 'planned';
-    case 'Выполнено':
-      return 'completed';
-    case 'Не отчитался':
-      return 'missing';
-    case 'Сверхурочно':
-      return 'overtime';
-    default:
-      return '';
-  }
 }
 
 export default WorkloadExportPreviewModal;
