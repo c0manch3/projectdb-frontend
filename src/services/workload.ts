@@ -545,7 +545,8 @@ export const workloadService = {
     const end = new Date(endDate);
 
     while (current <= end) {
-      dates.push(current.toISOString().split('T')[0]);
+      const dateStr = current.toISOString().split('T')[0];
+      if (dateStr) dates.push(dateStr);
       current.setDate(current.getDate() + 1);
     }
 

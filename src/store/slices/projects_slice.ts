@@ -23,7 +23,7 @@ const initialState: ExtendedProjectsState = {
   list: [],
   current: null,
   filters: {
-    status: 'Active',
+    status: 'active',
     customerId: null,
     managerId: null,
     type: 'all',
@@ -412,7 +412,7 @@ export const selectFilteredProjects = (state: { projects: ExtendedProjectsState 
   const { list, filters, searchQuery } = state.projects;
   return list.filter(project => {
     // Apply status filter
-    if (filters.status !== 'all' && project.status !== filters.status) return false;
+    if (filters.status !== 'all' && project.status.toLowerCase() !== filters.status) return false;
 
     // Apply customer filter
     if (filters.customerId && project.customerId !== filters.customerId) return false;

@@ -492,26 +492,6 @@ function UnifiedWorkloadCalendar({
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="unified-workload-calendar__legend">
-        <div className="unified-workload-calendar__legend-item">
-          <div className="unified-workload-calendar__legend-indicator unified-workload-calendar__legend-indicator--completed"></div>
-          <span>Выполнено</span>
-        </div>
-        <div className="unified-workload-calendar__legend-item">
-          <div className="unified-workload-calendar__legend-indicator unified-workload-calendar__legend-indicator--planned"></div>
-          <span>Запланировано</span>
-        </div>
-        <div className="unified-workload-calendar__legend-item">
-          <div className="unified-workload-calendar__legend-indicator unified-workload-calendar__legend-indicator--missing"></div>
-          <span>Не отчитался</span>
-        </div>
-        <div className="unified-workload-calendar__legend-item">
-          <div className="unified-workload-calendar__legend-indicator unified-workload-calendar__legend-indicator--overtime"></div>
-          <span>Сверхурочно</span>
-        </div>
-      </div>
-
       {/* Loading State */}
       {loading && <LoadingState message="Загрузка календаря..." />}
 
