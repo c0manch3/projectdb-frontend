@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
@@ -25,6 +26,7 @@ import AddWorkloadActualModal from '../../components/modals/AddWorkloadActualMod
 import EditWorkloadActualModal from '../../components/modals/EditWorkloadActualModal';
 import ConfirmDeleteWorkloadActualModal from '../../components/modals/ConfirmDeleteWorkloadActualModal';
 import WorkloadDetailsModal from '../../components/modals/WorkloadDetailsModal';
+import WorkloadExportPreviewModal from '../../components/modals/WorkloadExportPreviewModal';
 
 import type { AppDispatch, AppRootState } from '../../store';
 import type { UnifiedWorkload, WorkloadPlan, WorkloadActual } from '../../store/types';
@@ -53,7 +55,7 @@ import {
 } from '../../store/slices/auth_slice';
 
 interface ModalState {
-  type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | null;
+  type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | 'export-preview' | null;
   data?: {
     date?: string;
     planId?: string;
@@ -131,11 +133,18 @@ function Workload(): JSX.Element {
 
   // Handle date range change
   const handleDateRangeChange = (startDate: string, endDate: string) => {
-    dispatch(updateFilters({
-      ...filters,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined
-    }));
+    const newFilters: any = { ...filters };
+    if (startDate) {
+      newFilters.startDate = startDate;
+    } else {
+      delete newFilters.startDate;
+    }
+    if (endDate) {
+      newFilters.endDate = endDate;
+    } else {
+      delete newFilters.endDate;
+    }
+    dispatch(updateFilters(newFilters));
   };
 
   // Handle view change
@@ -150,8 +159,12 @@ function Workload(): JSX.Element {
 
   const handleSuccess = () => {
     // Refresh data after successful operations
-    dispatch(fetchUnifiedWorkload(filters));
-    dispatch(fetchWorkloadStats(filters));
+    const cleanFilters: any = {};
+    Object.entries(filters).forEach(([key, val]) => {
+      if (val) cleanFilters[key] = val;
+    });
+    dispatch(fetchUnifiedWorkload(cleanFilters));
+    dispatch(fetchWorkloadStats(cleanFilters));
   };
 
   // Plan modal handlers
@@ -247,12 +260,9 @@ function Workload(): JSX.Element {
     });
   };
 
-  // Export functionality (placeholder)
+  // Export functionality
   const handleExport = () => {
-    toast('Функция экспорта будет добавлена в следующих версиях', {
-      icon: 'ℹ️',
-      duration: 3000,
-    });
+    setModalState({ type: 'export-preview' });
   };
 
   return (
@@ -434,7 +444,12 @@ function Workload(): JSX.Element {
         onSuccess={handleSuccess}
         date={modalState.data?.date || ''}
         workloads={modalState.data?.workloads || []}
-        selectedEmployeeId={filters.userId}
+        selectedEmployeeId={filters.userId || ''}
+      />
+
+      <WorkloadExportPreviewModal
+        isOpen={modalState.type === 'export-preview'}
+        onClose={closeModal}
       />
     </>
   );

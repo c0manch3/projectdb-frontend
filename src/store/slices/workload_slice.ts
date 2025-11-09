@@ -6,8 +6,7 @@ import {
   UpdateWorkloadPlanDto,
   CreateWorkloadActualDto,
   UpdateWorkloadActualDto,
-  WorkloadFilters,
-  WorkloadStatsResponse
+  WorkloadFilters
 } from '../../services/workload';
 
 // Extended WorkloadState with additional fields
@@ -30,7 +29,7 @@ const initialState: ExtendedWorkloadState = {
   // UI state
   view: 'month',
   activeTab: 'planned',
-  selectedDate: new Date().toISOString().split('T')[0], // Today
+  selectedDate: new Date().toISOString().split('T')[0] || new Date().toISOString(), // Today
 
   // Loading states
   loading: false,
@@ -485,7 +484,7 @@ const workloadSlice = createSlice({
         state.statsLoading = false;
         state.stats = action.payload;
       })
-      .addCase(fetchWorkloadStats.rejected, (state, action) => {
+      .addCase(fetchWorkloadStats.rejected, (state) => {
         state.statsLoading = false;
         // Don't set error for stats, it's not critical
       })

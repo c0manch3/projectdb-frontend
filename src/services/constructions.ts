@@ -32,6 +32,7 @@ export interface ReplaceDocumentDto {
 
 export interface DocumentsFilters {
   constructionId?: string;
+  projectId?: string;
   type?: 'working_documentation' | 'project_documentation';
   version?: number;
 }
