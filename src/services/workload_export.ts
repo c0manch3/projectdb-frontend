@@ -44,13 +44,21 @@ export const workloadExportService = {
       const status = this.getWorkloadStatus(workload);
       const formattedDate = new Date(workload.date).toLocaleDateString('ru-RU');
 
+      // Clean userText from 'undefined' string
+      let cleanUserText = workload.userText || '-';
+      if (cleanUserText.startsWith('undefined | ')) {
+        cleanUserText = cleanUserText.replace('undefined | ', '');
+      } else if (cleanUserText === 'undefined') {
+        cleanUserText = '-';
+      }
+
       rows.push({
         date: formattedDate,
         employeeName: `${employee.firstName} ${employee.lastName}`,
         projectName: project.name,
         status: this.getStatusLabel(status),
         hoursWorked: workload.hoursWorked ? `${workload.hoursWorked} ч` : '-',
-        userText: workload.userText || '-'
+        userText: cleanUserText
       });
     });
 
@@ -172,9 +180,10 @@ export const workloadExportService = {
         cellWidth: 'wrap',
       },
       headStyles: {
+        font: 'DejaVuSans',
         fillColor: [52, 73, 94],
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
+        fontStyle: 'normal',
         halign: 'center',
         fontSize: 10,
       },
