@@ -45,7 +45,7 @@ interface ModalProps {
   id?: string;
   className?: string;
   title?: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
 }
 
 function Modal({ children, isOpen = false, onClose, id, className = '', title, size = 'medium' }: ModalProps): JSX.Element {
