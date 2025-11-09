@@ -82,20 +82,21 @@ export const workloadExportService = {
   },
 
   // Get workload status
-  getWorkloadStatus(workload: UnifiedWorkload): 'planned' | 'completed' | 'missing' | 'overtime' {
+  getWorkloadStatus(workload: UnifiedWorkload): 'planned' | 'completed' | 'missing' {
     if (workload.planId && workload.actualId) {
       return 'completed';
     } else if (workload.planId && !workload.actualId) {
       return 'missing';
     } else if (!workload.planId && workload.actualId) {
-      return 'overtime';
+      // Changed: treat unplanned actual work as completed instead of overtime
+      return 'completed';
     } else {
       return 'planned';
     }
   },
 
   // Get status label
-  getStatusLabel(status: 'planned' | 'completed' | 'missing' | 'overtime'): string {
+  getStatusLabel(status: 'planned' | 'completed' | 'missing'): string {
     switch (status) {
       case 'planned':
         return 'Запланировано';
@@ -103,8 +104,6 @@ export const workloadExportService = {
         return 'Выполнено';
       case 'missing':
         return 'Не отчитался';
-      case 'overtime':
-        return 'Сверхурочно';
       default:
         return status;
     }
@@ -289,7 +288,6 @@ export const workloadExportService = {
     totalPlanned: number;
     totalCompleted: number;
     totalMissing: number;
-    totalOvertime: number;
     totalHours: number;
     uniqueEmployees: number;
     uniqueProjects: number;
@@ -301,7 +299,6 @@ export const workloadExportService = {
       totalPlanned: 0,
       totalCompleted: 0,
       totalMissing: 0,
-      totalOvertime: 0,
       totalHours: 0,
       uniqueEmployees: new Set<string>(),
       uniqueProjects: new Set<string>(),
@@ -319,9 +316,6 @@ export const workloadExportService = {
           break;
         case 'missing':
           summary.totalMissing++;
-          break;
-        case 'overtime':
-          summary.totalOvertime++;
           break;
       }
 
