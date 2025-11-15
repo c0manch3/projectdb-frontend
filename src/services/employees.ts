@@ -11,6 +11,7 @@ export interface CreateEmployeeDto {
   password: string;
   role: UserRole;
   telegramId?: string;
+  salary?: number; // Optional, visible only to Admin
 }
 
 export interface UpdateEmployeeDto {
@@ -21,6 +22,7 @@ export interface UpdateEmployeeDto {
   dateBirth?: string;
   role?: UserRole;
   telegramId?: string;
+  salary?: number; // Optional, visible only to Admin
 }
 
 export interface EmployeesFilters {

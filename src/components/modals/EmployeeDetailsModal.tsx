@@ -1,7 +1,9 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import Modal from '../common/modal/modal';
 import Button from '../common/button/button';
 import type { User } from '../../store/types';
+import { selectCurrentUser } from '../../store/slices/auth_slice';
 
 interface EmployeeDetailsModalProps {
   isOpen: boolean;
@@ -11,6 +13,9 @@ interface EmployeeDetailsModalProps {
 }
 
 function EmployeeDetailsModal({ isOpen, onClose, employee, onEdit }: EmployeeDetailsModalProps): JSX.Element {
+  const currentUser = useSelector(selectCurrentUser);
+  const isAdmin = currentUser?.role === 'Admin';
+
   const handleEdit = () => {
     if (employee && onEdit) {
       onEdit(employee);
@@ -62,6 +67,17 @@ function EmployeeDetailsModal({ isOpen, onClose, employee, onEdit }: EmployeeDet
               <label className="employee-details__label">Дата рождения:</label>
               <span className="employee-details__value">{formatDate(employee.dateBirth)}</span>
             </div>
+
+            {isAdmin && (
+              <div className="employee-details__field">
+                <label className="employee-details__label">Зарплата:</label>
+                <span className="employee-details__value">
+                  {employee.salary !== undefined && employee.salary !== null
+                    ? `${employee.salary.toLocaleString('ru-RU')} ₽`
+                    : 'Не указана'}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="employee-details__section">

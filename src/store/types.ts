@@ -10,6 +10,7 @@ export interface User {
   dateBirth: string;
   telegramId?: string;
   role: UserRole;
+  salary?: number; // Optional, visible only to Admin
   createdAt: string;
   updatedAt: string;
 }

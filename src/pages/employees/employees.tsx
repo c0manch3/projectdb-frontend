@@ -260,6 +260,7 @@ function Employees(): JSX.Element {
                     <Table.Header>Email</Table.Header>
                     <Table.Header>Телефон</Table.Header>
                     <Table.Header>Роль</Table.Header>
+                    {canManageEmployees && <Table.Header>Зарплата</Table.Header>}
                     {canManageEmployees && <Table.Header>Действия</Table.Header>}
                   </tr>
                 </Table.Head>
@@ -278,6 +279,13 @@ function Employees(): JSX.Element {
                       <Table.Cell>{employee.email}</Table.Cell>
                       <Table.Cell>{employee.phone || 'Не указан'}</Table.Cell>
                       <Table.Cell>{getRoleDisplayName(employee.role)}</Table.Cell>
+                      {canManageEmployees && (
+                        <Table.Cell>
+                          {employee.salary !== undefined && employee.salary !== null
+                            ? `${employee.salary.toLocaleString('ru-RU')} ₽`
+                            : 'Не указана'}
+                        </Table.Cell>
+                      )}
                       {canManageEmployees && (
                         <Table.Cell className="table__cell--actions">
                           <div className="employee-actions" onClick={(e) => e.stopPropagation()}>
