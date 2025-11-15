@@ -50,7 +50,7 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
   if (!isOpen) return <></>;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} id="projectsAnalyticsModal" size="xlarge">
+    <Modal isOpen={isOpen} onClose={onClose} id="projectsAnalyticsModal" size="large">
       <Modal.Header onClose={onClose}>
         Аналитика по проектам
       </Modal.Header>
@@ -94,8 +94,8 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
 
             <ProjectsBubbleChart
               data={data.projects}
-              width={1100}
-              height={700}
+              width={1000}
+              height={600}
             />
 
             <div className="analytics-summary">

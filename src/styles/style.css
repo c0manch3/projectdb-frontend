@@ -8642,14 +8642,15 @@ option:disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--surface);
+  background: var(--background);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
 }
 
 .projects-bubble-chart__svg {
   display: block;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-md);
 }
 
@@ -8717,20 +8718,6 @@ option:disabled {
 
 .projects-bubble-chart__tooltip .tooltip__employee:not(:last-child) {
   border-bottom: 1px solid var(--border-light);
-}
-
-/* Bubble animations */
-.bubble-group {
-  transition: all 0.2s ease;
-}
-
-.bubble {
-  transition: all 0.2s ease;
-}
-
-.bubble-name,
-.bubble-percent {
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* === PROJECTS ANALYTICS MODAL STYLES === */

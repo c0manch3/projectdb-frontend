@@ -8,19 +8,22 @@ interface ProjectsBubbleChartProps {
   height?: number;
 }
 
-interface BubbleNode extends d3.SimulationNodeDatum {
+interface BubbleNode {
   id: string;
   name: string;
   value: number;
   changePercent: number;
   employees: EmployeeWorkload[];
   radius: number;
+  x: number;
+  y: number;
 }
 
-function ProjectsBubbleChart({ data, width = 1000, height = 700 }: ProjectsBubbleChartProps): JSX.Element {
+function ProjectsBubbleChart({ data, width = 1000, height = 600 }: ProjectsBubbleChartProps): JSX.Element {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [hoveredProject, setHoveredProject] = useState<ProjectWorkloadAnalytics | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!svgRef.current || !data || data.length === 0) return;
@@ -29,77 +32,93 @@ function ProjectsBubbleChart({ data, width = 1000, height = 700 }: ProjectsBubbl
     d3.select(svgRef.current).selectAll('*').remove();
 
     const svg = d3.select(svgRef.current);
-    const centerX = width / 2;
-    const centerY = height / 2;
+    const padding = 100;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
 
-    // Create bubble nodes
+    // Create bubble nodes with static positioning using circle packing
     const maxEmployees = d3.max(data, d => d.employeeCount) || 1;
     const radiusScale = d3.scaleSqrt()
       .domain([0, maxEmployees])
-      .range([20, 80]);
+      .range([30, 60]);
 
-    const nodes: BubbleNode[] = data.map(project => ({
-      id: project.projectId,
-      name: project.projectName,
-      value: project.employeeCount,
-      changePercent: project.changePercent,
-      employees: project.employees,
-      radius: radiusScale(project.employeeCount),
-      x: centerX + (Math.random() - 0.5) * width * 0.8,
-      y: centerY + (Math.random() - 0.5) * height * 0.8
-    }));
+    // Simple grid layout for fast rendering
+    const cols = Math.ceil(Math.sqrt(data.length));
+    const rows = Math.ceil(data.length / cols);
+    const cellWidth = chartWidth / cols;
+    const cellHeight = chartHeight / rows;
 
-    // Color scale
-    const colorScale = d3.scaleLinear<string>()
-      .domain([-50, 0, 50])
-      .range(['#ef4444', '#6b7280', '#22c55e'])
-      .clamp(true);
+    const nodes: BubbleNode[] = data.map((project, index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      return {
+        id: project.projectId,
+        name: project.projectName,
+        value: project.employeeCount,
+        changePercent: project.changePercent,
+        employees: project.employees,
+        radius: radiusScale(project.employeeCount),
+        x: padding + col * cellWidth + cellWidth / 2,
+        y: padding + row * cellHeight + cellHeight / 2
+      };
+    });
 
-    // Create force simulation
-    const simulation = d3.forceSimulation(nodes)
-      .force('charge', d3.forceManyBody().strength(10))
-      .force('center', d3.forceCenter(centerX, centerY))
-      .force('collision', d3.forceCollide<BubbleNode>().radius(d => d.radius + 2))
-      .force('x', d3.forceX(centerX).strength(0.05))
-      .force('y', d3.forceY(centerY).strength(0.05));
+    // Color scale matching project theme
+    const getColor = (changePercent: number): string => {
+      if (changePercent > 0) return 'var(--success)';
+      if (changePercent < 0) return 'var(--error)';
+      return 'var(--text-secondary)';
+    };
 
     // Create groups for each bubble
     const bubbles = svg.selectAll<SVGGElement, BubbleNode>('g')
       .data(nodes)
       .join('g')
       .attr('class', 'bubble-group')
+      .attr('transform', d => `translate(${d.x},${d.y})`)
       .style('cursor', 'pointer');
 
     // Add circles
     bubbles.append('circle')
       .attr('class', 'bubble')
       .attr('r', d => d.radius)
-      .attr('fill', d => colorScale(d.changePercent))
-      .attr('fill-opacity', 0.7)
-      .attr('stroke', d => colorScale(d.changePercent))
-      .attr('stroke-width', 2)
-      .attr('stroke-opacity', 1);
+      .attr('fill', d => getColor(d.changePercent))
+      .attr('fill-opacity', 0.15)
+      .attr('stroke', d => getColor(d.changePercent))
+      .attr('stroke-width', 2);
 
     // Add project names
     bubbles.append('text')
       .attr('class', 'bubble-name')
       .attr('text-anchor', 'middle')
       .attr('dy', '-0.3em')
-      .style('fill', '#fff')
-      .style('font-size', d => `${Math.max(10, d.radius / 3)}px`)
+      .style('fill', 'var(--text-primary)')
+      .style('font-size', '12px')
       .style('font-weight', '600')
       .style('pointer-events', 'none')
       .style('user-select', 'none')
       .text(d => d.name.length > 15 ? d.name.substring(0, 12) + '...' : d.name);
 
+    // Add employee count
+    bubbles.append('text')
+      .attr('class', 'bubble-count')
+      .attr('text-anchor', 'middle')
+      .attr('dy', '0.8em')
+      .style('fill', 'var(--text-primary)')
+      .style('font-size', '14px')
+      .style('font-weight', '700')
+      .style('pointer-events', 'none')
+      .style('user-select', 'none')
+      .text(d => d.value);
+
     // Add change percent
     bubbles.append('text')
       .attr('class', 'bubble-percent')
       .attr('text-anchor', 'middle')
-      .attr('dy', '1em')
-      .style('fill', '#fff')
-      .style('font-size', d => `${Math.max(9, d.radius / 4)}px`)
-      .style('font-weight', '500')
+      .attr('dy', '2em')
+      .style('fill', d => getColor(d.changePercent))
+      .style('font-size', '11px')
+      .style('font-weight', '600')
       .style('pointer-events', 'none')
       .style('user-select', 'none')
       .text(d => {
@@ -113,44 +132,25 @@ function ProjectsBubbleChart({ data, width = 1000, height = 700 }: ProjectsBubbl
         const project = data.find(p => p.projectId === d.id);
         if (project) {
           setHoveredProject(project);
+          setTooltipPos({ x: event.pageX, y: event.pageY });
         }
 
         d3.select(this).select('circle')
-          .transition()
-          .duration(200)
-          .attr('stroke-width', 4)
-          .attr('fill-opacity', 0.9);
+          .attr('stroke-width', 3)
+          .attr('fill-opacity', 0.25);
       })
       .on('mouseleave', function() {
         setHoveredProject(null);
 
         d3.select(this).select('circle')
-          .transition()
-          .duration(200)
           .attr('stroke-width', 2)
-          .attr('fill-opacity', 0.7);
+          .attr('fill-opacity', 0.15);
       })
       .on('mousemove', (event) => {
-        if (tooltipRef.current && hoveredProject) {
-          const tooltip = tooltipRef.current;
-          tooltip.style.left = `${event.pageX + 15}px`;
-          tooltip.style.top = `${event.pageY + 15}px`;
-        }
+        setTooltipPos({ x: event.pageX, y: event.pageY });
       });
 
-    // Update positions on simulation tick
-    simulation.on('tick', () => {
-      bubbles.attr('transform', d => `translate(${d.x},${d.y})`);
-    });
-
-    // Stop simulation after it settles
-    simulation.alpha(1).restart();
-    setTimeout(() => simulation.stop(), 3000);
-
-    return () => {
-      simulation.stop();
-    };
-  }, [data, width, height, hoveredProject]);
+  }, [data, width, height]);
 
   return (
     <div className="projects-bubble-chart">
@@ -165,6 +165,10 @@ function ProjectsBubbleChart({ data, width = 1000, height = 700 }: ProjectsBubbl
         <div
           ref={tooltipRef}
           className="projects-bubble-chart__tooltip"
+          style={{
+            left: `${tooltipPos.x + 15}px`,
+            top: `${tooltipPos.y + 15}px`
+          }}
         >
           <div className="tooltip__header">
             <strong>{hoveredProject.projectName}</strong>
@@ -182,7 +186,7 @@ function ProjectsBubbleChart({ data, width = 1000, height = 700 }: ProjectsBubbl
           <div className="tooltip__employees">
             <div className="tooltip__employees-title">Сотрудники:</div>
             <div className="tooltip__employees-list">
-              {hoveredProject.employees.map((employee, index) => (
+              {hoveredProject.employees.map((employee) => (
                 <div key={employee.userId} className="tooltip__employee">
                   • {employee.firstName} {employee.lastName} — {employee.hoursWorked.toFixed(1)} ч
                 </div>
