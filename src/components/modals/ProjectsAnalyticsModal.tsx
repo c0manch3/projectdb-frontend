@@ -95,8 +95,13 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
                     onChange={handleCompareDateChange}
                     className="analytics-compare-input"
                     max={data.date}
+                    placeholder="Предыдущий день"
                   />
-                  {data.compareDate && (
+                  {compareDate ? (
+                    <span className="analytics-compare-current">
+                      ({formatDate(compareDate)})
+                    </span>
+                  ) : data.compareDate && (
                     <span className="analytics-compare-current">
                       ({formatDate(data.compareDate)})
                     </span>
