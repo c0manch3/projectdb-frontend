@@ -16,6 +16,7 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
   const [data, setData] = useState<ProjectsWorkloadAnalytics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [compareDate, setCompareDate] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -23,11 +24,12 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
     }
   }, [isOpen]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (customCompareDate?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await analyticsService.getProjectsWorkload();
+      const query = customCompareDate ? { compareDate: customCompareDate } : undefined;
+      const response = await analyticsService.getProjectsWorkload(query);
       setData(response);
     } catch (err: any) {
       const errorMessage = typeof err === 'string' ? err : err?.message || 'Ошибка при загрузке аналитики';
@@ -36,6 +38,16 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
       console.error('Analytics fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCompareDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setCompareDate(newDate);
+    if (newDate) {
+      fetchAnalytics(newDate);
+    } else {
+      fetchAnalytics();
     }
   };
 
@@ -72,9 +84,24 @@ function ProjectsAnalyticsModal({ isOpen, onClose }: ProjectsAnalyticsModalProps
                 <p className="analytics-date">
                   <strong>Анализ за:</strong> {formatDate(data.date)}
                 </p>
-                <p className="analytics-compare">
-                  <strong>Сравнение с:</strong> {formatDate(data.compareDate)}
-                </p>
+                <div className="analytics-compare-container">
+                  <label htmlFor="compareDate" className="analytics-compare-label">
+                    <strong>Сравнение с:</strong>
+                  </label>
+                  <input
+                    id="compareDate"
+                    type="date"
+                    value={compareDate}
+                    onChange={handleCompareDateChange}
+                    className="analytics-compare-input"
+                    max={data.date}
+                  />
+                  {data.compareDate && (
+                    <span className="analytics-compare-current">
+                      ({formatDate(data.compareDate)})
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="analytics-legend">
                 <div className="legend-item">

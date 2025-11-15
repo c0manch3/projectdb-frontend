@@ -3,6 +3,7 @@ import type { ProjectsWorkloadAnalytics } from '../store/types';
 
 export interface ProjectsWorkloadQuery {
   date?: string; // YYYY-MM-DD format
+  compareDate?: string; // YYYY-MM-DD format
 }
 
 // Analytics service
@@ -14,6 +15,10 @@ export const analyticsService = {
 
       if (query?.date) {
         params.append('date', query.date);
+      }
+
+      if (query?.compareDate) {
+        params.append('compareDate', query.compareDate);
       }
 
       const queryString = params.toString();
