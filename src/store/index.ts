@@ -7,6 +7,7 @@ import projectsSlice from './slices/projects_slice';
 import constructionsSlice from './slices/constructions_slice';
 import usersSlice from './slices/users_slice';
 import workloadSlice from './slices/workload_slice';
+import analyticsSlice from './slices/analytics_slice';
 import uiSlice from './slices/ui_slice';
 
 // Import types
@@ -20,6 +21,7 @@ export const store = configureStore({
     constructions: constructionsSlice,
     users: usersSlice,
     workload: workloadSlice,
+    analytics: analyticsSlice,
     ui: uiSlice,
   },
   middleware: (getDefaultMiddleware) =>

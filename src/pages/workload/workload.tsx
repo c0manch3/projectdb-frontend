@@ -27,6 +27,7 @@ import EditWorkloadActualModal from '../../components/modals/EditWorkloadActualM
 import ConfirmDeleteWorkloadActualModal from '../../components/modals/ConfirmDeleteWorkloadActualModal';
 import WorkloadDetailsModal from '../../components/modals/WorkloadDetailsModal';
 import WorkloadExportPreviewModal from '../../components/modals/WorkloadExportPreviewModal';
+import ProjectsAnalyticsModal from '../../components/modals/ProjectsAnalyticsModal';
 
 import type { AppDispatch, AppRootState } from '../../store';
 import type { UnifiedWorkload, WorkloadPlan, WorkloadActual } from '../../store/types';
@@ -347,6 +348,16 @@ function Workload(): JSX.Element {
               >
                 📊 Экспорт
               </Button>
+
+              {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState({ type: 'analytics' })}
+                  title="Аналитика по проектам"
+                >
+                  📈 Аналитика
+                </Button>
+              )}
             </Filters>
           </Card>
 
@@ -449,6 +460,11 @@ function Workload(): JSX.Element {
 
       <WorkloadExportPreviewModal
         isOpen={modalState.type === 'export-preview'}
+        onClose={closeModal}
+      />
+
+      <ProjectsAnalyticsModal
+        isOpen={modalState.type === 'analytics'}
         onClose={closeModal}
       />
     </>
