@@ -25,15 +25,15 @@ const editEmployeeSchema = z.object({
   firstName: z.string()
     .min(1, 'Имя обязательно для заполнения')
     .min(2, 'Имя должно содержать минимум 2 символа'),
-  
+
   lastName: z.string()
     .min(1, 'Фамилия обязательна для заполнения')
     .min(2, 'Фамилия должна содержать минимум 2 символа'),
-  
+
   email: z.string()
     .min(1, 'Email обязателен для заполнения')
     .email('Неверный формат email адреса'),
-  
+
   phone: z.string()
     .min(1, 'Телефон обязателен для заполнения')
     .min(10, 'Телефон должен содержать минимум 10 символов')
@@ -44,7 +44,7 @@ const editEmployeeSchema = z.object({
   role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
-  
+
   dateBirth: z.string()
     .min(1, 'Дата рождения обязательна для заполнения')
     .refine((date) => {
@@ -58,6 +58,19 @@ const editEmployeeSchema = z.object({
       minDate.setFullYear(minDate.getFullYear() - 100);
       return birthDate > minDate;
     }, 'Дата рождения не может быть более 100 лет назад'),
+
+  salary: z.union([
+    z.string().transform((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = parseFloat(val);
+      if (isNaN(num)) return undefined;
+      return num;
+    }),
+    z.number(),
+    z.undefined()
+  ]).optional()
+    .refine((val) => val === undefined || val === null || val >= 0,
+      'Зарплата не может быть отрицательной'),
 });
 
 type FormData = z.infer<typeof editEmployeeSchema>;
@@ -92,7 +105,8 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
         phone: employee.phone,
         telegramId: employee.telegramId || '',
         role: employee.role,
-        dateBirth: employee.dateBirth ? employee.dateBirth.split('T')[0] : '' // Convert to YYYY-MM-DD format
+        dateBirth: employee.dateBirth ? employee.dateBirth.split('T')[0] : '', // Convert to YYYY-MM-DD format
+        salary: employee.salary
       });
     }
   }, [isOpen, employee, reset]);
@@ -119,6 +133,11 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
       // Add telegramId only if provided
       if (data.telegramId && data.telegramId.trim() !== '') {
         updateEmployeeDto.telegramId = data.telegramId.trim();
+      }
+
+      // Add salary only if provided and is a valid number
+      if (data.salary !== undefined && data.salary !== null && !isNaN(Number(data.salary))) {
+        updateEmployeeDto.salary = Number(data.salary);
       }
 
       await dispatch(updateEmployee({ id: employee.id, data: updateEmployeeDto })).unwrap();
@@ -273,6 +292,26 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
               {errors.dateBirth && (
                 <span className="error-message">{errors.dateBirth.message}</span>
               )}
+            </FormGroup>
+
+            {/* Salary (optional, Admin only) */}
+            <FormGroup>
+              <label htmlFor="salary">Зарплата (₽)</label>
+              <FormInput
+                id="salary"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Например: 50000"
+                {...register('salary')}
+                className={errors.salary ? 'error' : ''}
+              />
+              {errors.salary && (
+                <span className="error-message">{errors.salary.message}</span>
+              )}
+              <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                Опциональное поле. Видно только администратору.
+              </span>
             </FormGroup>
           </div>
         </Modal.Content>

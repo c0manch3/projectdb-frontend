@@ -25,15 +25,15 @@ const createEmployeeSchema = z.object({
   firstName: z.string()
     .min(1, 'Имя обязательно для заполнения')
     .min(2, 'Имя должно содержать минимум 2 символа'),
-  
+
   lastName: z.string()
     .min(1, 'Фамилия обязательна для заполнения')
     .min(2, 'Фамилия должна содержать минимум 2 символа'),
-  
+
   email: z.string()
     .min(1, 'Email обязателен для заполнения')
     .email('Неверный формат email адреса'),
-  
+
   phone: z.string()
     .min(1, 'Телефон обязателен для заполнения')
     .min(10, 'Телефон должен содержать минимум 10 символов')
@@ -44,11 +44,11 @@ const createEmployeeSchema = z.object({
   password: z.string()
     .min(1, 'Пароль обязателен для заполнения')
     .min(6, 'Пароль должен содержать минимум 6 символов'),
-  
+
   role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
-  
+
   dateBirth: z.string()
     .min(1, 'Дата рождения обязательна для заполнения')
     .refine((date) => {
@@ -62,6 +62,19 @@ const createEmployeeSchema = z.object({
       minDate.setFullYear(minDate.getFullYear() - 100);
       return birthDate > minDate;
     }, 'Дата рождения не может быть более 100 лет назад'),
+
+  salary: z.union([
+    z.string().transform((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = parseFloat(val);
+      if (isNaN(num)) return undefined;
+      return num;
+    }),
+    z.number(),
+    z.undefined()
+  ]).optional()
+    .refine((val) => val === undefined || val === null || val >= 0,
+      'Зарплата не может быть отрицательной'),
 });
 
 type FormData = z.infer<typeof createEmployeeSchema>;
@@ -91,7 +104,8 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
       telegramId: '',
       password: '',
       role: 'Employee',
-      dateBirth: ''
+      dateBirth: '',
+      salary: undefined
     }
   });
 
@@ -113,6 +127,11 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
       // Add telegramId only if provided
       if (data.telegramId && data.telegramId.trim() !== '') {
         createEmployeeDto.telegramId = data.telegramId.trim();
+      }
+
+      // Add salary only if provided and is a valid number
+      if (data.salary !== undefined && data.salary !== null && !isNaN(Number(data.salary))) {
+        createEmployeeDto.salary = Number(data.salary);
       }
 
       await dispatch(createEmployee(createEmployeeDto)).unwrap();
@@ -282,6 +301,26 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
               {errors.dateBirth && (
                 <span className="error-message">{errors.dateBirth.message}</span>
               )}
+            </FormGroup>
+
+            {/* Salary (optional, Admin only) */}
+            <FormGroup>
+              <label htmlFor="salary">Зарплата (₽)</label>
+              <FormInput
+                id="salary"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Например: 50000"
+                {...register('salary')}
+                className={errors.salary ? 'error' : ''}
+              />
+              {errors.salary && (
+                <span className="error-message">{errors.salary.message}</span>
+              )}
+              <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                Опциональное поле. Видно только администратору.
+              </span>
             </FormGroup>
           </div>
         </Modal.Content>
