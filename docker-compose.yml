@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  frontend:
+    # Service name for the frontend application
+    container_name: projectdb-frontend
+
+    # Build configuration
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+
+    # Port mapping: host:container
+    # Maps port 8080 on host to port 80 in container
+    ports:
+      - "8080:80"
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Resource limits (adjust based on your server capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Networks
+    networks:
+      - projectdb-network
+
+# Networks configuration
+networks:
+  projectdb-network:
+    driver: bridge
+
+# Volumes for persistent data (if needed in future)
+# volumes:
+#   nginx-cache:

@@ -8636,88 +8636,226 @@ option:disabled {
 
 /* === PROJECTS BUBBLE CHART STYLES === */
 
-.projects-bubble-chart {
-  position: relative;
+/* Projects Analytics - Modern Card-Based Design */
+.projects-analytics {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--background);
+}
+
+.projects-analytics__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+}
+
+.project-analytics-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.projects-bubble-chart__svg {
-  display: block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-md);
+.project-analytics-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--text-secondary);
+  transition: background 0.2s ease;
 }
 
-.projects-bubble-chart__tooltip {
-  position: fixed;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
+.project-analytics-card.positive::before {
+  background: linear-gradient(90deg, var(--success), #10b981);
+}
+
+.project-analytics-card.negative::before {
+  background: linear-gradient(90deg, var(--error), #f87171);
+}
+
+.project-analytics-card.neutral::before {
+  background: linear-gradient(90deg, var(--text-secondary), #9ca3af);
+}
+
+.project-analytics-card:hover {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  pointer-events: none;
-  z-index: 1000;
-  max-width: 350px;
-  min-width: 250px;
+  border-color: var(--primary);
 }
 
-.projects-bubble-chart__tooltip .tooltip__header {
-  font-size: 1rem;
+.project-analytics-card.expanded {
+  grid-column: span 1;
+}
+
+.project-analytics-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+  gap: var(--spacing-md);
+}
+
+.project-analytics-card__title {
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--border);
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
 }
 
-.projects-bubble-chart__tooltip .tooltip__stats {
-  margin-bottom: var(--spacing-md);
+.project-analytics-card__badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
   font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.project-analytics-card__badge.positive {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--success);
+}
+
+.project-analytics-card__badge.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+}
+
+.project-analytics-card__badge.neutral {
+  background: rgba(107, 114, 128, 0.1);
   color: var(--text-secondary);
 }
 
-.projects-bubble-chart__tooltip .tooltip__stats strong {
+.project-analytics-card__stats {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.project-analytics-card__stat {
+  flex: 1;
+}
+
+.project-analytics-card__stat-value {
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text-primary);
-  font-weight: 600;
+  line-height: 1;
+  margin-bottom: var(--spacing-xs);
 }
 
-.projects-bubble-chart__tooltip .tooltip__stats .positive {
+.project-analytics-card__stat-value.positive {
   color: var(--success);
-  font-weight: 500;
 }
 
-.projects-bubble-chart__tooltip .tooltip__stats .negative {
+.project-analytics-card__stat-value.negative {
   color: var(--error);
+}
+
+.project-analytics-card__stat-value.neutral {
+  color: var(--text-secondary);
+}
+
+.project-analytics-card__stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   font-weight: 500;
 }
 
-.projects-bubble-chart__tooltip .tooltip__employees-title {
+.project-analytics-card__employees {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.project-analytics-card__employees-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
 }
 
-.projects-bubble-chart__tooltip .tooltip__employees-list {
-  max-height: 300px;
+.project-analytics-card__employees-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 200px;
   overflow-y: auto;
 }
 
-.projects-bubble-chart__tooltip .tooltip__employee {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  padding: var(--spacing-xs) 0;
-  line-height: 1.5;
+.project-analytics-card__employee {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--background);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
 }
 
-.projects-bubble-chart__tooltip .tooltip__employee:not(:last-child) {
-  border-bottom: 1px solid var(--border-light);
+.project-analytics-card__employee .employee-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.project-analytics-card__employee .employee-hours {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-analytics-card__expand-hint {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-top: 1px dashed var(--border);
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .projects-analytics__grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 600px) {
+  .projects-analytics__grid {
+    grid-template-columns: 1fr;
+    padding: var(--spacing-sm);
+  }
+
+  .project-analytics-card__stats {
+    gap: var(--spacing-md);
+  }
+
+  .project-analytics-card__stat-value {
+    font-size: 1.75rem;
+  }
 }
 
 /* === PROJECTS ANALYTICS MODAL STYLES === */
