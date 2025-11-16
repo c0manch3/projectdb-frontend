@@ -284,6 +284,35 @@ export interface UiState {
   };
 }
 
+// Analytics types
+export interface EmployeeWorkload {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  hoursWorked: number;
+}
+
+export interface ProjectWorkloadAnalytics {
+  projectId: string;
+  projectName: string;
+  employeeCount: number;
+  previousEmployeeCount: number;
+  changePercent: number;
+  employees: EmployeeWorkload[];
+}
+
+export interface ProjectsWorkloadAnalytics {
+  date: string;
+  compareDate: string;
+  projects: ProjectWorkloadAnalytics[];
+}
+
+export interface AnalyticsState {
+  projectsWorkload: ProjectsWorkloadAnalytics | null;
+  loading: boolean;
+  error: string | null;
+}
+
 // Root state interface
 export interface RootState {
   auth: AuthState;
@@ -295,4 +324,5 @@ export interface RootState {
   companies: CompaniesState;
   projectUsers: ProjectUsersState;
   ui: UiState;
+  analytics: AnalyticsState;
 }

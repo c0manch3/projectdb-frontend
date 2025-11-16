@@ -27,6 +27,7 @@ import EditWorkloadActualModal from '../../components/modals/EditWorkloadActualM
 import ConfirmDeleteWorkloadActualModal from '../../components/modals/ConfirmDeleteWorkloadActualModal';
 import WorkloadDetailsModal from '../../components/modals/WorkloadDetailsModal';
 import WorkloadExportPreviewModal from '../../components/modals/WorkloadExportPreviewModal';
+import ProjectsAnalyticsModal from '../../components/modals/ProjectsAnalyticsModal';
 
 import type { AppDispatch, AppRootState } from '../../store';
 import type { UnifiedWorkload, WorkloadPlan, WorkloadActual } from '../../store/types';
@@ -340,13 +341,25 @@ function Workload(): JSX.Element {
                 />
               </Filters.Group>
 
-              <Button
-                variant="secondary"
-                onClick={handleExport}
-                title="Экспорт в Excel"
-              >
-                📊 Экспорт
-              </Button>
+              <Filters.Group style={{display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-end'}}>
+                <Button
+                  variant="secondary"
+                  onClick={handleExport}
+                  title="Экспорт в Excel"
+                >
+                  📊 Экспорт
+                </Button>
+
+                {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModalState({ type: 'analytics' })}
+                    title="Аналитика по проектам"
+                  >
+                    📈 Аналитика
+                  </Button>
+                )}
+              </Filters.Group>
             </Filters>
           </Card>
 
@@ -449,6 +462,11 @@ function Workload(): JSX.Element {
 
       <WorkloadExportPreviewModal
         isOpen={modalState.type === 'export-preview'}
+        onClose={closeModal}
+      />
+
+      <ProjectsAnalyticsModal
+        isOpen={modalState.type === 'analytics'}
         onClose={closeModal}
       />
     </>
