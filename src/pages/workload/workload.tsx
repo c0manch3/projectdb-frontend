@@ -341,23 +341,25 @@ function Workload(): JSX.Element {
                 />
               </Filters.Group>
 
-              <Button
-                variant="secondary"
-                onClick={handleExport}
-                title="Экспорт в Excel"
-              >
-                📊 Экспорт
-              </Button>
-
-              {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
+              <Filters.Group style={{display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'flex-end'}}>
                 <Button
-                  variant="primary"
-                  onClick={() => setModalState({ type: 'analytics' })}
-                  title="Аналитика по проектам"
+                  variant="secondary"
+                  onClick={handleExport}
+                  title="Экспорт в Excel"
                 >
-                  📈 Аналитика
+                  📊 Экспорт
                 </Button>
-              )}
+
+                {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModalState({ type: 'analytics' })}
+                    title="Аналитика по проектам"
+                  >
+                    📈 Аналитика
+                  </Button>
+                )}
+              </Filters.Group>
             </Filters>
           </Card>
 
