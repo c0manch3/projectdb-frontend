@@ -28,6 +28,7 @@ import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { CreateProjectDto } from '../../services/projects';
 
 // Validation schema using Zod
+// NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
 const createProjectSchema = z.object({
   name: z.string()
     .min(1, 'Название проекта обязательно для заполнения')
@@ -49,13 +50,6 @@ const createProjectSchema = z.object({
 
   expirationDate: z.string()
     .min(1, 'Срок сдачи обязателен для заполнения'),
-
-  cost: z.number({
-    required_error: 'Стоимость проекта обязательна для заполнения',
-    invalid_type_error: 'Стоимость должна быть числом'
-  })
-    .min(1, 'Стоимость должна быть больше нуля')
-    .max(999999999999, 'Стоимость слишком большая')
 }).refine((data) => {
   if (data.contractDate && data.expirationDate) {
     const contractDate = new Date(data.contractDate);
@@ -107,8 +101,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
   } = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
-      type: 'main',
-      cost: 0
+      type: 'main'
     }
   });
 
@@ -131,6 +124,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
   }, [watchedType, setValue]);
 
   // Handle form submission
+  // NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
   const onSubmit = async (data: CreateProjectFormData) => {
     setIsSubmitting(true);
     try {
@@ -139,7 +133,6 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
         type: data.type,
         contractDate: data.contractDate,
         expirationDate: data.expirationDate,
-        cost: data.cost,
         ...(data.customerId && { customerId: data.customerId }),
         ...(data.managerId && { managerId: data.managerId }),
         ...(data.type === 'additional' && data.mainProjectId && { mainProjectId: data.mainProjectId })
@@ -277,20 +270,7 @@ function AddProjectModal({ isOpen, onClose }: AddProjectModalProps): JSX.Element
             />
           </FormGroup>
 
-          <FormGroup>
-            <FormGroup.Label htmlFor="cost" required>
-              Стоимость (руб.)
-            </FormGroup.Label>
-            <FormInput
-              {...register('cost', { valueAsNumber: true })}
-              id="cost"
-              type="number"
-              placeholder="5000000"
-              min="0"
-              step="1000"
-              error={errors.cost?.message}
-            />
-          </FormGroup>
+          {/* NOTE: Поле cost удалено - стоимость вычисляется автоматически из графиков платежей */}
         </form>
       </Modal.Content>
       <Modal.Footer>
