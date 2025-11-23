@@ -13,6 +13,9 @@ import Button from '../../components/common/button/button';
 import UploadProjectDocumentModal from '../../components/modals/UploadProjectDocumentModal';
 import ConfirmDeleteDocumentModal from '../../components/modals/ConfirmDeleteDocumentModal';
 import EditProjectModal from '../../components/modals/EditProjectModal';
+import AddPaymentScheduleModal from '../../components/modals/AddPaymentScheduleModal';
+import EditPaymentScheduleModal from '../../components/modals/EditPaymentScheduleModal';
+import ConfirmDeletePaymentScheduleModal from '../../components/modals/ConfirmDeletePaymentScheduleModal';
 
 import type { AppDispatch } from '../../store';
 import {
@@ -27,7 +30,8 @@ import {
 } from '../../store/slices/projects_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import { projectsService } from '../../services/projects';
-import type { Document } from '../../store/types';
+import { paymentSchedulesService } from '../../services/payment_schedules';
+import type { Document, PaymentSchedule } from '../../store/types';
 
 function ProjectDetail(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,6 +57,14 @@ function ProjectDetail(): JSX.Element {
 
   // Local state for edit project modal
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  // Local state for payment schedules
+  const [paymentSchedules, setPaymentSchedules] = useState<PaymentSchedule[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
+  const [editPaymentModalOpen, setEditPaymentModalOpen] = useState(false);
+  const [deletePaymentModalOpen, setDeletePaymentModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentSchedule | null>(null);
 
   // Check user permissions
   const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
@@ -89,6 +101,52 @@ function ProjectDetail(): JSX.Element {
       loadProjectDocuments();
     }
   }, [id, canViewProjects, currentProject]);
+
+  // Load payment schedules
+  const loadPaymentSchedules = async () => {
+    if (!id) return;
+
+    setPaymentsLoading(true);
+    try {
+      const payments = await paymentSchedulesService.getPaymentSchedulesByProject(id);
+      setPaymentSchedules(payments);
+    } catch (error: any) {
+      console.error('Error loading payment schedules:', error);
+      toast.error(error?.message || error?.toString() || 'Ошибка при загрузке графиков платежей');
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  // Load payment schedules when project loads
+  useEffect(() => {
+    if (id && canViewProjects && currentProject) {
+      loadPaymentSchedules();
+    }
+  }, [id, canViewProjects, currentProject]);
+
+  // Payment schedule handlers
+  const handleAddPayment = () => {
+    setAddPaymentModalOpen(true);
+  };
+
+  const handleEditPayment = (payment: PaymentSchedule) => {
+    setSelectedPayment(payment);
+    setEditPaymentModalOpen(true);
+  };
+
+  const handleDeletePayment = (payment: PaymentSchedule) => {
+    setSelectedPayment(payment);
+    setDeletePaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    loadPaymentSchedules();
+    // Also refresh project to update cost
+    if (id) {
+      dispatch(fetchProjectById(id));
+    }
+  };
 
   // Document operations handlers
   const handleUploadDocument = (type: 'tz' | 'contract') => {
@@ -457,29 +515,38 @@ function ProjectDetail(): JSX.Element {
                 </Card.Content>
               </Card>
 
-              {/* Actions Card */}
+              {/* Quick Actions Card */}
               <Card className="project-actions-card">
                 <Card.Header>
-                  <Card.Title>Действия</Card.Title>
+                  <Card.Title>Быстрые действия</Card.Title>
                 </Card.Header>
                 <Card.Content>
-                  <div className="project-actions">
+                  <div className="project-quick-actions">
                     {canEditProjects && (
-                      <Button
-                        variant="primary"
-                        className="project-action-button"
+                      <button
+                        className="quick-action-btn"
                         onClick={handleEditProject}
+                        title="Редактировать проект"
                       >
-                        ✏️ Редактировать проект
-                      </Button>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <span className="quick-action-btn__label">Редактировать</span>
+                      </button>
                     )}
-                    <Button
-                      variant="outline"
-                      className="project-action-button"
+                    <button
+                      className="quick-action-btn"
                       onClick={handleNavigateToConstructions}
+                      title="Перейти к сооружениям"
                     >
-                      🏗️ Сооружения
-                    </Button>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M2 20h20"></path>
+                        <path d="M5 20V8l7-5 7 5v12"></path>
+                        <path d="M9 20v-4h6v4"></path>
+                      </svg>
+                      <span className="quick-action-btn__label">Сооружения</span>
+                    </button>
                   </div>
                 </Card.Content>
               </Card>
@@ -487,175 +554,189 @@ function ProjectDetail(): JSX.Element {
 
             {/* Project Documents Section */}
             <div className="project-documents-section">
-              <h2 className="section-title">Документы проекта</h2>
-
-              <div className="project-documents-grid">
-                {/* Technical Specification (TZ) */}
-                <Card className="project-document-card constructions-table-card">
-                  <Card.Header>
-                    <div className="document-card-header">
-                      <Card.Title className="document-card-title">
-                        📋 Техническое задание (ТЗ)
-                      </Card.Title>
-                      {canEditProjects && (
-                        <Button
-                          variant="outline"
-                          size="small"
-                          onClick={() => handleUploadDocument('tz')}
-                        >
-                          Загрузить ТЗ
-                        </Button>
-                      )}
-                    </div>
-                  </Card.Header>
-                  <Card.Content>
-                    {documentsLoading ? (
-                      <LoadingState message="Загрузка документов..." />
-                    ) : (
-                      <div className="construction-card__documents-list">
-                        {getDocumentsByType('tz').length > 0 ? (
-                          getDocumentsByType('tz').map((document) => (
-                            <div key={document.id} className="construction-document-item">
-                              <div className="construction-document-item__info">
-                                <div className="construction-document-item__icon">
-                                  {document.mimeType?.includes('pdf') ? '📄' :
-                                   document.mimeType?.includes('word') ? '📝' :
-                                   document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
-                                </div>
-                                <div className="construction-document-item__details">
-                                  <div className="construction-document-item__name">{document.originalName}</div>
-                                  <div className="construction-document-item__meta">
-                                    <span className="construction-document-item__type-badge">
-                                      ТЗ
-                                    </span>
-                                    <span className="document-separator">•</span>
-                                    <span className="construction-document-item__date">
-                                      Дата загрузки: {formatDate(document.uploadedAt)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="construction-document-item__actions">
-                                <button
-                                  className="construction-document-item__action"
-                                  onClick={() => handleDownloadDocument(document)}
-                                  title="Скачать документ"
-                                >
-                                  <span className="construction-document-item__action-icon">⬇️</span>
-                                  Скачать
-                                </button>
-                                {canEditProjects && (
-                                  <button
-                                    className="construction-document-item__action construction-document-item__action--danger"
-                                    onClick={() => handleDeleteDocument(document)}
-                                    title="Удалить документ"
-                                  >
-                                    <span className="construction-document-item__action-icon">🗑️</span>
-                                    Удалить
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="document-empty-state">
-                            <div className="document-empty-icon">📋</div>
-                            <div className="document-empty-text">
-                              <div className="document-empty-title">Техническое задание не загружено</div>
-                              <div className="document-empty-description">
-                                Загрузите техническое задание для проекта
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Card.Content>
-                </Card>
-
-                {/* Contract */}
-                <Card className="project-document-card constructions-table-card">
-                  <Card.Header>
-                    <div className="document-card-header">
-                      <Card.Title className="document-card-title">
-                        📄 Договор
-                      </Card.Title>
-                      {canEditProjects && (
-                        <Button
-                          variant="outline"
-                          size="small"
-                          onClick={() => handleUploadDocument('contract')}
-                        >
-                          Загрузить договор
-                        </Button>
-                      )}
-                    </div>
-                  </Card.Header>
-                  <Card.Content>
-                    {documentsLoading ? (
-                      <LoadingState message="Загрузка документов..." />
-                    ) : (
-                      <div className="construction-card__documents-list">
-                        {getDocumentsByType('contract').length > 0 ? (
-                          getDocumentsByType('contract').map((document) => (
-                            <div key={document.id} className="construction-document-item">
-                              <div className="construction-document-item__info">
-                                <div className="construction-document-item__icon">
-                                  {document.mimeType?.includes('pdf') ? '📄' :
-                                   document.mimeType?.includes('word') ? '📝' :
-                                   document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
-                                </div>
-                                <div className="construction-document-item__details">
-                                  <div className="construction-document-item__name">{document.originalName}</div>
-                                  <div className="construction-document-item__meta">
-                                    <span className="construction-document-item__type-badge">
-                                      Договор
-                                    </span>
-                                    <span className="document-separator">•</span>
-                                    <span className="construction-document-item__date">
-                                      Дата загрузки: {formatDate(document.uploadedAt)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="construction-document-item__actions">
-                                <button
-                                  className="construction-document-item__action"
-                                  onClick={() => handleDownloadDocument(document)}
-                                  title="Скачать документ"
-                                >
-                                  <span className="construction-document-item__action-icon">⬇️</span>
-                                  Скачать
-                                </button>
-                                {canEditProjects && (
-                                  <button
-                                    className="construction-document-item__action construction-document-item__action--danger"
-                                    onClick={() => handleDeleteDocument(document)}
-                                    title="Удалить документ"
-                                  >
-                                    <span className="construction-document-item__action-icon">🗑️</span>
-                                    Удалить
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="document-empty-state">
-                            <div className="document-empty-icon">📄</div>
-                            <div className="document-empty-text">
-                              <div className="document-empty-title">Договор не загружен</div>
-                              <div className="document-empty-description">
-                                Загрузите договор для проекта
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Card.Content>
-                </Card>
+              <div className="section-header">
+                <h2 className="section-title">Документы проекта</h2>
+                {canEditProjects && (
+                  <div className="section-header__actions">
+                    <Button
+                      variant="outline"
+                      size="small"
+                      onClick={() => handleUploadDocument('tz')}
+                    >
+                      + ТЗ
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="small"
+                      onClick={() => handleUploadDocument('contract')}
+                    >
+                      + Договор
+                    </Button>
+                  </div>
+                )}
               </div>
+
+              <Card className="project-documents-card">
+                <Card.Content>
+                  {documentsLoading ? (
+                    <LoadingState message="Загрузка документов..." />
+                  ) : projectDocuments.length > 0 ? (
+                    <div className="documents-table">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Тип</th>
+                            <th>Название документа</th>
+                            <th>Дата загрузки</th>
+                            <th>Действия</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {projectDocuments.map((document) => (
+                            <tr key={document.id}>
+                              <td>
+                                <span className={`document-type-badge document-type-badge--${document.type}`}>
+                                  {document.type === 'tz' ? 'ТЗ' : 'Договор'}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="document-name-cell">
+                                  <span className="document-name-cell__icon">
+                                    {document.mimeType?.includes('pdf') ? '📄' :
+                                     document.mimeType?.includes('word') ? '📝' :
+                                     document.mimeType?.includes('excel') || document.mimeType?.includes('sheet') ? '📊' : '📎'}
+                                  </span>
+                                  <span className="document-name-cell__text">{document.originalName}</span>
+                                </div>
+                              </td>
+                              <td>{formatDate(document.uploadedAt)}</td>
+                              <td className="actions-cell">
+                                <button
+                                  className="action-btn action-btn--download"
+                                  onClick={() => handleDownloadDocument(document)}
+                                  title="Скачать"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                  </svg>
+                                </button>
+                                {canEditProjects && (
+                                  <button
+                                    className="action-btn action-btn--delete"
+                                    onClick={() => handleDeleteDocument(document)}
+                                    title="Удалить"
+                                  >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <polyline points="3 6 5 6 21 6"></polyline>
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="Нет документов"
+                      description="Загрузите техническое задание или договор для этого проекта"
+                    />
+                  )}
+                </Card.Content>
+              </Card>
+            </div>
+
+            {/* Payment Schedules Section */}
+            <div className="project-payments-section">
+              <div className="section-header">
+                <h2 className="section-title">График платежей</h2>
+                {canEditProjects && (
+                  <Button
+                    variant="primary"
+                    size="small"
+                    onClick={handleAddPayment}
+                  >
+                    + Добавить платеж
+                  </Button>
+                )}
+              </div>
+
+              <Card className="project-payments-card">
+                <Card.Content>
+                  {paymentsLoading ? (
+                    <LoadingState message="Загрузка графиков платежей..." />
+                  ) : paymentSchedules.length > 0 ? (
+                    <div className="payment-schedules-table">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Название</th>
+                            <th>Тип</th>
+                            <th>Сумма</th>
+                            <th>%</th>
+                            <th>Ожидаемая дата</th>
+                            <th>Статус</th>
+                            {canEditProjects && <th>Действия</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paymentSchedules.map((payment) => (
+                            <tr key={payment.id} className={payment.isPaid ? 'payment-row--paid' : paymentSchedulesService.isOverdue(payment) ? 'payment-row--overdue' : ''}>
+                              <td>{payment.name}</td>
+                              <td>{paymentSchedulesService.getPaymentTypeLabel(payment.type)}</td>
+                              <td className="payment-amount">{paymentSchedulesService.formatAmount(payment.amount)}</td>
+                              <td>{payment.percentage ? `${payment.percentage}%` : '-'}</td>
+                              <td>{formatDate(payment.expectedDate)}</td>
+                              <td>
+                                <span className={`status-badge ${payment.isPaid ? 'status-badge--paid' : paymentSchedulesService.isOverdue(payment) ? 'status-badge--overdue' : 'status-badge--pending'}`}>
+                                  {payment.isPaid ? 'Оплачен' : paymentSchedulesService.isOverdue(payment) ? 'Просрочен' : 'Ожидается'}
+                                </span>
+                              </td>
+                              {canEditProjects && (
+                                <td className="actions-cell">
+                                  <button
+                                    className="action-btn action-btn--edit"
+                                    onClick={() => handleEditPayment(payment)}
+                                    title="Редактировать"
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button
+                                    className="action-btn action-btn--delete"
+                                    onClick={() => handleDeletePayment(payment)}
+                                    title="Удалить"
+                                  >
+                                    🗑️
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="payment-totals-row">
+                            <td colSpan={2}><strong>Итого:</strong></td>
+                            <td className="payment-amount"><strong>{paymentSchedulesService.formatAmount(paymentSchedulesService.calculateTotalAmount(paymentSchedules))}</strong></td>
+                            <td>100%</td>
+                            <td colSpan={canEditProjects ? 3 : 2}>
+                              Оплачено: {paymentSchedulesService.formatAmount(paymentSchedulesService.calculatePaidAmount(paymentSchedules))}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="Нет платежей"
+                      description="Добавьте график платежей для этого проекта"
+                    />
+                  )}
+                </Card.Content>
+              </Card>
             </div>
 
             {/* Future Features Card */}
@@ -727,6 +808,36 @@ function ProjectDetail(): JSX.Element {
           onConfirm={handleConfirmDeleteDocument}
           document={documentToDelete}
           isLoading={isDeleting}
+        />
+
+        {/* Payment Schedule Modals */}
+        {currentProject && (
+          <AddPaymentScheduleModal
+            isOpen={addPaymentModalOpen}
+            onClose={() => setAddPaymentModalOpen(false)}
+            projectId={currentProject.id}
+            onSuccess={handlePaymentSuccess}
+          />
+        )}
+
+        <EditPaymentScheduleModal
+          isOpen={editPaymentModalOpen}
+          onClose={() => {
+            setEditPaymentModalOpen(false);
+            setSelectedPayment(null);
+          }}
+          paymentSchedule={selectedPayment}
+          onSuccess={handlePaymentSuccess}
+        />
+
+        <ConfirmDeletePaymentScheduleModal
+          isOpen={deletePaymentModalOpen}
+          onClose={() => {
+            setDeletePaymentModalOpen(false);
+            setSelectedPayment(null);
+          }}
+          paymentSchedule={selectedPayment}
+          onSuccess={handlePaymentSuccess}
         />
       </main>
     </>

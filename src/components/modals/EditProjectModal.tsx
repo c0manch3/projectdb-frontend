@@ -29,6 +29,7 @@ import type { Project } from '../../store/types';
 import type { UpdateProjectDto } from '../../services/projects';
 
 // Validation schema using Zod
+// NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
 const updateProjectSchema = z.object({
   name: z.string()
     .min(1, 'Название проекта обязательно для заполнения')
@@ -50,13 +51,6 @@ const updateProjectSchema = z.object({
 
   expirationDate: z.string()
     .min(1, 'Срок сдачи обязателен для заполнения'),
-
-  cost: z.number({
-    required_error: 'Стоимость проекта обязательна для заполнения',
-    invalid_type_error: 'Стоимость должна быть числом'
-  })
-    .min(1, 'Стоимость должна быть больше нуля')
-    .max(999999999999, 'Стоимость слишком большая'),
 
   status: z.enum(['Active', 'Completed'] as const, {
     required_error: 'Статус проекта обязателен для выбора'
@@ -133,9 +127,8 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
         customerId: project.customerId || '',
         managerId: project.managerId || '',
         mainProjectId: project.mainProjectId || '',
-        contractDate: project.contractDate.split('T')[0], // Convert to YYYY-MM-DD format
-        expirationDate: project.expirationDate.split('T')[0], // Convert to YYYY-MM-DD format
-        cost: project.cost,
+        contractDate: project.contractDate ? project.contractDate.split('T')[0] : '', // Convert to YYYY-MM-DD format
+        expirationDate: project.expirationDate ? project.expirationDate.split('T')[0] : '', // Convert to YYYY-MM-DD format
         status: project.status
       });
     }
@@ -149,6 +142,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
   }, [watchedType, setValue]);
 
   // Handle form submission
+  // NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
   const onSubmit = async (data: UpdateProjectFormData) => {
     if (!project) return;
 
@@ -159,7 +153,6 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
         type: data.type,
         contractDate: data.contractDate,
         expirationDate: data.expirationDate,
-        cost: data.cost,
         status: data.status,
         ...(data.customerId && { customerId: data.customerId }),
         ...(data.managerId && { managerId: data.managerId }),
@@ -318,20 +311,7 @@ function EditProjectModal({ isOpen, onClose, project }: EditProjectModalProps): 
             />
           </FormGroup>
 
-          <FormGroup>
-            <FormGroup.Label htmlFor="edit-cost" required>
-              Стоимость (руб.)
-            </FormGroup.Label>
-            <FormInput
-              {...register('cost', { valueAsNumber: true })}
-              id="edit-cost"
-              type="number"
-              placeholder="5000000"
-              min="0"
-              step="1000"
-              error={errors.cost?.message}
-            />
-          </FormGroup>
+          {/* NOTE: Поле cost удалено - стоимость вычисляется автоматически из графиков платежей */}
 
           <FormGroup>
             <FormGroup.Label htmlFor="edit-status" required>

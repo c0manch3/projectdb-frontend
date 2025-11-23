@@ -17,17 +17,36 @@ export interface User {
 
 export type UserRole = 'Admin' | 'Manager' | 'Employee';
 
+// Payment Schedule types
+export type PaymentType = 'Advance' | 'MainPayment' | 'FinalPayment' | 'Other';
+
+export interface PaymentSchedule {
+  id: string;
+  projectId: string;
+  type: PaymentType;
+  name: string;
+  amount: number;
+  percentage?: number;
+  expectedDate: string;
+  actualDate?: string;
+  isPaid: boolean;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   customerId?: string;
   contractDate: string;
   expirationDate: string;
-  cost: number;
+  cost: number; // Вычисляется автоматически как сумма paymentSchedules[].amount
   type: 'main' | 'additional';
   managerId?: string;
   mainProjectId?: string;
   status: 'Active' | 'Completed';
+  paymentSchedules?: PaymentSchedule[]; // Массив платежей проекта
   createdAt: string;
   updatedAt: string;
 }
@@ -313,6 +332,18 @@ export interface AnalyticsState {
   error: string | null;
 }
 
+export interface PaymentSchedulesState {
+  list: PaymentSchedule[];
+  byProject: { [projectId: string]: PaymentSchedule[] };
+  current: PaymentSchedule | null;
+  filters: {
+    projectId?: string;
+    status?: 'all' | 'paid' | 'unpaid' | 'overdue';
+  };
+  loading: boolean;
+  error: string | null;
+}
+
 // Root state interface
 export interface RootState {
   auth: AuthState;
@@ -325,4 +356,5 @@ export interface RootState {
   projectUsers: ProjectUsersState;
   ui: UiState;
   analytics: AnalyticsState;
+  paymentSchedules: PaymentSchedulesState;
 }

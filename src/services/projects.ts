@@ -2,12 +2,13 @@ import { apiRequest } from './api';
 import { Project, User, Company, Document } from '../store/types';
 
 // DTOs for project operations
+// NOTE: cost больше НЕ передаётся при создании/обновлении проекта
+// cost теперь вычисляется автоматически как сумма paymentSchedules[].amount
 export interface CreateProjectDto {
   name: string;
   customerId?: string;
   contractDate: string; // ISO date string
   expirationDate: string; // ISO date string
-  cost: number;
   type: 'main' | 'additional';
   managerId?: string;
   mainProjectId?: string; // Required when type is 'additional'
@@ -18,7 +19,6 @@ export interface UpdateProjectDto {
   customerId?: string;
   contractDate?: string;
   expirationDate?: string;
-  cost?: number;
   type?: 'main' | 'additional';
   managerId?: string;
   mainProjectId?: string;
@@ -127,11 +127,12 @@ export const projectsService = {
   },
 
   // Create new project
+  // NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
   async createProject(projectData: CreateProjectDto): Promise<Project> {
     try {
-      // Validate required fields
+      // Validate required fields (cost removed - now calculated from payment schedules)
       const requiredFields: (keyof CreateProjectDto)[] = [
-        'name', 'contractDate', 'expirationDate', 'cost', 'type'
+        'name', 'contractDate', 'expirationDate', 'type'
       ];
 
       for (const field of requiredFields) {
@@ -153,10 +154,7 @@ export const projectsService = {
         throw new Error('Срок сдачи должен быть позже даты договора');
       }
 
-      // Validate cost
-      if (projectData.cost <= 0) {
-        throw new Error('Стоимость проекта должна быть больше нуля');
-      }
+      // NOTE: cost validation removed - cost is now calculated from payment schedules
 
       const response = await apiRequest.post<Project>('/project/create', projectData);
       return response.data;
@@ -180,6 +178,7 @@ export const projectsService = {
   },
 
   // Update project
+  // NOTE: cost больше НЕ передаётся - вычисляется автоматически из paymentSchedules
   async updateProject(id: string, projectData: UpdateProjectDto): Promise<Project> {
     try {
       // Validate dates if both are provided
@@ -192,10 +191,7 @@ export const projectsService = {
         }
       }
 
-      // Validate cost if provided
-      if (projectData.cost !== undefined && projectData.cost <= 0) {
-        throw new Error('Стоимость проекта должна быть больше нуля');
-      }
+      // NOTE: cost validation removed - cost is now calculated from payment schedules
 
       // Validate additional project specific requirements
       if (projectData.type === 'additional' && !projectData.mainProjectId) {
