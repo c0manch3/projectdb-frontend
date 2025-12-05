@@ -28,6 +28,7 @@ import ConfirmDeleteWorkloadActualModal from '../../components/modals/ConfirmDel
 import WorkloadDetailsModal from '../../components/modals/WorkloadDetailsModal';
 import WorkloadExportPreviewModal from '../../components/modals/WorkloadExportPreviewModal';
 import ProjectsAnalyticsModal from '../../components/modals/ProjectsAnalyticsModal';
+import EmployeeWorkHoursDeviationModal from '../../components/modals/EmployeeWorkHoursDeviationModal';
 
 import type { AppDispatch, AppRootState } from '../../store';
 import type { UnifiedWorkload, WorkloadPlan, WorkloadActual } from '../../store/types';
@@ -56,7 +57,7 @@ import {
 } from '../../store/slices/auth_slice';
 
 interface ModalState {
-  type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | 'export-preview' | null;
+  type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | 'export-preview' | 'analytics' | 'hours-deviation' | null;
   data?: {
     date?: string;
     planId?: string;
@@ -351,13 +352,22 @@ function Workload(): JSX.Element {
                 </Button>
 
                 {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setModalState({ type: 'analytics' })}
-                    title="Аналитика по проектам"
-                  >
-                    📈 Аналитика
-                  </Button>
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setModalState({ type: 'analytics' })}
+                      title="Аналитика по проектам"
+                    >
+                      📈 Аналитика
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setModalState({ type: 'hours-deviation' })}
+                      title="Отклонения рабочих часов"
+                    >
+                      ⏰ Отклонения часов
+                    </Button>
+                  </>
                 )}
               </Filters.Group>
             </Filters>
@@ -467,6 +477,11 @@ function Workload(): JSX.Element {
 
       <ProjectsAnalyticsModal
         isOpen={modalState.type === 'analytics'}
+        onClose={closeModal}
+      />
+
+      <EmployeeWorkHoursDeviationModal
+        isOpen={modalState.type === 'hours-deviation'}
         onClose={closeModal}
       />
     </>
