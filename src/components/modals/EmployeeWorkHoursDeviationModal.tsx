@@ -404,7 +404,7 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
                                   <div className="employee-deviation-modal__accordion-spinner"></div>
                                   <span>Загрузка детальной информации...</span>
                                 </div>
-                              ) : details && details.workloads.length > 0 ? (
+                              ) : details && details.workloads && details.workloads.length > 0 ? (
                                 <>
                                   <div className="employee-deviation-modal__accordion-header">
                                     <h4 className="employee-deviation-modal__accordion-title">
