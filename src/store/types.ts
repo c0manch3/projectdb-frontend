@@ -341,6 +341,25 @@ export interface EmployeeWorkHoursResponse {
   employees: EmployeeWorkHourItem[];
 }
 
+// Employee Workload Details for specific date
+export interface EmployeeWorkloadDetail {
+  id: string;
+  projectId: string;
+  projectName: string;
+  hoursWorked: number;
+  userText: string;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmployeeWorkloadDetailsResponse {
+  userId: string;
+  date: string;
+  workloads: EmployeeWorkloadDetail[];
+  totalHours: number;
+}
+
 export interface AnalyticsState {
   projectsWorkload: ProjectsWorkloadAnalytics | null;
   employeeWorkHours: EmployeeWorkHoursResponse | null;

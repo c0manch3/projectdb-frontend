@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Modal from '../common/modal/modal';
 import Button from '../common/button/button';
 import LoadingState from '../common/loading_state/loading_state';
 import { analyticsService } from '../../services/analytics';
-import type { EmployeeWorkHoursResponse, EmployeeWorkHourItem } from '../../store/types';
+import type {
+  EmployeeWorkHoursResponse,
+  EmployeeWorkHourItem,
+  EmployeeWorkloadDetailsResponse
+} from '../../store/types';
 
 interface EmployeeWorkHoursDeviationModalProps {
   isOpen: boolean;
@@ -21,6 +26,11 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('deviation');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
+
+  // Accordion state
+  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
+  const [workloadDetails, setWorkloadDetails] = useState<Record<string, EmployeeWorkloadDetailsResponse>>({});
+  const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
 
   // Get yesterday's date in YYYY-MM-DD format
   const getYesterdayDate = (): string => {
@@ -58,6 +68,55 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
     const newDate = e.target.value;
     setSelectedDate(newDate);
     fetchAnalytics(newDate || undefined);
+    // Reset accordion state when date changes
+    setExpandedEmployeeId(null);
+    setWorkloadDetails({});
+  };
+
+  // Handle employee card click to toggle accordion
+  const handleEmployeeCardClick = async (employee: EmployeeWorkHourItem) => {
+    const employeeId = employee.userId;
+
+    // If clicking on already expanded card, collapse it
+    if (expandedEmployeeId === employeeId) {
+      setExpandedEmployeeId(null);
+      return;
+    }
+
+    // Expand new card
+    setExpandedEmployeeId(employeeId);
+
+    // If we already have the details cached, don't fetch again
+    if (workloadDetails[employeeId]) {
+      return;
+    }
+
+    // Fetch workload details
+    setLoadingDetails(prev => ({ ...prev, [employeeId]: true }));
+    try {
+      const details = await analyticsService.getEmployeeWorkloadDetails({
+        employeeId,
+        date: selectedDate,
+        type: 'actual'
+      });
+      setWorkloadDetails(prev => ({ ...prev, [employeeId]: details }));
+    } catch (err: any) {
+      const errorMessage = typeof err === 'string' ? err : err?.message || 'Ошибка при загрузке деталей';
+      toast.error(errorMessage);
+      console.error('Error fetching workload details:', err);
+      // Set empty details on error
+      setWorkloadDetails(prev => ({
+        ...prev,
+        [employeeId]: {
+          userId: employeeId,
+          date: selectedDate,
+          workloads: [],
+          totalHours: 0
+        }
+      }));
+    } finally {
+      setLoadingDetails(prev => ({ ...prev, [employeeId]: false }));
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -259,13 +318,27 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
                 {displayedEmployees.map((employee) => {
                   const percentage = getPercentage(employee.hoursWorked);
                   const isOvertime = employee.deviation > 0;
+                  const isExpanded = expandedEmployeeId === employee.userId;
+                  const details = workloadDetails[employee.userId];
+                  const isLoadingDetails = loadingDetails[employee.userId];
 
                   return (
                     <div
                       key={employee.userId}
-                      className={`employee-deviation-modal__card ${isOvertime ? 'employee-deviation-modal__card--overtime' : 'employee-deviation-modal__card--undertime'}`}
+                      className={`employee-deviation-modal__card ${isOvertime ? 'employee-deviation-modal__card--overtime' : 'employee-deviation-modal__card--undertime'} ${isExpanded ? 'employee-deviation-modal__card--expanded' : ''}`}
                     >
-                      <div className="employee-deviation-modal__card-header">
+                      <div
+                        className="employee-deviation-modal__card-header employee-deviation-modal__card-header--clickable"
+                        onClick={() => handleEmployeeCardClick(employee)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleEmployeeCardClick(employee);
+                          }
+                        }}
+                      >
                         <div className="employee-deviation-modal__employee-info">
                           <div className="employee-deviation-modal__employee-name">
                             <span className="employee-deviation-modal__employee-icon">👤</span>
@@ -275,10 +348,15 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
                             {employee.email}
                           </div>
                         </div>
-                        <div className={`employee-deviation-modal__deviation-badge ${isOvertime ? 'employee-deviation-modal__deviation-badge--positive' : 'employee-deviation-modal__deviation-badge--negative'}`}>
-                          {isOvertime ? '+' : ''}{formatHours(employee.deviation)}ч
-                          <span className="employee-deviation-modal__deviation-arrow">
-                            {isOvertime ? '⬆️' : '⬇️'}
+                        <div className="employee-deviation-modal__card-header-actions">
+                          <div className={`employee-deviation-modal__deviation-badge ${isOvertime ? 'employee-deviation-modal__deviation-badge--positive' : 'employee-deviation-modal__deviation-badge--negative'}`}>
+                            {isOvertime ? '+' : ''}{formatHours(employee.deviation)}ч
+                            <span className="employee-deviation-modal__deviation-arrow">
+                              {isOvertime ? '⬆️' : '⬇️'}
+                            </span>
+                          </div>
+                          <span className={`employee-deviation-modal__expand-icon ${isExpanded ? 'employee-deviation-modal__expand-icon--expanded' : ''}`}>
+                            ▼
                           </span>
                         </div>
                       </div>
@@ -309,6 +387,74 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
                           </div>
                         </div>
                       </div>
+
+                      {/* Accordion Details */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="employee-deviation-modal__accordion"
+                          >
+                            <div className="employee-deviation-modal__accordion-content">
+                              {isLoadingDetails ? (
+                                <div className="employee-deviation-modal__accordion-loading">
+                                  <div className="employee-deviation-modal__accordion-spinner"></div>
+                                  <span>Загрузка детальной информации...</span>
+                                </div>
+                              ) : details && details.workloads && details.workloads.length > 0 ? (
+                                <>
+                                  <div className="employee-deviation-modal__accordion-header">
+                                    <h4 className="employee-deviation-modal__accordion-title">
+                                      Фактические записи за {formatDate(selectedDate)}
+                                    </h4>
+                                  </div>
+                                  <div className="employee-deviation-modal__workload-list">
+                                    {details.workloads.map((workload) => (
+                                      <div key={workload.id} className="employee-deviation-modal__workload-item">
+                                        <div className="employee-deviation-modal__workload-header">
+                                          <div className="employee-deviation-modal__workload-project">
+                                            <span className="employee-deviation-modal__workload-icon">📁</span>
+                                            <span className="employee-deviation-modal__workload-project-name">
+                                              {workload.projectName}
+                                            </span>
+                                          </div>
+                                          <div className="employee-deviation-modal__workload-hours">
+                                            {formatHours(workload.hoursWorked)} ч
+                                          </div>
+                                        </div>
+                                        <div className="employee-deviation-modal__workload-description">
+                                          <span className="employee-deviation-modal__workload-description-icon">📝</span>
+                                          <p className="employee-deviation-modal__workload-description-text">
+                                            {workload.userText}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="employee-deviation-modal__accordion-footer">
+                                    <span className="employee-deviation-modal__accordion-total-label">
+                                      Итого часов:
+                                    </span>
+                                    <span className="employee-deviation-modal__accordion-total-value">
+                                      {formatHours(details.totalHours)} ч
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="employee-deviation-modal__accordion-empty">
+                                  <span className="employee-deviation-modal__accordion-empty-icon">📭</span>
+                                  <p className="employee-deviation-modal__accordion-empty-text">
+                                    Нет записей о фактической работе за выбранную дату
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}

@@ -1,5 +1,9 @@
 import { apiRequest } from './api';
-import type { ProjectsWorkloadAnalytics, EmployeeWorkHoursResponse } from '../store/types';
+import type {
+  ProjectsWorkloadAnalytics,
+  EmployeeWorkHoursResponse,
+  EmployeeWorkloadDetailsResponse
+} from '../store/types';
 
 export interface ProjectsWorkloadQuery {
   date?: string; // YYYY-MM-DD format
@@ -8,6 +12,12 @@ export interface ProjectsWorkloadQuery {
 
 export interface EmployeeWorkHoursQuery {
   date?: string; // YYYY-MM-DD format
+}
+
+export interface EmployeeWorkloadDetailsQuery {
+  employeeId: string;
+  date: string; // YYYY-MM-DD format
+  type: 'actual'; // Currently only actual workload details
 }
 
 // Analytics service
@@ -65,6 +75,63 @@ export const analyticsService = {
         throw new Error('Ошибка сервера при загрузке аналитики');
       }
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке аналитики рабочих часов');
+    }
+  },
+
+  // Get detailed workload records for a specific employee and date
+  async getEmployeeWorkloadDetails(query: EmployeeWorkloadDetailsQuery): Promise<EmployeeWorkloadDetailsResponse> {
+    try {
+      const params = new URLSearchParams();
+      params.append('userId', query.employeeId);
+      params.append('date', query.date);
+      params.append('type', query.type);
+
+      const url = `/workload?${params.toString()}`;
+
+      // Backend returns array of UnifiedWorkload, need to transform to EmployeeWorkloadDetailsResponse
+      const response = await apiRequest.get<any>(url);
+      const workloadRecords = response.data;
+
+      // Filter by exact date and transform data
+      const filteredWorkloads = workloadRecords
+        .filter((record: any) => record.date.startsWith(query.date))
+        .map((record: any) => ({
+          id: record.actualId,
+          projectId: record.projectId,
+          projectName: 'Проект', // TODO: Backend should provide projectName
+          hoursWorked: record.hoursWorked,
+          userText: record.userText.replace('undefined | ', ''), // Remove prefix
+          date: record.date,
+          createdAt: record.actualCreatedAt,
+          updatedAt: record.actualUpdatedAt
+        }));
+
+      const totalHours = filteredWorkloads.reduce((sum: number, w: any) => sum + w.hoursWorked, 0);
+
+      return {
+        userId: query.employeeId,
+        date: query.date,
+        workloads: filteredWorkloads,
+        totalHours
+      };
+    } catch (error: any) {
+      console.error('Error fetching employee workload details:', error);
+      if (error.response?.status === 404) {
+        // Return empty response for 404 - no workload data found
+        return {
+          userId: query.employeeId,
+          date: query.date,
+          workloads: [],
+          totalHours: 0
+        };
+      } else if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для просмотра детальной информации о нагрузке');
+      } else if (error.response?.status === 400) {
+        throw new Error('Неверные параметры запроса');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера при загрузке детальной информации');
+      }
+      throw new Error(error.response?.data?.message || 'Ошибка при загрузке детальной информации о нагрузке');
     }
   }
 };
