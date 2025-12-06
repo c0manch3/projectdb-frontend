@@ -1,5 +1,9 @@
 import { apiRequest } from './api';
-import type { ProjectsWorkloadAnalytics, EmployeeWorkHoursResponse } from '../store/types';
+import type {
+  ProjectsWorkloadAnalytics,
+  EmployeeWorkHoursResponse,
+  EmployeeWorkloadDetailsResponse
+} from '../store/types';
 
 export interface ProjectsWorkloadQuery {
   date?: string; // YYYY-MM-DD format
@@ -8,6 +12,12 @@ export interface ProjectsWorkloadQuery {
 
 export interface EmployeeWorkHoursQuery {
   date?: string; // YYYY-MM-DD format
+}
+
+export interface EmployeeWorkloadDetailsQuery {
+  employeeId: string;
+  date: string; // YYYY-MM-DD format
+  type: 'actual'; // Currently only actual workload details
 }
 
 // Analytics service
@@ -65,6 +75,38 @@ export const analyticsService = {
         throw new Error('Ошибка сервера при загрузке аналитики');
       }
       throw new Error(error.response?.data?.message || 'Ошибка при загрузке аналитики рабочих часов');
+    }
+  },
+
+  // Get detailed workload records for a specific employee and date
+  async getEmployeeWorkloadDetails(query: EmployeeWorkloadDetailsQuery): Promise<EmployeeWorkloadDetailsResponse> {
+    try {
+      const params = new URLSearchParams();
+      params.append('employeeId', query.employeeId);
+      params.append('date', query.date);
+      params.append('type', query.type);
+
+      const url = `/workload?${params.toString()}`;
+      const response = await apiRequest.get<EmployeeWorkloadDetailsResponse>(url);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching employee workload details:', error);
+      if (error.response?.status === 404) {
+        // Return empty response for 404 - no workload data found
+        return {
+          userId: query.employeeId,
+          date: query.date,
+          workloads: [],
+          totalHours: 0
+        };
+      } else if (error.response?.status === 403) {
+        throw new Error('У вас нет прав для просмотра детальной информации о нагрузке');
+      } else if (error.response?.status === 400) {
+        throw new Error('Неверные параметры запроса');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Ошибка сервера при загрузке детальной информации');
+      }
+      throw new Error(error.response?.data?.message || 'Ошибка при загрузке детальной информации о нагрузке');
     }
   }
 };
