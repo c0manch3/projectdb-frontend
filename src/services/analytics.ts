@@ -98,7 +98,7 @@ export const analyticsService = {
         .map((record: any) => ({
           id: record.actualId,
           projectId: record.projectId,
-          projectName: 'Проект', // TODO: Backend should provide projectName
+          projectName: '', // Project name is resolved from Redux store on frontend
           hoursWorked: record.hoursWorked,
           userText: record.userText.replace('undefined | ', ''), // Remove prefix
           date: record.date,

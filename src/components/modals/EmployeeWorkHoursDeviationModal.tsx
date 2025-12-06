@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Modal from '../common/modal/modal';
@@ -8,7 +9,8 @@ import { analyticsService } from '../../services/analytics';
 import type {
   EmployeeWorkHoursResponse,
   EmployeeWorkHourItem,
-  EmployeeWorkloadDetailsResponse
+  EmployeeWorkloadDetailsResponse,
+  RootState
 } from '../../store/types';
 
 interface EmployeeWorkHoursDeviationModalProps {
@@ -20,6 +22,9 @@ type SortOption = 'deviation' | 'name' | 'hours';
 type FilterOption = 'all' | 'overtime' | 'undertime';
 
 function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursDeviationModalProps): JSX.Element {
+  // Get projects from Redux store to display project names
+  const projects = useSelector((state: RootState) => state.projects.list);
+
   const [data, setData] = useState<EmployeeWorkHoursResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +76,12 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
     // Reset accordion state when date changes
     setExpandedEmployeeId(null);
     setWorkloadDetails({});
+  };
+
+  // Helper function to get project name by ID
+  const getProjectName = (projectId: string): string => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.name || 'Неизвестный проект';
   };
 
   // Handle employee card click to toggle accordion
@@ -418,7 +429,7 @@ function EmployeeWorkHoursDeviationModal({ isOpen, onClose }: EmployeeWorkHoursD
                                           <div className="employee-deviation-modal__workload-project">
                                             <span className="employee-deviation-modal__workload-icon">📁</span>
                                             <span className="employee-deviation-modal__workload-project-name">
-                                              {workload.projectName}
+                                              {getProjectName(workload.projectId)}
                                             </span>
                                           </div>
                                           <div className="employee-deviation-modal__workload-hours">

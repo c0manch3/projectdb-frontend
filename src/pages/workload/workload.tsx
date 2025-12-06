@@ -55,6 +55,9 @@ import {
 import {
   selectCurrentUser
 } from '../../store/slices/auth_slice';
+import {
+  fetchProjects
+} from '../../store/slices/projects_slice';
 
 interface ModalState {
   type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | 'export-preview' | 'analytics' | 'hours-deviation' | null;
@@ -93,6 +96,9 @@ function Workload(): JSX.Element {
 
       // Load all projects for workload view (no filtering by manager)
       dispatch(fetchWorkloadProjects());
+
+      // Load projects list to Redux store for project names in analytics
+      dispatch(fetchProjects());
 
       // For Employee, automatically set userId filter to current user
       const initialFilters = currentUser.role === 'Employee'
