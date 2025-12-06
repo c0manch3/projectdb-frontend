@@ -82,13 +82,38 @@ export const analyticsService = {
   async getEmployeeWorkloadDetails(query: EmployeeWorkloadDetailsQuery): Promise<EmployeeWorkloadDetailsResponse> {
     try {
       const params = new URLSearchParams();
-      params.append('employeeId', query.employeeId);
+      params.append('userId', query.employeeId);
       params.append('date', query.date);
       params.append('type', query.type);
 
       const url = `/workload?${params.toString()}`;
-      const response = await apiRequest.get<EmployeeWorkloadDetailsResponse>(url);
-      return response.data;
+
+      // Backend returns array of UnifiedWorkload, need to transform to EmployeeWorkloadDetailsResponse
+      const response = await apiRequest.get<any>(url);
+      const workloadRecords = response.data;
+
+      // Filter by exact date and transform data
+      const filteredWorkloads = workloadRecords
+        .filter((record: any) => record.date.startsWith(query.date))
+        .map((record: any) => ({
+          id: record.actualId,
+          projectId: record.projectId,
+          projectName: 'Проект', // TODO: Backend should provide projectName
+          hoursWorked: record.hoursWorked,
+          userText: record.userText.replace('undefined | ', ''), // Remove prefix
+          date: record.date,
+          createdAt: record.actualCreatedAt,
+          updatedAt: record.actualUpdatedAt
+        }));
+
+      const totalHours = filteredWorkloads.reduce((sum: number, w: any) => sum + w.hoursWorked, 0);
+
+      return {
+        userId: query.employeeId,
+        date: query.date,
+        workloads: filteredWorkloads,
+        totalHours
+      };
     } catch (error: any) {
       console.error('Error fetching employee workload details:', error);
       if (error.response?.status === 404) {
