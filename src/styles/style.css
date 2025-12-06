@@ -9407,3 +9407,500 @@ option:disabled {
 .form__textarea.error {
   border-color: var(--error);
 }
+
+/* ============================================ */
+/* Employee Work Hours Deviation Modal */
+/* ============================================ */
+
+/* Date Selector Section */
+.employee-deviation-modal__date-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--surface);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border);
+  margin-bottom: var(--spacing-xl);
+}
+
+.employee-deviation-modal__date-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.employee-deviation-modal__date-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.employee-deviation-modal__date-icon {
+  font-size: 1.25rem;
+}
+
+.employee-deviation-modal__date-input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background: var(--background);
+  transition: var(--transition);
+  min-width: 160px;
+}
+
+.employee-deviation-modal__date-input:hover {
+  border-color: var(--primary);
+}
+
+.employee-deviation-modal__date-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.employee-deviation-modal__date-display {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.employee-deviation-modal__info-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(37, 99, 235, 0.1);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.employee-deviation-modal__info-icon {
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+/* Summary Statistics Cards */
+.employee-deviation-modal__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.employee-deviation-modal__summary-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border);
+  background: var(--background);
+  transition: var(--transition);
+}
+
+.employee-deviation-modal__summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.employee-deviation-modal__summary-card--overtime {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--success);
+}
+
+.employee-deviation-modal__summary-card--undertime {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: var(--warning);
+}
+
+.employee-deviation-modal__summary-card--neutral {
+  background: var(--surface);
+}
+
+.employee-deviation-modal__summary-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.employee-deviation-modal__summary-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.employee-deviation-modal__summary-value--overtime {
+  color: var(--success);
+}
+
+.employee-deviation-modal__summary-value--undertime {
+  color: var(--warning);
+}
+
+.employee-deviation-modal__summary-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* Controls Section */
+.employee-deviation-modal__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--surface);
+  border-radius: var(--border-radius-md);
+  flex-wrap: wrap;
+}
+
+.employee-deviation-modal__sort-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.employee-deviation-modal__sort-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.employee-deviation-modal__sort-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--background);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.employee-deviation-modal__sort-select:hover {
+  border-color: var(--primary);
+}
+
+.employee-deviation-modal__filter-group {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.employee-deviation-modal__filter-button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background: var(--background);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.employee-deviation-modal__filter-button:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+}
+
+.employee-deviation-modal__filter-button--active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Employee List */
+.employee-deviation-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: 500px;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.employee-deviation-modal__list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.employee-deviation-modal__list::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: var(--border-radius);
+}
+
+.employee-deviation-modal__list::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: var(--border-radius);
+}
+
+.employee-deviation-modal__list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Employee Card */
+.employee-deviation-modal__card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-md);
+  transition: var(--transition);
+  position: relative;
+}
+
+.employee-deviation-modal__card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.employee-deviation-modal__card--overtime {
+  border-left: 4px solid var(--success);
+}
+
+.employee-deviation-modal__card--undertime {
+  border-left: 4px solid var(--warning);
+}
+
+/* Card Header */
+.employee-deviation-modal__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.employee-deviation-modal__employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.employee-deviation-modal__employee-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.employee-deviation-modal__employee-icon {
+  font-size: 1.25rem;
+}
+
+.employee-deviation-modal__employee-email {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Deviation Badge */
+.employee-deviation-modal__deviation-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.employee-deviation-modal__deviation-badge--positive {
+  background: var(--success);
+  color: white;
+}
+
+.employee-deviation-modal__deviation-badge--negative {
+  background: var(--warning);
+  color: white;
+}
+
+.employee-deviation-modal__deviation-arrow {
+  font-size: 1.125rem;
+}
+
+/* Card Content */
+.employee-deviation-modal__card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.employee-deviation-modal__hours-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.employee-deviation-modal__hours-icon {
+  font-size: 1rem;
+  color: var(--text-tertiary);
+}
+
+.employee-deviation-modal__hours-label {
+  font-weight: 500;
+}
+
+.employee-deviation-modal__hours-value {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-left: auto;
+}
+
+/* Progress Bar */
+.employee-deviation-modal__progress {
+  margin-top: var(--spacing-md);
+}
+
+.employee-deviation-modal__progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--surface);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+  position: relative;
+}
+
+.employee-deviation-modal__progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease-out;
+  position: relative;
+}
+
+.employee-deviation-modal__progress-bar--overtime {
+  background: linear-gradient(90deg, var(--success) 0%, #15803d 100%);
+}
+
+.employee-deviation-modal__progress-bar--undertime {
+  background: linear-gradient(90deg, var(--warning) 0%, #d97706 100%);
+}
+
+.employee-deviation-modal__progress-percentage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* Empty State */
+.employee-deviation-modal__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  text-align: center;
+  background: var(--surface);
+  border-radius: var(--border-radius-lg);
+  min-height: 300px;
+}
+
+.employee-deviation-modal__empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.employee-deviation-modal__empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.employee-deviation-modal__empty-description {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+/* Error State */
+.employee-deviation-modal__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--border-radius-md);
+  min-height: 200px;
+  justify-content: center;
+}
+
+.employee-deviation-modal__error-icon {
+  font-size: 3rem;
+  color: var(--danger);
+  margin-bottom: var(--spacing-md);
+}
+
+.employee-deviation-modal__error-message {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .employee-deviation-modal__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-deviation-modal__controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employee-deviation-modal__filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .employee-deviation-modal__card-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .employee-deviation-modal__deviation-badge {
+    align-self: flex-start;
+  }
+
+  .employee-deviation-modal__date-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employee-deviation-modal__date-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-deviation-modal__employee-name {
+    font-size: 1rem;
+  }
+
+  .employee-deviation-modal__summary-value {
+    font-size: 1.5rem;
+  }
+
+  .employee-deviation-modal__card {
+    padding: var(--spacing-md);
+  }
+}

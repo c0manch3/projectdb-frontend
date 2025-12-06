@@ -326,8 +326,24 @@ export interface ProjectsWorkloadAnalytics {
   projects: ProjectWorkloadAnalytics[];
 }
 
+// Employee Work Hours Deviation Analytics
+export interface EmployeeWorkHourItem {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  hoursWorked: number;
+  deviation: number;
+}
+
+export interface EmployeeWorkHoursResponse {
+  date: string;
+  employees: EmployeeWorkHourItem[];
+}
+
 export interface AnalyticsState {
   projectsWorkload: ProjectsWorkloadAnalytics | null;
+  employeeWorkHours: EmployeeWorkHoursResponse | null;
   loading: boolean;
   error: string | null;
 }
