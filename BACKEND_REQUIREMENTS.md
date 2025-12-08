@@ -18,17 +18,132 @@ Trial users need to be able to view workload data for all employees (including t
 
 Create a new endpoint specifically for workload employee selection:
 
+---
+
+## Новый эндпоинт: GET /workload/employees
+
+### Описание
+
+Специальный эндпоинт для получения списка всех сотрудников (включая роль Employee) для использования на странице workload. Этот эндпоинт создан специально для Trial пользователей, которым нужно видеть всех сотрудников в dropdown селекторе для полноценной оценки функционала управления рабочей нагрузкой.
+
+### URL
+
 ```
 GET /workload/employees
 ```
 
-**Response:** All users including those with role `Employee`, regardless of requesting user's role
+### Аутентификация
 
-**Access:** Available to `Admin`, `Manager`, `Employee`, and `Trial` users
+Требуется JWT токен в заголовке:
+```
+Authorization: Bearer <token>
+```
 
-**Purpose:** This endpoint is specifically for the workload page employee selector dropdown
+### Доступ
 
-#### Option 2: Modify Existing Endpoint Behavior
+- ✅ Admin
+- ✅ Manager
+- ✅ Trial
+- ✅ Employee (для просмотра списка коллег)
+
+### Query параметры
+
+Отсутствуют
+
+### Пример запроса
+
+```typescript
+const response = await fetch('http://localhost:3000/workload/employees', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+const employees = await response.json();
+```
+
+### Пример ответа (200 OK)
+
+```json
+[
+  {
+    "id": "b1c4a3e5-a818-4ebc-9cee-f6b4d672a6e3",
+    "email": "ivan.petrov@example.com",
+    "firstName": "Иван",
+    "lastName": "Петров",
+    "role": "Employee",
+    "phone": "+79111111111",
+    "dateBirth": "1990-01-15T00:00:00.000Z",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  },
+  {
+    "id": "c2d5b4f6-b919-5fcd-adff-g7c5e783b7f4",
+    "email": "maria.sidorova@example.com",
+    "firstName": "Мария",
+    "lastName": "Сидорова",
+    "role": "Manager",
+    "phone": "+79222222222",
+    "dateBirth": "1985-05-20T00:00:00.000Z",
+    "createdAt": "2024-01-10T09:15:00.000Z",
+    "updatedAt": "2024-01-10T09:15:00.000Z"
+  },
+  {
+    "id": "d3e6c5g7-c020-6gde-beg0-h8d6f894c8g5",
+    "email": "trial.user@example.com",
+    "firstName": "Тестовый",
+    "lastName": "Пользователь",
+    "role": "Trial",
+    "phone": "+79333333333",
+    "dateBirth": "1995-12-01T00:00:00.000Z",
+    "createdAt": "2024-12-01T14:20:00.000Z",
+    "updatedAt": "2024-12-01T14:20:00.000Z"
+  }
+]
+```
+
+### Отличие от GET /auth
+
+| Эндпоинт                | Для Trial пользователей возвращает   |
+|-------------------------|--------------------------------------|
+| GET /auth               | ❌ Все пользователи КРОМЕ Employee    |
+| GET /workload/employees | ✅ ВСЕ пользователи, включая Employee |
+
+### Использование на фронтенде
+
+Этот эндпоинт следует использовать только на странице workload для заполнения dropdown списка сотрудников. Для всех остальных страниц продолжайте использовать GET /auth.
+
+```typescript
+// В файле: src/services/workload.ts
+async getEmployees(): Promise<User[]> {
+  try {
+    const response = await apiRequest.get<User[]>('/workload/employees');
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching employees:', error);
+    throw new Error(error.response?.data?.message || 'Ошибка при загрузке списка сотрудников');
+  }
+}
+```
+
+### Коды ответов
+
+- `200 OK` - Успешно получен список сотрудников
+- `401 Unauthorized` - Отсутствует или невалидный JWT токен
+- `403 Forbidden` - Пользователь не имеет прав (роль Customer не имеет доступа)
+
+### Примечания
+
+- Эндпоинт возвращает всех пользователей независимо от роли запрашивающего
+- Для Trial пользователей это единственный эндпоинт, который возвращает Employee роли
+- Данные не должны содержать пароль и другую чувствительную информацию
+- Эндпоинт не требует query параметров - всегда возвращает полный список
+
+---
+
+#### Option 2: Modify Existing Endpoint Behavior (NOT Recommended)
 
 Modify the `/auth` endpoint to include users with role `Employee` in responses to Trial users.
 
