@@ -450,13 +450,12 @@ export const workloadService = {
   },
 
   // Get employees for workload management
-  // NOTE: Backend should provide /workload/employees endpoint that returns ALL users including Employee role
-  // for Trial users. Currently /auth filters out Employee users for Trial role.
-  // WORKAROUND: Using /auth but Trial users won't see Employee users in the dropdown
+  // Uses /workload/employees endpoint which returns ALL users including Employee role
+  // This allows Trial users to see and select Employee users on workload page
   async getEmployees(): Promise<User[]> {
     try {
-      const response = await apiRequest.get<User[]>('/auth');
-      // Return all users - but Trial users will only see non-Employee users due to backend filtering
+      const response = await apiRequest.get<User[]>('/workload/employees');
+      // Return all users including Employees - Trial users can view workload
       return response.data;
     } catch (error: any) {
       console.error('Error fetching employees:', error);
