@@ -298,7 +298,8 @@ function Workload(): JSX.Element {
           {/* Filters and Controls */}
           <Card>
             <Filters>
-              {/* Hide employee filter for Employee role - they can only see their own data */}
+              {/* Hide employee filter only for Employee role - they can only see their own data */}
+              {/* Trial, Admin, and Manager can select which employee to view */}
               {currentUser?.role !== 'Employee' && (
                 <Filters.Group>
                   <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
