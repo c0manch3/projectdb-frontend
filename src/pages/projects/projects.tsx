@@ -40,6 +40,7 @@ import {
 } from '../../store/slices/projects_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { Project } from '../../store/types';
+import { usePermissions } from '../../hooks/use_permissions';
 
 function Projects(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -64,11 +65,15 @@ function Projects(): JSX.Element {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  // Check user permissions
-  const canCreateProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
-  const canEditProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canDeleteProjects = currentUser?.role === 'Admin';
+  // Check user permissions using hook
+  const permissions = usePermissions();
+  const {
+    canCreateProjects,
+    canEditProjects,
+    canDeleteProjects,
+    canViewProjects,
+    isTrial
+  } = permissions;
   const canSeeCustomerFilter = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
 
   // Load data on component mount
