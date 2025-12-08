@@ -41,7 +41,7 @@ const editEmployeeSchema = z.object({
 
   telegramId: z.string().optional(),
 
-  role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
+  role: z.enum(['Admin', 'Manager', 'Employee', 'Trial'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
 
@@ -172,7 +172,8 @@ function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps
   const roleOptions: { value: UserRole; label: string }[] = [
     { value: 'Employee', label: 'Сотрудник' },
     { value: 'Manager', label: 'Менеджер' },
-    { value: 'Admin', label: 'Администратор' }
+    { value: 'Admin', label: 'Администратор' },
+    { value: 'Trial', label: 'Тестовый доступ' }
   ];
 
   if (!isOpen || !employee) return <></>;
