@@ -58,6 +58,7 @@ import {
 import {
   fetchProjects
 } from '../../store/slices/projects_slice';
+import { usePermissions } from '../../hooks/use_permissions';
 
 interface ModalState {
   type: 'add-plan' | 'edit-plan' | 'delete-plan' | 'add-actual' | 'edit-actual' | 'delete-actual' | 'workload-details' | 'export-preview' | 'analytics' | 'hours-deviation' | null;
@@ -73,6 +74,10 @@ interface ModalState {
 
 function Workload(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
+
+  // Check user permissions
+  const permissions = usePermissions();
+  const { canManageWorkload, canViewAnalytics } = permissions;
 
   // Redux state
   const workloadState = useSelector(selectWorkload);
@@ -357,7 +362,7 @@ function Workload(): JSX.Element {
                   📊 Экспорт
                 </Button>
 
-                {(currentUser?.role === 'Admin' || currentUser?.role === 'Manager') && (
+                {canViewAnalytics && (
                   <>
                     <Button
                       variant="secondary"

@@ -45,7 +45,7 @@ const createEmployeeSchema = z.object({
     .min(1, 'Пароль обязателен для заполнения')
     .min(6, 'Пароль должен содержать минимум 6 символов'),
 
-  role: z.enum(['Admin', 'Manager', 'Employee'] as const, {
+  role: z.enum(['Admin', 'Manager', 'Employee', 'Trial'] as const, {
     required_error: 'Роль обязательна для выбора'
   }),
 
@@ -166,7 +166,8 @@ function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps): JSX.Eleme
   const roleOptions: { value: UserRole; label: string }[] = [
     { value: 'Employee', label: 'Сотрудник' },
     { value: 'Manager', label: 'Менеджер' },
-    { value: 'Admin', label: 'Администратор' }
+    { value: 'Admin', label: 'Администратор' },
+    { value: 'Trial', label: 'Тестовый доступ' }
   ];
 
   if (!isOpen) return <></>;

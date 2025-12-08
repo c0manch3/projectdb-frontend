@@ -98,7 +98,7 @@ function App(): JSX.Element {
           <Route
             path={AppRoute.ProjectConstructions}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee', 'Trial']}>
                 <Constructions />
               </RoleBasedRoute>
             }
@@ -106,7 +106,7 @@ function App(): JSX.Element {
           <Route
             path={AppRoute.Constructions}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee', 'Trial']}>
                 <Constructions />
               </RoleBasedRoute>
             }
@@ -119,21 +119,21 @@ function App(): JSX.Element {
               </RoleBasedRoute>
             }
           />
-          <Route 
-            path={AppRoute.Companies} 
+          <Route
+            path={AppRoute.Companies}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Trial']}>
                 <Companies />
               </RoleBasedRoute>
-            } 
+            }
           />
-          <Route 
-            path={AppRoute.Workload} 
+          <Route
+            path={AppRoute.Workload}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee', 'Trial']}>
                 <Workload />
               </RoleBasedRoute>
-            } 
+            }
           />
           <Route 
             path={AppRoute.Profile} 

@@ -21,6 +21,7 @@ import {
 } from '../../store/slices/auth_slice';
 import type { UnifiedWorkload, WorkloadPlan, WorkloadActual } from '../../store/types';
 import { workloadService } from '../../services/workload';
+import { usePermissions } from '../../hooks/use_permissions';
 
 interface WorkloadDetailsModalProps {
   isOpen: boolean;
@@ -54,6 +55,10 @@ function WorkloadDetailsModal({
   const projects = useSelector(selectWorkloadProjects);
   const currentUser = useSelector(selectCurrentUser);
 
+  // Permissions hook
+  const permissions = usePermissions();
+  const { canManageWorkload, isTrial } = permissions;
+
   // Local state
   const [mode, setMode] = useState<'view' | 'edit' | 'create' | 'create-plan'>('view');
   const [loading, setLoading] = useState(false);
@@ -81,12 +86,12 @@ function WorkloadDetailsModal({
   const isManager = currentUser?.role === 'Manager';
   const currentUserId = currentUser?.id;
 
-  // Role-based permissions
-  const canEdit = isManager || (!isPast && workloads.some(w => w.userId === currentUserId));
-  const canCreate = !isPast && currentUser; // Authenticated users can create workload
-  const canCreatePlan = isManager && !isBeforeToday; // Manager can create plans for current and future dates
-  const canEditOtherUsers = isManager;
-  const canDeleteWorkload = isManager || workloads.some(w => w.userId === currentUserId && !isPast);
+  // Role-based permissions - Trial users cannot modify workload
+  const canEdit = canManageWorkload && (isManager || (!isPast && workloads.some(w => w.userId === currentUserId)));
+  const canCreate = canManageWorkload && !isPast && currentUser; // Authenticated users can create workload (except Trial)
+  const canCreatePlan = canManageWorkload && isManager && !isBeforeToday; // Manager can create plans for current and future dates
+  const canEditOtherUsers = canManageWorkload && isManager;
+  const canDeleteWorkload = canManageWorkload && (isManager || workloads.some(w => w.userId === currentUserId && !isPast));
 
   // Load employees and projects when modal opens
   useEffect(() => {

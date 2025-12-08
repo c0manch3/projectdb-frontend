@@ -4,6 +4,7 @@ import { AppRoute } from '../../../const';
 import { logout } from '../../../store/slices/auth_slice';
 import type { RootState } from '../../../store/types';
 import type { AppDispatch } from '../../../store';
+import TrialBadge from '../../common/trial_badge/trial_badge';
 
 interface HeaderProps {
   activeNavItem?: 'projects' | 'employees' | 'companies' | 'workload';
@@ -57,6 +58,8 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
         return 'Менеджер';
       case 'Employee':
         return 'Сотрудник';
+      case 'Trial':
+        return 'Тестовый доступ';
       default:
         return role;
     }
@@ -68,13 +71,17 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
 
     switch (navItem) {
       case 'employees':
+        // Trial users cannot access employees section
         return user.role === 'Admin' || user.role === 'Manager';
       case 'companies':
-        return user.role === 'Admin' || user.role === 'Manager';
+        // Trial can view companies
+        return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Trial';
       case 'workload':
-        return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Employee';
+        // Trial can view workload
+        return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Employee' || user.role === 'Trial';
       case 'projects':
-        return user.role === 'Admin' || user.role === 'Manager'; // Only Admin and Manager can access projects
+        // Trial can view projects (read-only)
+        return user.role === 'Admin' || user.role === 'Manager' || user.role === 'Trial';
       default:
         return false;
     }
@@ -122,6 +129,7 @@ function Header({ activeNavItem }: HeaderProps): JSX.Element {
       </nav>
       
       <div className="header__user">
+        <TrialBadge />
         <div className="header__user-info">
           <div className="header__user-name">
             {user ? `${user.firstName} ${user.lastName}` : 'Загрузка...'}

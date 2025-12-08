@@ -34,6 +34,7 @@ import {
 } from '../../store/slices/users_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { User, UserRole } from '../../store/types';
+import { usePermissions } from '../../hooks/use_permissions';
 
 function Employees(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -55,10 +56,10 @@ function Employees(): JSX.Element {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingEmployee, setDeletingEmployee] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Check user permissions
-  const canManageEmployees = currentUser?.role === 'Admin';
-  const canViewEmployees = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+
+  // Check user permissions using hook
+  const permissions = usePermissions();
+  const { canManageEmployees, canViewEmployees, isTrial } = permissions;
 
   // Load data on component mount
   useEffect(() => {
@@ -125,9 +126,15 @@ function Employees(): JSX.Element {
       case 'Admin': return 'Администратор';
       case 'Manager': return 'Менеджер';
       case 'Employee': return 'Сотрудник';
+      case 'Trial': return 'Тестовый доступ';
       default: return role;
     }
   };
+
+  // Filter out Employee users if current user is Trial
+  const displayUsers = isTrial
+    ? filteredUsers.filter(user => user.role !== 'Employee')
+    : filteredUsers;
 
   // If user doesn't have permission, show access denied
   if (!canViewEmployees) {
@@ -241,10 +248,10 @@ function Employees(): JSX.Element {
           <Table.Container>
             {loading ? (
               <LoadingState id="loadingState" message="Загрузка сотрудников..." />
-            ) : filteredUsers.length === 0 ? (
-              <EmptyState 
-                id="emptyState" 
-                message="Сотрудники не найдены" 
+            ) : displayUsers.length === 0 ? (
+              <EmptyState
+                id="emptyState"
+                message="Сотрудники не найдены"
                 show={true}
                 actionButton={canManageEmployees ? (
                   <Button onClick={() => setShowCreateModal(true)}>
@@ -265,7 +272,7 @@ function Employees(): JSX.Element {
                   </tr>
                 </Table.Head>
                 <Table.Body id="employeesTableBody">
-                  {filteredUsers.map((employee) => (
+                  {displayUsers.map((employee) => (
                     <tr
                       key={employee.id}
                       className={`table__row ${canManageEmployees ? 'table__row--clickable' : ''}`}

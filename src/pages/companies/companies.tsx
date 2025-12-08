@@ -34,6 +34,7 @@ import {
 } from '../../store/slices/users_slice';
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import type { Company, CompanyType } from '../../store/types';
+import { usePermissions } from '../../hooks/use_permissions';
 
 function Companies(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -55,9 +56,10 @@ function Companies(): JSX.Element {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Check user permissions
-  const canManageCompanies = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canViewCompanies = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  // Check user permissions using hook
+  const permissions = usePermissions();
+  const { canManageCompanies, isTrial } = permissions;
+  const canViewCompanies = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Trial';
 
   // Load data on component mount
   useEffect(() => {

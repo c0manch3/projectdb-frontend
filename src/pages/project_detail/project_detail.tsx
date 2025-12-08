@@ -32,6 +32,7 @@ import { selectCurrentUser } from '../../store/slices/auth_slice';
 import { projectsService } from '../../services/projects';
 import { paymentSchedulesService } from '../../services/payment_schedules';
 import type { Document, PaymentSchedule } from '../../store/types';
+import { usePermissions } from '../../hooks/use_permissions';
 
 function ProjectDetail(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -66,9 +67,15 @@ function ProjectDetail(): JSX.Element {
   const [deletePaymentModalOpen, setDeletePaymentModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<PaymentSchedule | null>(null);
 
-  // Check user permissions
-  const canViewProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
-  const canEditProjects = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  // Check user permissions using hook
+  const permissions = usePermissions();
+  const {
+    canViewProjects,
+    canEditProjects,
+    canManageDocuments,
+    canManagePaymentSchedules,
+    isTrial
+  } = permissions;
 
   // Load data on component mount
   useEffect(() => {
@@ -556,7 +563,7 @@ function ProjectDetail(): JSX.Element {
             <div className="project-documents-section">
               <div className="section-header">
                 <h2 className="section-title">Документы проекта</h2>
-                {canEditProjects && (
+                {canManageDocuments && (
                   <div className="section-header__actions">
                     <Button
                       variant="outline"
@@ -611,18 +618,20 @@ function ProjectDetail(): JSX.Element {
                               </td>
                               <td>{formatDate(document.uploadedAt)}</td>
                               <td className="actions-cell">
-                                <button
-                                  className="action-btn action-btn--download"
-                                  onClick={() => handleDownloadDocument(document)}
-                                  title="Скачать"
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                  </svg>
-                                </button>
-                                {canEditProjects && (
+                                {canManageDocuments && (
+                                  <button
+                                    className="action-btn action-btn--download"
+                                    onClick={() => handleDownloadDocument(document)}
+                                    title="Скачать"
+                                  >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                      <polyline points="7 10 12 15 17 10"></polyline>
+                                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                  </button>
+                                )}
+                                {canManageDocuments && (
                                   <button
                                     className="action-btn action-btn--delete"
                                     onClick={() => handleDeleteDocument(document)}
@@ -633,6 +642,12 @@ function ProjectDetail(): JSX.Element {
                                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                     </svg>
                                   </button>
+                                )}
+                                {isTrial && (
+                                  <div className="trial-access-message trial-access-message--compact">
+                                    <span className="trial-access-message__icon">🔒</span>
+                                    <span className="trial-access-message__text">Просмотр документов недоступен в тестовом режиме</span>
+                                  </div>
                                 )}
                               </td>
                             </tr>

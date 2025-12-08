@@ -15,7 +15,7 @@ export interface User {
   updatedAt: string;
 }
 
-export type UserRole = 'Admin' | 'Manager' | 'Employee';
+export type UserRole = 'Admin' | 'Manager' | 'Employee' | 'Trial';
 
 // Payment Schedule types
 export type PaymentType = 'Advance' | 'MainPayment' | 'FinalPayment' | 'Other';

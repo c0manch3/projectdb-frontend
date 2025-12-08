@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
+import toast from 'react-hot-toast';
 import { store } from '../store';
 import { updateAccessToken, logout } from '../store/slices/auth_slice';
 import { tokenStorage } from './auth';
@@ -58,6 +59,29 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle 403 Forbidden - Trial user attempting restricted action
+    if (error.response?.status === 403) {
+      const state = store.getState();
+      const currentUser = state.auth.user;
+
+      // If user is Trial, show a friendly message
+      if (currentUser?.role === 'Trial') {
+        const errorMessage = error.response?.data?.message || 'Trial users cannot perform this action';
+
+        // Show user-friendly toast message
+        if (errorMessage.includes('Trial users')) {
+          toast.error('Это действие недоступно в тестовом режиме');
+        } else {
+          toast.error('У вас нет прав для выполнения этого действия');
+        }
+      } else {
+        // For non-Trial users with 403, show generic permission error
+        toast.error('У вас нет прав для выполнения этого действия');
+      }
+
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
