@@ -41,6 +41,7 @@ import {
 import { selectCurrentUser } from '../../store/slices/auth_slice';
 import { fetchProjectById, selectCurrentProject } from '../../store/slices/projects_slice';
 import type { Construction, Document, ConstructionDocumentType } from '../../store/types';
+import { usePermissions } from '../../hooks/use_permissions';
 
 function Constructions(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +60,18 @@ function Constructions(): JSX.Element {
   const currentProject = useSelector(selectCurrentProject);
   const constructionsByProject = useSelector(selectConstructionsByProject);
 
+  // Permissions hook
+  const permissions = usePermissions();
+  const {
+    canModifyData,
+    canManageDocuments,
+    canUploadDocuments,
+    canDownloadDocuments,
+    canDeleteDocuments,
+    hasAdminPrivileges,
+    isTrial
+  } = permissions;
+
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,13 +86,11 @@ function Constructions(): JSX.Element {
   const [uploadDocumentType, setUploadDocumentType] = useState<ConstructionDocumentType | undefined>(undefined);
   const [documentsLoaded, setDocumentsLoaded] = useState(false);
 
-  // Check user permissions
-  const canCreateConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canViewConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager' || currentUser?.role === 'Employee';
-  const canEditConstructions = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canDeleteConstructions = currentUser?.role === 'Admin';
-  const canDeleteDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
-  const canUploadDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+  // Check user permissions - Trial users can view but not modify
+  const canCreateConstructions = canModifyData;
+  const canViewConstructions = true; // All authenticated users can view (including Trial)
+  const canEditConstructions = canModifyData;
+  const canDeleteConstructions = hasAdminPrivileges;
 
   // Load data on component mount
   useEffect(() => {

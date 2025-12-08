@@ -98,7 +98,7 @@ function App(): JSX.Element {
           <Route
             path={AppRoute.ProjectConstructions}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee', 'Trial']}>
                 <Constructions />
               </RoleBasedRoute>
             }
@@ -106,7 +106,7 @@ function App(): JSX.Element {
           <Route
             path={AppRoute.Constructions}
             element={
-              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee']}>
+              <RoleBasedRoute allowedRoles={['Admin', 'Manager', 'Employee', 'Trial']}>
                 <Constructions />
               </RoleBasedRoute>
             }
