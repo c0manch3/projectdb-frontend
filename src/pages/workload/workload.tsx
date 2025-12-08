@@ -298,7 +298,9 @@ function Workload(): JSX.Element {
           {/* Filters and Controls */}
           <Card>
             <Filters>
-              {/* Hide employee filter for Employee role - they can only see their own data */}
+              {/* Hide employee filter only for Employee role - they can only see their own data */}
+              {/* Trial, Admin, and Manager can select which employee to view */}
+              {/* Note: Trial users can see Employee users ONLY on workload page for viewing workload data */}
               {currentUser?.role !== 'Employee' && (
                 <Filters.Group>
                   <Filters.Label htmlFor="employeeFilter">Сотрудник:</Filters.Label>
@@ -309,11 +311,13 @@ function Workload(): JSX.Element {
                     className="filters__select"
                   >
                     <option value="all">Все сотрудники</option>
-                    {employees.filter(emp => emp.role === 'Employee').map(employee => (
-                      <option key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </option>
-                    ))}
+                    {employees
+                      .filter(emp => emp.role === 'Employee')
+                      .map(employee => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.firstName} {employee.lastName}
+                        </option>
+                      ))}
                   </FormSelect>
                 </Filters.Group>
               )}

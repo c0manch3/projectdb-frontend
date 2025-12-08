@@ -450,10 +450,12 @@ export const workloadService = {
   },
 
   // Get employees for workload management
+  // Uses /workload/employees endpoint which returns ALL users including Employee role
+  // This allows Trial users to see and select Employee users on workload page
   async getEmployees(): Promise<User[]> {
     try {
-      const response = await apiRequest.get<User[]>('/auth');
-      // Return all users - plans can be created for any user
+      const response = await apiRequest.get<User[]>('/workload/employees');
+      // Return all users including Employees - Trial users can view workload
       return response.data;
     } catch (error: any) {
       console.error('Error fetching employees:', error);
